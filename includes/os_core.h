@@ -106,6 +106,7 @@ OS_Error OS_CreateAperiodicTask(
 // kernel process and do everything in those tasks if desired.
 ///////////////////////////////////////////////////////////////////////////////
 
+// OS_CreateProcess:
 // API for creating a process. 
 // Input:
 //		process_name: pointer to the process name
@@ -116,6 +117,19 @@ OS_Error OS_CreateProcess(
 		OS_Process *process,
 		const INT8 * process_name,
 		void (*process_entry_function)(void *pdata),
+		void *pdata
+	);
+
+// OS_CreateProcessFromFile:
+// API for creating a process given its path in the file system
+// Input:
+//		process_name: pointer to the process name
+//		exec_path: Path to the process executable file. 
+//			The exec file should be in ELF format
+OS_Error OS_CreateProcessFromFile(
+		OS_Process *process,
+		const INT8 * process_name,
+		const INT8 * exec_path,
 		void *pdata
 	);
 

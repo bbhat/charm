@@ -117,6 +117,19 @@ OS_Error OS_CreateProcess(
 		void *pdata
 	);
 
+// OS_CreateProcessFromFile:
+// API for creating a process given its path in the file system
+// Input:
+//		process_name: pointer to the process name
+//		exec_path: Path to the process executable file. 
+//			The exec file should be in ELF format
+OS_Error OS_CreateProcessFromFile(
+		OS_Process *process,
+		const INT8 * process_name,
+		const INT8 * exec_path,
+		void *pdata
+	);
+
 ///////////////////////////////////////////////////////////////////////////////
 // The following funcstion starts the OS scheduling
 // Note that this function never returns

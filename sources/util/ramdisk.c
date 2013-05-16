@@ -14,12 +14,6 @@
 
 OS_Error ramdisk_init(void * addr);
 
-INT32 ramdisk_open(INT8 * filepath, INT32 flags);
-BOOL ramdisk_assert_open(INT32 fd);
-INT32 ramdisk_close(INT32 fd);
-INT32 ramdisk_read(INT32 fd, void * ptr, INT32 numbytes);
-INT32 ramdisk_lseek(INT32 fd, INT32 position, INT32 startpoint);
-
 static INT32 getToken(INT8 * dst, const INT8 * path);
 
 #ifdef _USE_STD_LIBS
@@ -273,6 +267,42 @@ INT32 ramdisk_lseek(INT32 fd, INT32 position, INT32 startpoint)
 	}
 	
 	return result;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Function to get file size
+//////////////////////////////////////////////////////////////////////////////////////////
+INT32 ramdisk_GetFileSize(INT32 fd)
+{
+	// Assert that the file is actually open
+	if(!ramdisk_assert_open(fd))
+	{
+		return -1;
+	}
+
+	// Get a pointer to file structure
+	FILE * fp = &g_current_process->open_files[fd];
+	
+	return fp->length;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Function to get pointer to file data. Since the ramdisk already has the data in memory
+// as a single contiguous block, we can return pointer to this data block.
+// If the file data is not contiguous, then this function will not work
+//////////////////////////////////////////////////////////////////////////////////////////
+void * ramdisk_GetDataPtr(INT32 fd)
+{
+	// Assert that the file is actually open
+	if(!ramdisk_assert_open(fd))
+	{
+		return -1;
+	}
+
+	// Get a pointer to file structure
+	FILE * fp = &g_current_process->open_files[fd];
+	
+	return fp->data;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

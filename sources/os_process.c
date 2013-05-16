@@ -73,3 +73,34 @@ OS_Error OS_CreateProcess(
 	
 	return SUCCESS; 
 }
+
+OS_Error OS_CreateProcessFromFile(
+		OS_Process *process,
+		const INT8 * process_name,
+		const INT8 * exec_path,
+		void *pdata
+	)
+{
+	UINT32 intsts;
+	
+	if(!process)
+	{
+	    FAULT("Invalid process");
+		return INVALID_ARG;
+	}
+
+	if(!exec_path)
+	{
+	    FAULT("One or more invalid %s arguments", "exec_path");
+		return INVALID_ARG;
+	}
+	
+	// Clear the process structure
+	memset(process, 0, sizeof(OS_Process));
+		
+	// Copy process name
+	strncpy(process->name, process_name, OS_PROCESS_NAME_SIZE);
+
+
+	return SUCCESS;	
+}

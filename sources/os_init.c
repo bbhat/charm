@@ -15,10 +15,13 @@
 // External functions used in here
 extern void _OS_InitTimer();
 extern void _OS_SystemInit();
+extern OS_Error ramdisk_init(void * addr);
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_block_q;
+
+extern UINT32 __ramdisk_start__;
 
 OS_Process	g_kernel_process;	// Kernel process
 
@@ -31,8 +34,12 @@ void kernel_process_entry(void * pdata);
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_Init()
 {
-	// Call system initializatoin routine
+	// Call system initialization routine
 	_OS_SystemInit();
+	
+	if(ramdisk_init((void *)__ramdisk_start__) != SUCCESS) {
+		panic("ramdisk_init failed\n");
+	}
 	
 	// Initialize Instruction and Data Caches
 #if ENABLE_INSTRUCTION_CACHE == 1

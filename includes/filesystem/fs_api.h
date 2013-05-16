@@ -14,10 +14,13 @@
 // File system related functions
 ///////////////////////////////////////////////////////////////////////////////
 
-INT32 open(INT8 * filename, INT32 flags);
-INT32 close(INT32 fd);
-INT32 read(INT32 fd, void * ptr, INT32 numbytes);
-INT32 lseek(INT32 fd, INT32 position, INT32 startpoint);
+INT32 ramdisk_open(INT8 * filepath, INT32 flags);
+BOOL ramdisk_assert_open(INT32 fd);
+INT32 ramdisk_close(INT32 fd);
+void * ramdisk_GetDataPtr(INT32 fd);
+INT32 ramdisk_read(INT32 fd, void * ptr, INT32 numbytes);
+INT32 ramdisk_lseek(INT32 fd, INT32 position, INT32 startpoint);
+INT32 ramdisk_GetFileSize(INT32 fd);
 	
 enum 
 {
