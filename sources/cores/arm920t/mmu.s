@@ -26,6 +26,8 @@ R1_nF		=	(1<<30)
 	.global MMU_flushDCache
 	.global MMU_flushCache
 	
+	.global MMU_CleanDCache
+
 	.global MMU_CleanDCacheMVA
 	.global MMU_CleanInvalidateDCacheMVA
 	.global MMU_CleanDCacheIndex
@@ -100,7 +102,21 @@ MMU_CleanDCacheIndex:
 MMU_CleanInvalidateDCacheIndex:
 	mcr  p15,0,r0,c7,c14,2 
 	mov  pc, lr
-	
+
+	@ void MMU_CleanDCache(void)
+MMU_CleanDCache:		
+@    mov    r1, #0                        ; Initialize segment counter outer_loop
+@    mov    r0, #0                        ; Initialize line counter inner_loop
+@    orr    r2, r1, r0                    ; Generate segment and line address
+@    mcr    p15, 0, r2, c7, c14, 2        ; Clean and flush the line
+@    add    r0, r0, #0x20                 ; Increment to next line
+@    cmp    r0, #0x400                    ; Complete all entries in one segment?
+@    bne    inner_loop                    ; If not branch back to inner_loop
+@    add    r1, r1, #0x40000000           ; Increment segment counter
+@    cmp    r1, #0x0                      ; Complete all segments
+@    bne    outer_loop                    ; If not branch back to outer_loop
+	mov  pc, lr
+
 MMU_WaitForInterrupt:
    mcr  p15,0,r0,c7,c0,4 
    mov  pc, lr
