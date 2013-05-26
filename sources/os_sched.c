@@ -151,7 +151,7 @@ static void _OS_idle_task(void * ptr)
 	while(1)
 	{
 		// Wait for interrupt at lower power state
-		MMU_WaitForInterrupt();
+		_OS_WaitForInterrupt();
 #if OS_ENABLE_CPU_STATS==1
 		g_idle_count++;
 #endif

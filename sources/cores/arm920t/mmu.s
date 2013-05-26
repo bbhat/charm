@@ -33,6 +33,8 @@ R1_nF		=	(1<<30)
 	.global MMU_CleanDCacheIndex
 	.global MMU_CleanInvalidateDCacheIndex
 	
+	.global MMU_CleanInvalidateDCache
+	
 	.global MMU_WaitForInterrupt
 		
 	.code 32             		@ CODE32
@@ -103,20 +105,22 @@ MMU_CleanInvalidateDCacheIndex:
 	mcr  p15,0,r0,c7,c14,2 
 	mov  pc, lr
 
-	@ void MMU_CleanDCache(void)
-MMU_CleanDCache:		
-@    mov    r1, #0                        ; Initialize segment counter outer_loop
-@    mov    r0, #0                        ; Initialize line counter inner_loop
-@    orr    r2, r1, r0                    ; Generate segment and line address
-@    mcr    p15, 0, r2, c7, c14, 2        ; Clean and flush the line
-@    add    r0, r0, #0x20                 ; Increment to next line
-@    cmp    r0, #0x400                    ; Complete all entries in one segment?
-@    bne    inner_loop                    ; If not branch back to inner_loop
-@    add    r1, r1, #0x40000000           ; Increment segment counter
-@    cmp    r1, #0x0                      ; Complete all segments
-@    bne    outer_loop                    ; If not branch back to outer_loop
+	@ void MMU_CleanInvalidateDCache(void)
+MMU_CleanInvalidateDCache:
+    mov    r1, #0                        @ Initialize segment counter 
+next_segment:
+    mov    r0, #0                        @ Initialize cache line counter 
+next_index:
+    orr    r2, r1, r0                    @ Generate segment and line address
+    mcr    p15, 0, r2, c7, c14, 2        @ Clean and flush the line
+    add    r0, r0, #0x20                 @ Increment to next line
+    cmp    r0, #0x400                    @ Complete all entries in one segment?
+    bne    next_index                    @ If not branch back to next_index
+    add    r1, r1, #0x40000000           @ Increment segment counter
+    cmp    r1, #0x0                      @ Complete all segments
+    bne    next_segment                  @ If not branch back to next_segment
 	mov  pc, lr
-
+		
 MMU_WaitForInterrupt:
    mcr  p15,0,r0,c7,c0,4 
    mov  pc, lr

@@ -10,7 +10,7 @@
 #include "os_core.h"
 #include "os_queue.h"
 #include "os_process.h"
-#include "mmu.h"
+#include "cache.h"
 
 // External functions used in here
 extern void _OS_InitTimer();
@@ -43,13 +43,13 @@ void _OS_Init()
 	
 	// Initialize Instruction and Data Caches
 #if ENABLE_INSTRUCTION_CACHE == 1
-	MMU_flushICache();
-	MMU_EnableICache();
+	_OS_flushICache();
+	_OS_EnableICache();
 #endif
 
 #if ENABLE_DATA_CACHE == 1
-	MMU_flushDCache();
-	MMU_EnableDCache();
+	_OS_flushDCache();
+	_OS_EnableDCache();
 #endif
 
 	// Start the scheduling timer

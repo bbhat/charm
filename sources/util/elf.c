@@ -10,6 +10,7 @@
 #include "elf.h"
 #include "util.h"
 #include "os_core.h"
+#include "cache.h"
 
 #ifdef _USE_STD_LIBS
 	#define FAULT(x, ...) printf(x, ...);
@@ -68,7 +69,7 @@ OS_Error elf_load(void * elfdata)
 			continue;
 		
 		// We need to load this segment at the target virtual address
-		memcpy(elf_phhdr->p_vaddr, (INT8*)elfdata + elf_phhdr->p_offset, elf_phhdr->p_memsz);
+		memcpy((void *)elf_phhdr->p_vaddr, (INT8*)elfdata + elf_phhdr->p_offset, elf_phhdr->p_memsz);
 	}
 	
 	// TODO: Issue #19, Make selective cache flushing/cleaning in elf_load
@@ -77,11 +78,11 @@ OS_Error elf_load(void * elfdata)
 	// 		cleaning the DCache to ensure memory is up to date with all changes
 	// 		invalidating the ICache to ensure that the ICache is forced to re-fetch instructions from memory.
 	
-	// Flush the data cache at this point
-	MMU_CleanDCache();
+	// Flush the data cache
+	_OS_CleanInvalidateDCache(NULL, 0);	// Passing NULL, 0 invalidates the whole cache
 	
 	// Invalidate the Instruction Cache
-	MMU_flushICache();
+	_OS_flushICache();
 
 	// The ELF file was loaded successfully
 	return SUCCESS;

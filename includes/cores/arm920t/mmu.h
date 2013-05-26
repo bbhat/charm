@@ -23,5 +23,9 @@ void MMU_CleanDCacheMVA(UINT32 mva);
 void MMU_CleanInvalidateDCacheMVA(UINT32 mva);
 void MMU_CleanDCacheIndex(UINT32 index);
 void MMU_CleanInvalidateDCacheIndex(UINT32 index);
+void MMU_CleanInvalidateDCache(void);
 void MMU_WaitForInterrupt(void);
+
+#define _OS_WaitForInterrupt() MMU_WaitForInterrupt();
+
 #endif // _MMU_H_
