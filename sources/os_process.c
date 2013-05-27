@@ -10,6 +10,7 @@
 #include "os_process.h"
 #include "os_core.h"
 #include "util.h"
+#include "fs_api.h"
 
 UINT16 g_process_id_counter;
 
@@ -23,6 +24,8 @@ OS_Process * g_current_process;
 #else
 	#define FAULT(x, ...)
 #endif
+
+OS_Error elf_load(void * elfdata, void ** start_address);
 
 OS_Error OS_CreateProcess(
 	OS_Process *process,
@@ -38,9 +41,9 @@ OS_Error OS_CreateProcess(
 		return INVALID_ARG;
 	}
 
-	if(!process_entry_function)
+	if(!process_entry_function || !process_name)
 	{
-	    FAULT("One or more invalid %s arguments", "process");
+	    FAULT("OS_CreateProcess: invalid arguments");
 		return INVALID_ARG;
 	}
 	
@@ -81,26 +84,35 @@ OS_Error OS_CreateProcessFromFile(
 		void *pdata
 	)
 {
-	UINT32 intsts;
-	
-	if(!process)
-	{
-	    FAULT("Invalid process");
-		return INVALID_ARG;
-	}
-
+	// Validate inputs
 	if(!exec_path)
 	{
-	    FAULT("One or more invalid %s arguments", "exec_path");
+		FAULT("OS_CreateProcessFromFile: invalid file path");
 		return INVALID_ARG;
 	}
 	
-	// Clear the process structure
-	memset(process, 0, sizeof(OS_Process));
-		
-	// Copy process name
-	strncpy(process->name, process_name, OS_PROCESS_NAME_SIZE);
+	// First read the elf file
+	INT32 fd = ramdisk_open(exec_path, O_RDONLY);
+	if(fd < 0)
+	{
+		FAULT("OS_CreateProcessFromFile: could not open '%s'", exec_path);
+		return FILE_ERROR;
+	}
+	
+	void * program = ramdisk_GetDataPtr(fd, NULL);
+	if(!program)
+	{
+		FAULT("OS_CreateProcessFromFile: could not read '%s'", exec_path);
+		return FILE_ERROR;		
+	}
+	
+	// Load the executable file to memory
+	void * start_address = NULL;
+	OS_Error status = elf_load(program, &start_address);
+	if(status == SUCCESS)
+	{
+		status = OS_CreateProcess(process, process_name, start_address, pdata);
+	}
 
-
-	return SUCCESS;	
+	return status;	
 }

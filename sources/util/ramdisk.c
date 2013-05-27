@@ -25,6 +25,10 @@ static INT32 getToken(INT8 * dst, const INT8 * path);
 static FS_RamdiskHdr * ramdisk = NULL;
 static FS_FileHdr * root = NULL;
 
+// Static functions
+static BOOL ramdisk_assert_open(INT32 fd);
+static INT32 getToken(INT8 * dst, const INT8 * path);
+
 OS_Error ramdisk_init(void * addr)
 {
 	if(!addr) {
@@ -72,7 +76,7 @@ OS_Error ramdisk_init(void * addr)
 
 // Given the path, open the file node representing the given path
 // The path could be either a file or a folder
-INT32 ramdisk_open(INT8 * filepath, INT32 flags)
+INT32 ramdisk_open(const INT8 * filepath, INT32 flags)
 {
 	FS_FileHdr *cur_dir;
 	char name[MAX_FILE_NAME_SIZE];
@@ -177,7 +181,7 @@ INT32 ramdisk_open(INT8 * filepath, INT32 flags)
 	return res;
 }
 
-BOOL ramdisk_assert_open(INT32 fd)
+static BOOL ramdisk_assert_open(INT32 fd)
 {
 	// Validate the inputs
 	if(fd < 0 || fd >= 32)
@@ -291,16 +295,22 @@ INT32 ramdisk_GetFileSize(INT32 fd)
 // as a single contiguous block, we can return pointer to this data block.
 // If the file data is not contiguous, then this function will not work
 //////////////////////////////////////////////////////////////////////////////////////////
-void * ramdisk_GetDataPtr(INT32 fd)
+void * ramdisk_GetDataPtr(INT32 fd, UINT32 * length)
 {
 	// Assert that the file is actually open
 	if(!ramdisk_assert_open(fd))
 	{
-		return -1;
+		return NULL;
 	}
 
 	// Get a pointer to file structure
 	FILE * fp = &g_current_process->open_files[fd];
+
+	// Update length 
+	if(length)
+	{
+		*length = fp->length;
+	}
 	
 	return fp->data;
 }

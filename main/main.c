@@ -9,6 +9,8 @@
 
 #include "os_core.h"
 
+OS_Process test_proc;
+
 ///////////////////////////////////////////////////////////////////////////////
 // main function for the Kernel
 // Note: This is the place where we should create all the required processes
@@ -17,12 +19,11 @@
 // Use - OS_CreatePeriodicTask / OS_CreateAperiodicTask to create kernel tasks
 //			that runs in the kernel space
 ///////////////////////////////////////////////////////////////////////////////
-
 int main(int argc, char *argv[])
 {
 	SyslogStr("Calling - ",  __func__);
 	
-//	OS_CreateProcess(&test_proc, "test_os", process_entry, NULL);
+	OS_CreateProcessFromFile(&test_proc, "test_os", "/applications/bin/test_os.elf", NULL);
 	
 	OS_Start();
 	

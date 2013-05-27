@@ -21,9 +21,7 @@
 void MMU_CleanDCache(void);
 void MMU_flushICache(void);
 
-OS_Error elf_load(void * elfdata);
-
-OS_Error elf_load(void * elfdata)
+OS_Error elf_load(void * elfdata, void ** start_address)
 {	
 	INT32 i;
 	
@@ -84,6 +82,11 @@ OS_Error elf_load(void * elfdata)
 	// Invalidate the Instruction Cache
 	_OS_flushICache();
 
+	// Update the start address
+	if(start_address) {
+		*start_address = elf_hdr->e_entry;
+	}
+	
 	// The ELF file was loaded successfully
 	return SUCCESS;
 }
