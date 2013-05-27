@@ -25,7 +25,5 @@ int main(int argc, char *argv[])
 	
 	OS_CreateProcessFromFile(&test_proc, "test_os", "/applications/bin/test_os.elf", NULL);
 	
-	OS_Start();
-	
 	return 0;
 }

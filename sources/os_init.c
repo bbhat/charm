@@ -37,7 +37,7 @@ void _OS_Init()
 	// Call system initialization routine
 	_OS_SystemInit();
 	
-	if(ramdisk_init((void *)__ramdisk_start__) != SUCCESS) {
+	if(ramdisk_init((void *)&__ramdisk_start__) != SUCCESS) {
 		panic("ramdisk_init failed\n");
 	}
 	
@@ -64,8 +64,8 @@ void _OS_Init()
 	// Initialize the Kernel process
 	OS_CreateProcess(&g_kernel_process, "kernel", &kernel_process_entry, NULL);
 
-	// Calling main which will start the scheduling by calling OS_Start
-	main(1, " chARM");
+	// This will start the scheuling
+	OS_Start();
 	
 	// The main function should never return if it called OS_Start. 
 	// If it does not call we may return from main.

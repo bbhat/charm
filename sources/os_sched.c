@@ -141,6 +141,11 @@ void kernel_process_entry(void * pdata)
 			&g_stat_task, 
 			_OS_StatisticsFn, 0);
 #endif
+
+	// Call main from the kernel process which will create more processes
+	// Note that main() should return in order for normal scheduling to start
+	// This is a difference in the other OS and this OS.
+	main(1, " chARM");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
