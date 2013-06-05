@@ -154,17 +154,21 @@ INT32 ramdisk_open(const INT8 * filepath, INT32 flags)
 				break;
 			}
 		}
+		// The filepath parsing is not complete yet. The 'file' should be a folder
 		else
 		{
-			// The filepath parsing is not complete yet. The 'file' should be a folder
-			if((file->flags & F_DIR_MASK) != F_DIR) 
+			if((file->flags & F_DIR_MASK) == F_DIR)
+			{
+				// Do Nothing
+			}
+			else
 			{
 				FAULT("ramdisk_open: '%s' in file path is not a folder\n", name);
 				break;
-			}
-			
-			cur_dir = file;			
-		}		
+			}		
+		}
+		
+		cur_dir = file;
 	}	
 	
 	if(!search_file) return -1;	// File not found

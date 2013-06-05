@@ -18,6 +18,7 @@
 #define RAMDISK_IDENT_STRING	("chARMrd")
 #define RAMDISK_IDENT_LENGTH	8
 
+#define MAX_FILE_NAME_SIZE		40
 
 // The ramdisk starts with the following structure
 typedef struct

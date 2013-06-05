@@ -50,6 +50,8 @@ typedef struct Node_File
 // Global ramdisk object
 Node_Ramdisk ramdisk;
 
+static UINT32 pad_bytes = 0;
+
 typedef enum {
 	CMD_INVALID,
 	CMD_ADD_FILE,
@@ -298,8 +300,10 @@ int fixFileOffsets(Node_File *file, int * offset)
 	}
 	else
 	{
-		// This is not a folder. Create space for the file data
-		*offset += file->fileHdr.length;
+		// This is not a folder. Create space for the file data.
+		// Also make sure that the resulting offset is 4 byte aligned.
+		// Use padding if necessary
+		*offset += (file->fileHdr.length + 3) & (~0x3);
 	}
 	
 	return 0;
@@ -374,11 +378,22 @@ int writeFileNode(int rdfile, Node_File *file)
 	}
 	else if(file->fileHdr.length > 0)
 	{
+		// Write File data
 		if(write(rdfile, file->data, file->fileHdr.length) < 0)
 		{
 			fprintf(stderr,"ERROR: file write error %s: %s\n", file->fileHdr.fileName, strerror(errno));
 			return -1;
-		}	
+		}
+		
+		// If the file length is not 4 byte aligned, then pad using extra bytes
+		if(file->fileHdr.length & 0x3) 
+		{
+			if(write(rdfile, &pad_bytes, 4 - (file->fileHdr.length & 0x3)) < 0)
+			{
+				fprintf(stderr,"ERROR: file write error while padding %s: %s\n", file->fileHdr.fileName, strerror(errno));
+				return -1;
+			}
+		}
 	}
 	
 	return 0;
@@ -839,7 +854,7 @@ int ramdiskRecAddFolder(Node_Ramdisk *rd, Node_File *pwd)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-// This function recursively deconstructsa ramdisk into files & folders.
+// This function recursively deconstructs a ramdisk into files & folders.
 // It is important that we should already be in the directory where we want to extract the ramdisk
 /////////////////////////////////////////////////////////////////////////////////////////////////
 int ramdiskDeconstruct(Node_Ramdisk *rd, Node_File *pwd)
