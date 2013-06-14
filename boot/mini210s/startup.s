@@ -8,14 +8,20 @@
 //
 //-------------------------------------------------------------------------------
 
-	//				Memory Map
-	//	Exception Vector Table		0xD003_7400
-	//	Global Variable				0xD003_7480
-	//	Signature					0xD003_7580
-	//	SVC Stack					0xD003_7780
-	//	IRQ Stack					0xD003_7D80
-	//	BL1 Code Begin				0xD002_0010
-	//	SRAM Begin					0xD002_0000
+//				Memory Map
+//	Exception Vector Table		0xD003_7400
+//	Global Variable				0xD003_7480
+//	Signature					0xD003_7580
+//	SVC Stack					0xD003_7780
+//	IRQ Stack					0xD003_7D80
+//	BL1 Code Begin				0xD002_0010
+//	SRAM Begin					0xD002_0000
+
+#define REG_LED	0xE0200284
+#define LED0	1
+#define LED1	2
+#define LED2	4
+#define LED3	8
 
 //-------------------------------------------------------------------------------
 // Pre-defined constants
@@ -31,7 +37,7 @@
 	INTMASK     = 0xc0
 
 	#include "s5pv210.h"
-	
+		
 	.global _start
 _start:
 
@@ -42,11 +48,19 @@ _start:
 	mov	r1, #0
 	str	r1, [r0]
 
+	// Reset all LEDs	
+	mov r0, #0
+	bl set_led
+
 	// Initialize SVC Stack
 	bl stack_init
 				
 	// Init SDRAM
 	bl SDRAM_init						
+
+	// Set LED0 to indicate that this step in the boot is over	
+	mov r0, =LED0
+	bl set_led
 	
 halt:
 	// Wait for the debugger to connect.
@@ -68,6 +82,17 @@ stack_init:
    ldr      sp, =__STACK_SVC_END__
 
    mov      pc, lr
+
+//---------------------------------------------------------------------
+//  Initialize Stack
+//	r0 - should have leds to be set or reset
+//---------------------------------------------------------------------
+set_led:
+
+	ldr r1, =REG_LED
+	str r0, [r1]
+	
+	mov      pc, lr
 	
 //------------------------------------------------------------------------------
 // The location for stacks
