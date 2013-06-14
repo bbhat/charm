@@ -1,7 +1,7 @@
 /********************************************************************************
 	
 						Copyright 2012-2013 xxxxxxx, xxxxxxx
-	File:	memmap.ld
+	File:	boot.ld
 	Author:	Bala B. (bhat.balasubramanya@gmail.com)
 	Description: Linker script for the boot program
 	
@@ -38,7 +38,6 @@ MEMORY
 SECTIONS
 {	
 	.text : {
-		start.o
 		* (.text)
 	}	> CODE
     		

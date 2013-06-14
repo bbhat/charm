@@ -1,12 +1,12 @@
-@------------------------------------------------------------------------------
-@
-@						Copyright 2012-2013 xxxxxxx, xxxxxxx
-@	File:	start.S
-@	Author: Bala B. (bhat.balasubramanya@gmail.com)
-@	Description: Boot for Mini210s target. Current version simply initializes
-@		the hardware and waits for debugger to connect.
-@
-@-------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+//						Copyright 2012-2013 xxxxxxx, xxxxxxx
+//	File:	start.S
+//	Author: Bala B. (bhat.balasubramanya//gmail.com)
+//	Description: Boot for Mini210s target. Current version simply initializes
+//		the hardware and waits for debugger to connect.
+//
+//-------------------------------------------------------------------------------
 
 	//				Memory Map
 	//	Exception Vector Table		0xD003_7400
@@ -17,9 +17,9 @@
 	//	BL1 Code Begin				0xD002_0010
 	//	SRAM Begin					0xD002_0000
 
-@-------------------------------------------------------------------------------
-@ Pre-defined constants
-@-------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------
+// Pre-defined constants
+//-------------------------------------------------------------------------------
 	USERMODE    = 0x10
 	FIQMODE     = 0x11
 	IRQMODE     = 0x12
@@ -30,6 +30,8 @@
 	MODEMASK    = 0x1f
 	INTMASK     = 0xc0
 
+	#include "s5pv210.h"
+	
 	.global _start
 _start:
 
@@ -54,22 +56,22 @@ halt:
 
 	b halt
 	
-@---------------------------------------------------------------------
-@  Initialize Stack
-@---------------------------------------------------------------------
+//---------------------------------------------------------------------
+//  Initialize Stack
+//---------------------------------------------------------------------
 stack_init:
    mrs      r0, cpsr
    bic      r0, r0, #MODEMASK
 
    orr      r1, r0, #SVCMODE
-   msr      cpsr_c, r1                      @ Supervisor Mode
+   msr      cpsr_c, r1                      // Supervisor Mode
    ldr      sp, =__STACK_SVC_END__
 
    mov      pc, lr
 	
-@------------------------------------------------------------------------------
-@ The location for stacks
-@------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// The location for stacks
+//------------------------------------------------------------------------------
 
 	.section .stack
 	

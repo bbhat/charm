@@ -1,18 +1,18 @@
-@------------------------------------------------------------------------------
-@
-@						Copyright 2012-2013 xxxxxxx, xxxxxxx
-@	File:	VectorZero.s
-@	Author: Bala B. (bhat.balasubramanya@gmail.com)
-@	Description: Vector table residing in NOR Flash at address 0
-@	This simply redirects the interrupt to Vector table in SDRAM
-@
-@-------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+//
+//						Copyright 2012-2013 xxxxxxx, xxxxxxx
+//	File:	VectorZero.s
+//	Author: Bala B. (bhat.balasubramanya//gmail.com)
+//	Description: Vector table residing in NOR Flash at address 0
+//	This simply redirects the interrupt to Vector table in SDRAM
+//
+//-------------------------------------------------------------------------------
 
-   .text       @ AREA ???, CODE, READONLY
-   .code 32    @ CODE32
-@---------------------------------------------------------------------
-@  Interrupt Vectors
-@---------------------------------------------------------------------
+   .text       // AREA ???, CODE, READONLY
+   .code 32    // CODE32
+//---------------------------------------------------------------------
+//  Interrupt Vectors
+//---------------------------------------------------------------------
 	.global _start
 	
 _start:
@@ -25,7 +25,7 @@ _start:
 	ldr	pc, [pc, #0x18]
 	ldr	pc, [pc, #0x18]
 	
-	@ Jump to interrupt handlers residing in DRAM
+	// Jump to interrupt handlers residing in DRAM
 	
 	.word	0x30000000
 	.word	0x30000020
