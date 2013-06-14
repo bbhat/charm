@@ -38,6 +38,7 @@ MEMORY
 SECTIONS
 {	
 	.text : {
+		* (.startup)
 		* (.text)
 	}	> CODE
     		

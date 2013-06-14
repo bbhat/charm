@@ -18,6 +18,7 @@ MEMORY
 SECTIONS
 {	
 	.text : {
+		* (.startup)
 		* (.text)
 	}	> ROM    		
 }

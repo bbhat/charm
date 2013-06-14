@@ -18,10 +18,10 @@
 //	SRAM Begin					0xD002_0000
 
 #define REG_LED	0xE0200284
-#define LED0	1
-#define LED1	2
-#define LED2	4
-#define LED3	8
+#define LED0	0xe
+#define LED1	0xd
+#define LED2	0xb
+#define LED3	0x7
 
 //-------------------------------------------------------------------------------
 // Pre-defined constants
@@ -38,10 +38,10 @@
 
 	#include "s5pv210.h"
 		
+	.section	.startup
+
 	.global _start
 _start:
-
-	.section	.text
 
 	// Disable the WDT
 	ldr	r0, =ELFIN_WATCHDOG_BASE			
@@ -59,16 +59,17 @@ _start:
 	bl SDRAM_init						
 
 	// Set LED0 to indicate that this step in the boot is over	
-	mov r0, =LED0
+	ldr r0, =LED0
 	bl set_led
 	
-halt:
+halt_cpu:
 	// Wait for the debugger to connect.
 	// The current version of boot just prepares the target for debugging.
 	// We need a full fledged Boot to be implemented later.
 	// Issue #20
-
-	b halt
+	b halt_cpu
+	
+	.section	.text
 	
 //---------------------------------------------------------------------
 //  Initialize Stack
