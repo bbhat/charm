@@ -2,9 +2,8 @@
 @
 @						Copyright 2012 xxxxxxx, xxxxxxx
 @	File:	startup.s
-@	Author: Adapted and modified from somewhere by
-@          Bala B. (bhat.balasubramanya@gmail.com)
-@	Description: CPU Initialization code
+@	Author: Bala B. (bhat.balasubramanya@gmail.com)
+@	Description: Processor Initialization code
 @
 @-------------------------------------------------------------------------------
 
@@ -131,8 +130,8 @@ R1_iA		=	(1<<31)
 R1_nF		=	(1<<30)
 
 
-   	.section .text.startup      @ AREA ???, CODE, READONLY
-   	.code 32             		@ CODE32
+   	.section .text.startup
+   	.code 32
 
    	.global _OS_Init
 	.global _start	

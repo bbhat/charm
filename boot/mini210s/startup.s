@@ -8,6 +8,9 @@
 //
 //-------------------------------------------------------------------------------
 
+#include "s5pv210.h"
+
+//-------------------------------------------------------------------------------
 //				Memory Map
 //	Exception Vector Table		0xD003_7400
 //	Global Variable				0xD003_7480
@@ -16,6 +19,7 @@
 //	IRQ Stack					0xD003_7D80
 //	BL1 Code Begin				0xD002_0010
 //	SRAM Begin					0xD002_0000
+//-------------------------------------------------------------------------------
 
 #define REG_LED	0xE0200284
 #define LED0	0xe
@@ -36,8 +40,6 @@
 	MODEMASK    = 0x1f
 	INTMASK     = 0xc0
 
-	#include "s5pv210.h"
-		
 	.section	.startup
 
 	.global _start

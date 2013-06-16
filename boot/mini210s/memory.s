@@ -9,17 +9,22 @@
 
 // MemControl	BL=4, 1Chip, DDR2 Type, dynamic self refresh, force precharge, dynamic power down off
 #define DMC0_MEMCONTROL			0x00202400
+
 // MemConfig0	256MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
 #define DMC0_MEMCONFIG_0		0x20F00313	
+
 // MemConfig1
 #define DMC0_MEMCONFIG_1		0x00F00313	
 
 // TimingAref   7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4E)
 #define DMC0_TIMINGA_REF        0x00000618
+
 // TimingRow    for 200MHz
 #define DMC0_TIMING_ROW         0x2B34438A
+
 // TimingData   CL=3
 #define DMC0_TIMING_DATA        0x24240000
+
 // TimingPower
 #define DMC0_TIMING_PWR         0x0BDC0343      
 
@@ -228,4 +233,5 @@ find_lock_val:
 	ldr	r1, =0x00202400					
 	str	r1, [r0, #DMC_MEMCONTROL]
 
+	// Return to the caller
 	mov	pc, lr
