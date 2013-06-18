@@ -1,6 +1,6 @@
 chARM 
 =====
-is a Realtime Operating System developed from scratch that runs on ARM platform. chARM implements Earliest Deadline First (EDF) scheduling algorithm. Its periodic threading model allows creating tasks with arbitrary period, budget, deadline and phase having granularity of few microseconds. It attempts to reduce the context switch time to absolute minimum when periodic tasks finish before their deadline by not storing all registers. chARM currently runs on TQ2440 development board that has Samsung's S3C2440 SOC. Eventually I intend to add support for MPU and MMU.
+chARM is a Realtime Operating System developed from scratch that runs on ARM platform. chARM implements Earliest Deadline First (EDF) scheduling algorithm. Its periodic threading model allows creating tasks with arbitrary period, budget, deadline and phase having granularity and accuracy of few microseconds. chARM currently runs on TQ2440 development board that has Samsung's S3C2440 SOC. It is also currently being ported to a more powerful platform called Mini210s which has Samsung S5PV210 processor that runs upto 1 GHz. Each application in chARM is compiled independently and loaded from the ramdisk. Applications have their own address space and special care is taken to reduce switching b/w applications to be least expensive. Work is in progress to add MMU support.
 
 Main Features of the RTOS
 =========================
