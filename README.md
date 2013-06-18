@@ -19,10 +19,22 @@ Main Features of the RTOS
 
 * It configures the timer tick at a very high resolution (1.8963 uSec) to get good granularity. It smartly works around the resulting issue of smaller maximum interval while using 16 bit timers.
 
-* Because the RTOS programs the main OS timer each time, the is a possibility of very slow drift. In order to eliminate this drift completely, it optionally makes use of a second fixed interval timer which triggers every 1 second. At each 1 second interval, the main OS clock re-synchronizes itself to make the drift zero.
-
-* The OS context switch event interrupts are measured to take < 20 micro seconds. The actual time taken by the OS timer interrupt depends on the number of ready tasks at a given time.
+* Because the RTOS programs the main OS timer each time, the is a possibility of very slow drift. In order to eliminate this drift completely, it optionally makes use of an RTC timer timer which triggers every 10ms (configurable). At each resync interval, the main OS clock re-synchronizes itself to make the drift to be absolute zero.
 
 * Multiple tasks with periods as much as 10,000 Hz are tested to be working fine with zero drift.
 
 * The RTOS supports zero context store for periodic tasks which means for those periodic tasks which complete before its deadline / budget expiry it stores minimal context information. This is possible because each periodic task does not need to retain its registers between two periods.
+
+* The RTOS is compiled separately from all applications. This helps to keep the address spaces separetely for enhanced security.
+
+* Usually when each applications have their own address space, switching between tasks of different applications incur high cost which includes flushing instruction / data caches / TLBs etc. This time can run into few milliseconds. But chARM does this in a different way to provide least context switch time. Basically the total of 4GB address space is allocated to different applications & the kernel at the design time. Each application has non-overlapping address range allocated to it from the total 4GB address space. The page tables are setup in such a way that each application can access only its address range. This implementation means, we don't have to flush the caches or the TLBs. The total of 4GB is not a limiting factor in Embedded systems !
+
+* The binaries corresponding to all applications, other data files are combined together to prepare a ramdisk file. This file is loaded when the RTOS boots up. This provides a read-only file system in chARM at run time.
+
+* MMU support is being added. This enables paging and memory protection.
+
+* Eventually I intend to add support for graphics using OpenGL
+
+* Currently this RTOS runs on Mini210s (work in progress) & TQ2440.
+
+* The git repository has all the necessary scripts to enable connecting and debugging using JLink & OpenOCD
