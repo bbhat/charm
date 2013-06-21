@@ -141,42 +141,6 @@ _init_stacks:
    .LTORG   
 
 //---------------------------------------------------------------------
-//  Function to initialize PLL
-//---------------------------------------------------------------------
-InitPLL:
-
-    // To reduce PLL lock time, adjust the LOCKTIME register.
-    ldr		r0,=LOCKTIME
-    ldr		r1,=0xffffff
-    str		r1,[r0]
-
-    // Setting CAMDIVN to zero
-    ldr		r0,=CAMDIVN
-    mov		r1,#0
-    str		r1,[r0]
-
-    // Setting value Fclk:Hclk:Pclk
-    ldr		r0,=CLKDIVN
-    ldr		r1,=CLKDIV_VAL
-    str		r1,[r0]
-
-	// If HDIVN is not 0, the CPU bus mode has to be changed from the fast bus mode to the asynchronous
-	// bus mode using following instructions(S3C2440 does not support synchronous bus mode).
-	mrc 	p15,0,r0,c1,c0,0
-	orr 	r0,r0,#(R1_nF | R1_iA)
-	mcr 	p15,0,r0,c1,c0,0
-
-    // Configure MPLL
-    ldr		r0,=MPLLCON
-    ldr 	r1,=((U_MDIV<<12) | (U_PDIV<<4) | (U_SDIV))		// Fin=12.00MHz	Fout=405.00 MHz
-    str		r1,[r0]
-
-	mov   	pc, lr
-	
-	.LTORG  
-
-
-//---------------------------------------------------------------------
 //  Initialize Data Region
 //---------------------------------------------------------------------
 _init_bss:
@@ -271,45 +235,6 @@ HandleIRQ:      				// IRQ Exception
 HandleFIQ:      				// FIQ Exception
 	b		.
 	.space  28		
-
-// IRQ Interrupts
-
-	.global		_IRQ_TABLE_
-_IRQ_TABLE_:
-
-HandleEINT0:	mov    pc, lr
-HandleEINT1:	mov    pc, lr
-HandleEINT2:	mov    pc, lr
-HandleEINT3:	mov    pc, lr
-HandleEINT4_7:	mov    pc, lr
-HandleEINT8_23:	mov    pc, lr
-HandleCAM:		mov    pc, lr		// Added for 2440.
-HandleBATFLT:	mov    pc, lr
-HandleTICK:		mov    pc, lr
-HandleWDT:		mov    pc, lr
-HandleTIMER0: 	mov    pc, lr
-HandleTIMER1: 	mov    pc, lr
-HandleTIMER2: 	mov    pc, lr
-HandleTIMER3: 	mov    pc, lr
-HandleTIMER4: 	mov    pc, lr
-HandleUART2:  	mov    pc, lr
-HandleLCD: 		mov    pc, lr
-HandleDMA0:		mov    pc, lr
-HandleDMA1:		mov    pc, lr
-HandleDMA2:		mov    pc, lr
-HandleDMA3:		mov    pc, lr
-HandleMMC:		mov    pc, lr
-HandleSPI0:		mov    pc, lr
-HandleUART1:	mov    pc, lr
-HandleNFCON:	mov    pc, lr		// Added for 2440.
-HandleUSBD:		mov    pc, lr
-HandleUSBH:		mov    pc, lr
-HandleIIC:		mov    pc, lr
-HandleUART0: 	mov    pc, lr
-HandleSPI1: 	mov    pc, lr
-HandleRTC: 		mov    pc, lr
-HandleADC: 		mov    pc, lr
-VectorTableEnd:	mov    pc, lr
 
 
 //------------------------------------------------------------------------------
