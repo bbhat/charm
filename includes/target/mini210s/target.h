@@ -3,7 +3,7 @@
 //						Copyright 2013 xxxxxxx, xxxxxxx
 //	File: target.h
 //	Author:	Bala B. (bhat.balasubramanya@gmail.com)
-//	Description: Board specific functions header file for TQ2440
+//	Description: Board specific functions header file for mini210s
 //	
 ///////////////////////////////////////////////////////////////////////////////
 

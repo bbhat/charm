@@ -7,8 +7,8 @@
 @
 @-------------------------------------------------------------------------------
 
-SP_OFFSET_IN_TCB		=	12
-OWNER_OFFSET_IN_TCB		=	16
+SP_OFFSET_IN_TCB			=	12
+OWNER_OFFSET_IN_TCB	=	16
 
 SOLICITED_STACK_TYPE	=	1
 INTERRUPT_STACK_TYPE	=	2

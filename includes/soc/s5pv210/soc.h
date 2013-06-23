@@ -120,15 +120,15 @@
 #define ELFIN_GPIO_BASE			0xE0200000
 
 
-#define GPA0CON_OFFSET 			0x000
+#define GPA0CON_OFFSET			0x000
 #define GPA0DAT_OFFSET	 		0x004
 #define GPA0PUD_OFFSET 			0x008
 #define GPA0DRV_SR_OFFSET	 	0x00C
 #define GPA0CONPDN_OFFSET 		0x010
 #define GPA0PUDPDN_OFFSET 		0x014
 
-#define GPA1CON_OFFSET 			0x020
-#define GPA1DAT_OFFSET 			0x024
+#define GPA1CON_OFFSET 		0x020
+#define GPA1DAT_OFFSET 		0x024
 #define GPA1PUD_OFFSET 			0x028
 #define GPA1DRV_SR_OFFSET 		0x02C
 #define GPA1CONPDN_OFFSET 		0x030
@@ -324,6 +324,8 @@
 #define GPJ4CONPDN_OFFSET 		0x2D0
 #define GPJ4PUDPDN_OFFSET 		0x2D4
 
+#define  rGPJ2CON		__REG(ELFIN_GPIO_BASE + GPJ2CON_OFFSET))
+#define  rGPJ2DAT		__REG(ELFIN_GPIO_BASE + GPJ2DAT_OFFSET))
 
 /*
  * Interrupt
@@ -404,24 +406,24 @@
  */
 #define ELFIN_TIMER_BASE		0xE2500000
 
-#define TCFG0_REG			__REG(0xE2500000)
-#define TCFG1_REG			__REG(0xE2500004)
-#define TCON_REG			__REG(0xE2500008)
-#define TCNTB0_REG			__REG(0xE250000c)
-#define TCMPB0_REG			__REG(0xE2500010)
-#define TCNTO0_REG			__REG(0xE2500014)
-#define TCNTB1_REG			__REG(0xE2500018)
-#define TCMPB1_REG			__REG(0xE250001c)
-#define TCNTO1_REG			__REG(0xE2500020)
-#define TCNTB2_REG			__REG(0xE2500024)
-#define TCMPB2_REG			__REG(0xE2500028)
-#define TCNTO2_REG			__REG(0xE250002c)
-#define TCNTB3_REG			__REG(0xE2500030)
-#define TCMPB3_REG			__REG(0xE2500034)
-#define TCNTO3_REG			__REG(0xE2500038)
-#define TCNTB4_REG			__REG(0xE250003c)
-#define TCNTO4_REG			__REG(0xE2500040)
-#define TINT_CSTAT			__REG(0xE2500044)
+#define rTCFG0_REG			__REG(0xE2500000)
+#define rTCFG1_REG			__REG(0xE2500004)
+#define rTCON_REG			__REG(0xE2500008)
+#define rTCNTB0_REG			__REG(0xE250000c)
+#define rTCMPB0_REG			__REG(0xE2500010)
+#define rTCNTO0_REG			__REG(0xE2500014)
+#define rTCNTB1_REG			__REG(0xE2500018)
+#define rTCMPB1_REG			__REG(0xE250001c)
+#define rTCNTO1_REG			__REG(0xE2500020)
+#define rTCNTB2_REG			__REG(0xE2500024)
+#define rTCMPB2_REG			__REG(0xE2500028)
+#define rTCNTO2_REG			__REG(0xE250002c)
+#define rTCNTB3_REG			__REG(0xE2500030)
+#define rTCMPB3_REG			__REG(0xE2500034)
+#define rTCNTO3_REG			__REG(0xE2500038)
+#define rTCNTB4_REG			__REG(0xE250003c)
+#define rTCNTO4_REG			__REG(0xE2500040)
+#define rTINT_CSTAT			__REG(0xE2500044)
 
 /* Fields */
 #define fTCFG0_DZONE			Fld(8,16)       /* the dead zone length (= timer 0) */
@@ -449,6 +451,7 @@
 #define TCON_3_ONOFF			(1 << 16)       /* 0: Stop, 1: start Timer 3 */
 #define TIMER3_ON			(TCON_3_ONOFF*1)
 #define TIMER3_OFF			(FClrBit(TCON, TCON_3_ONOFF))
+
 /* macros */
 #define GET_PRESCALE_TIMER4(x)		FExtr((x), fTCFG0_PRE1)
 #define GET_DIVIDER_TIMER4(x)		FExtr((x), fTCFG1_MUX4)
@@ -489,6 +492,31 @@
 #define MP07CONPDN_OFFSET               0x3B0
 #define MP07PUDPDN_OFFSET               0x3B4
 
+/*
+ * RTC
+ */
+#define RTC_BASE		(0xE2800000)
+
+#define	 rINTP      		( *((volatile unsigned long *)(RTC_BASE + 0x30)) )
+#define	 rRTCCON    	( *((volatile unsigned long *)(RTC_BASE + 0x40)) )
+#define	 rTICCNT    	( *((volatile unsigned long *)(RTC_BASE + 0x44)) )
+#define	 rRTCALM    	( *((volatile unsigned long *)(RTC_BASE + 0x50)) )
+#define	 rALMSEC    	( *((volatile unsigned long *)(RTC_BASE + 0x54)) )
+#define	 rALMMIN    	( *((volatile unsigned long *)(RTC_BASE + 0x58)) )
+#define	 rALMHOUR  	( *((volatile unsigned long *)(RTC_BASE + 0x5c)) )
+#define	 rALMDATE    	( *((volatile unsigned long *)(RTC_BASE + 0x60)) )
+#define	 rALMMON    	( *((volatile unsigned long *)(RTC_BASE + 0x64)) )
+#define	 rALMYEAR  	( *((volatile unsigned long *)(RTC_BASE + 0x68)) )
+#define	 rRTCRST     	( *((volatile unsigned long *)(RTC_BASE + 0x6c)) )
+#define	 rBCDSEC    	( *((volatile unsigned long *)(RTC_BASE + 0x70)) )
+#define	 rBCDMIN   	( *((volatile unsigned long *)(RTC_BASE + 0x74)) )
+#define	 rBCDHOUR 	( *((volatile unsigned long *)(RTC_BASE + 0x78)) )
+#define	 rBCDDATE    ( *((volatile unsigned long *)(RTC_BASE + 0x7c)) )
+#define	 rBCDDAY     	( *((volatile unsigned long *)(RTC_BASE + 0x80)) )
+#define	 rBCDMON     ( *((volatile unsigned long *)(RTC_BASE + 0x84)) )
+#define	 rBCDYEAR    ( *((volatile unsigned long *)(RTC_BASE + 0x88)) )
+#define	 rCURTICCNT 	( *((volatile unsigned long *)(RTC_BASE + 0x90)) )
+#define	 rRTCLVD   	( *((volatile unsigned long *)(RTC_BASE + 0x94)) )
 
 /*
  * Nand flash controller

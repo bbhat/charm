@@ -12,15 +12,29 @@
 
 #include "mmu.h"
 
-// ARM920T has 16KB Instruction and Data Caches
-#define ICACHE_SIZE	0x4000
-#define DCACHE_SIZE	0x4000
+#if defined(SOC_S5PV210)
 
-#define CACHE_LINE_SIZE	32
+	// S5PV210 has 32KB Instruction and Data Caches, 512 KB Unified L2 cache
+	#define ICACHE_SIZE				0x8000
+	#define DCACHE_SIZE			0x8000
+	#define CACHE_LINE_SIZE		32
 
-// If the amount of memory to flush is >= half the cache size, we will flush the whole cache
-// Or else we will flush individual addresses
-#define WHOLE_CACHE_OP_THRESHOLD	0x2000
+	// If the amount of memory to flush is >= half the cache size, we will flush the whole cache
+	// Or else we will flush individual addresses
+	#define WHOLE_CACHE_OP_THRESHOLD		0x4000
+
+#elseif defined(SOC_ARM920T)
+
+	// ARM920T has 16KB Instruction and Data Caches
+	#define ICACHE_SIZE				0x4000
+	#define DCACHE_SIZE			0x4000
+	#define CACHE_LINE_SIZE		32
+
+	// If the amount of memory to flush is >= half the cache size, we will flush the whole cache
+	// Or else we will flush individual addresses
+	#define WHOLE_CACHE_OP_THRESHOLD		0x2000
+
+#endif
 
 #define _OS_EnableICache() MMU_EnableICache()
 #define _OS_DisableICache() MMU_DisableICache()

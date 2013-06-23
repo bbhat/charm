@@ -10,39 +10,69 @@
 #ifndef _OS_CONFIG_H
 #define _OS_CONFIG_H
 
-#define FIN 	(12000000)				// 12MHz Crystal
+#if defined(TARGET_TQ2440)
 
-#define FCLK (405000000)				// Main Processor clock	405 MHz
-#define HCLK (FCLK/3)					// AHB Clock	135 MHz
-#define PCLK (HCLK/2)					// APB Clock	67.5 MHz
-#define UCLK (48000000)					// USB Clock
+	#define FIN 	(12000000)				// 12MHz Crystal
 
-#define	TIMER_PRESCALAR_0	(0x3f)		// PCLK/64
-#define	TIMER0_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
-#define	TIMER1_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
-#define	TIMER0_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
-#define	TIMER1_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
+	#define FCLK (405000000)				// Main Processor clock	405 MHz
+	#define HCLK (FCLK/3)					// AHB Clock	135 MHz
+	#define PCLK (HCLK/2)					// APB Clock	67.5 MHz
+	#define UCLK (48000000)					// USB Clock
 
-// (65535 * 1000000) / TIMER0_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
-// This way there will be at least one interrupt every 100ms
-#define	MAX_TIMER0_INTERVAL_uS		100000		
+	#define	TIMER_PRESCALAR_0	(0x3f)		// PCLK/64
+	#define	TIMER0_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
+	#define	TIMER1_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
+	#define	TIMER0_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
+	#define	TIMER1_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
 
-// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 120ms for this.
-#define	MAX_TIMER1_INTERVAL_uS		120000		
+	// (65535 * 1000000) / TIMER0_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
+	// This way there will be at least one interrupt every 100ms
+	#define	MAX_TIMER0_INTERVAL_uS		100000		
+
+	// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 120ms for this.
+	#define	MAX_TIMER1_INTERVAL_uS		120000
+
+#elif defined(TARGET_MINI210S)
+
+	#define FIN 	(24000000)				// 24MHz Crystal
+
+	#define FCLK (1000000000)				// Main Processor clock	1GHz MHz
+	#define HCLK (FCLK/3)					// AHB Clock	135 MHz
+	#define PCLK (HCLK/2)					// APB Clock	67.5 MHz
+
+	#define	TIMER_PRESCALAR_0	(0x3f)		// PCLK/64
+	#define	TIMER0_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
+	#define	TIMER1_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
+	#define	TIMER0_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
+	#define	TIMER1_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
+
+	// (65535 * 1000000) / TIMER0_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
+	// This way there will be at least one interrupt every 100ms
+	#define	MAX_TIMER0_INTERVAL_uS		100000		
+
+	// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 120ms for this.
+	#define	MAX_TIMER1_INTERVAL_uS		120000
+
+#endif
+
+// Drivers to include
+#define ENABLE_RTC						1
+#define ENABLE_RTC_ALARM			1
 
 // Instruction and Data Cache related
+#if defined(SOC_S3C2440)
 #define ENABLE_INSTRUCTION_CACHE	1
-#define ENABLE_DATA_CACHE			1
+#define ENABLE_DATA_CACHE				1
+#else
+#define ENABLE_INSTRUCTION_CACHE	0
+#define ENABLE_DATA_CACHE				0
+#endif
 
 // Process related
 #define OS_PROCESS_NAME_SIZE		16
 
 // MMU Related
-#define ENABLE_MMU					1
-
-// Drivers to include
-#define ENABLE_RTC					1
-#define ENABLE_RTC_ALARM			1
+#define ENABLE_MMU				1
 
 // Since the OS timer is not a fixed interval timer, there can be a very small drift
 // over a long period of time. The RTOS actually calculates the time spent in the 
@@ -72,7 +102,7 @@
 #endif
 
 // Task related configuration parameters
-#define MIN_PRIORITY				255
+#define MIN_PRIORITY					255
 #define OS_IDLE_TASK_STACK_SIZE		0x40		// In Words
 #define OS_STAT_TASK_STACK_SIZE		0x40		// In Words
 #define STAT_TASK_PERIOD			5000000		// 5 sec
@@ -86,8 +116,8 @@
 #define OS_FIRST_SCHED_DELAY		10000		// 10 ms
 
 // Following values depend a lot on the timer resolution which is not very good in this case
-#define TASK_MIN_PERIOD		100	// 100 uSec
-#define TASK_MIN_BUDGET		100 // 100 uSec
+#define TASK_MIN_PERIOD				100	// 100 uSec
+#define TASK_MIN_BUDGET			100 // 100 uSec
 
 #define MAX_OPEN_FILES_PER_PROCESS	8	// This should be <= 32
 
@@ -98,20 +128,19 @@ typedef enum
 {
 	KLOG_CONTEXT_SWITCH 	= (1 << 0),
 	KLOG_OS_TIMER_ISR 		= (1 << 1),
-	KLOG_TBE_EXCEPTION		= (1 << 2),
-	KLOG_OS_TIMER_SET 		= (1 << 3),
+	KLOG_TBE_EXCEPTION	= (1 << 2),
+	KLOG_OS_TIMER_SET 	= (1 << 3),
 	KLOG_SYNC_TIMER_ISR 	= (1 << 4),
 	
-	KLOG_MISC 				= (1 << 31)
+	KLOG_MISC 			= (1 << 31)
 	
 } Klog_MaskType;
 
-#define OS_ENABLE_ASSERTS			1
-#define OS_ENABLE_CPU_STATS			1		// Enable OS & CPU Stats
+#define OS_ENABLE_CPU_STATS		1		// Enable OS & CPU Stats
 #define OS_WITH_VALIDATE_TASK		1
 
-#define	OS_KERNEL_LOGGING			0
-#define	OS_KLOG_MASK				(KLOG_SYNC_TIMER_ISR)
+#define	OS_KERNEL_LOGGING		0
+#define	OS_KLOG_MASK			(KLOG_SYNC_TIMER_ISR)
 #define DEBUG_UART_CHANNEL			0
 
 #endif // _OS_CONFIG_H

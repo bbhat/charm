@@ -1,9 +1,9 @@
 INCLUDES	+=	includes
-INCLUDES	+=	includes/cores/$(CORE)
+INCLUDES	+=	includes/cores/common
 INCLUDES	+=	includes/util
 INCLUDES	+=	includes/soc/$(SOC)
-INCLUDES	+=	includes/soc/$(SOC)/drivers/timer
-INCLUDES	+=	includes/soc/$(SOC)/drivers/uart
-INCLUDES	+=	includes/soc/$(SOC)/drivers/rtc
+INCLUDES	+=	includes/soc/common/drivers/uart
+INCLUDES	+=	includes/soc/common/drivers/rtc
+INCLUDES	+=	includes/soc/common/drivers/timer
 INCLUDES	+=	includes/target/$(TARGET)
 INCLUDES	+=	includes/filesystem

@@ -19,6 +19,12 @@ enum
 	TIMER1 = 1
 };
 
+#if defined(SOC_S5PV210)
+	#define MAX_TIMER_COUNT		0xffffffff
+#elseif defined(SOC_ARM920T)
+	#define MAX_TIMER_COUNT		0xffff
+#endif
+
 // Initializes both timer 0 & 1
 void _OS_InitTimer ();
 

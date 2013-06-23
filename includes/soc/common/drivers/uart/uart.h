@@ -20,7 +20,12 @@ typedef enum {
 	
 #define UART_BAUD_RATE	115200
 #define UART_LOOPBACK_MODE	0
-#define UART_FIFO_SIZE	64
+
+#if defined(SOC_S5PV210)
+	#define UART_FIFO_SIZE(ch)	((ch == UART0) ? 256 : 64)
+#elseif defined(SOC_ARM920T)
+	#define UART_FIFO_SIZE	64
+#endif
 
 void Uart_Init(UART_Channel ch);
 void Uart_Print(UART_Channel ch, const INT8 *buf);

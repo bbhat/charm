@@ -48,7 +48,7 @@ ROOTFS_PATH		:=	rootfs
 
 ## Create INCLUDES 
 include $(wildcard includes/*.mk)
-INCLUDES		:=	$(addprefix -I ,includes $(INCLUDES))
+INCLUDES			:=	$(addprefix -I ,includes $(INCLUDES))
 
 ## Build list of source and object files
 SUBDIRS			:=	sources main
@@ -62,7 +62,7 @@ include $(foreach sdir, $(SUBDIRS), $(wildcard $(sdir)/*.mk))
 
 ## Build a list of corresponding object files
 OBJS			:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
-BOOT_OBJS		:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(BOOT_SOURCES))))
+BOOT_OBJS	:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(BOOT_SOURCES))))
 
 ## Build flags
 AFLAGS		:=	-mcpu=$(CORE) -g
@@ -72,6 +72,21 @@ ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)
 else ifeq ($(CONFIG),release)
 	CFLAGS	:=	-O2 -D RELEASE $(CFLAGS)
+endif
+
+ifeq ($(TARGET), tq2440)
+	CFLAGS := $(CFLAGS) -D TARGET_TQ2440
+endif
+
+ifeq ($(TARGET), mini210s)
+	CFLAGS := $(CFLAGS) -D TARGET_MINI210S
+endif
+
+ifeq ($(SOC), s3c2440)
+	CFLAGS := $(CFLAGS) -D SOC_ARM920T
+endif
+ifeq ($(SOC), s5pv210)
+	CFLAGS := $(CFLAGS) -D SOC_S5PV210
 endif
 
 

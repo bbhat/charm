@@ -3,7 +3,7 @@
 //						Copyright 2013 xxxxxxx, xxxxxxx
 //	File:	rtc.c
 //	Author:	Bala B. (bhat.balasubramanya@gmail.com)
-//	Description: Driver RTC
+//	Description: Common RTC Driver
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -20,6 +20,8 @@ OS_Error OS_GetDateAndTime(OS_DateAndTime *date_and_time)
 {
     UINT32 intsts;
     UINT32 i;
+    
+    ASSERT(date_and_time);
 
 	// RTC Control enable
     rRTCCON = RTC_ENABLE;
@@ -53,10 +55,7 @@ OS_Error OS_SetDateAndTime(const OS_DateAndTime *date_and_time)
 {
 	UINT32 intsts;
 
-	if(!date_and_time) 
-	{
-		return ARGUMENT_ERROR;
-	}
+	ASSERT(date_and_time);
 	
 	if((date_and_time->year < 0 || date_and_time->year > 99)
 	|| (date_and_time->mon < 1 || date_and_time->mon > 12)
@@ -95,6 +94,8 @@ OS_Error OS_GetTime(OS_Time *time)
     UINT32 intsts;
     UINT32 i;
 
+	ASSERT(time);
+	
 	// RTC Control enable
     rRTCCON = RTC_ENABLE;
 
@@ -122,6 +123,8 @@ OS_Error OS_GetTime(OS_Time *time)
 #if ENABLE_RTC_ALARM==1
 OS_Error OS_SetAlarm(const OS_DateAndTime *date_and_time)
 {
+	ASSERT(date_and_time);
+	
 	// TODO:
 	panic("Not implemented");
 	
@@ -130,6 +133,8 @@ OS_Error OS_SetAlarm(const OS_DateAndTime *date_and_time)
 
 OS_Error OS_GetAlarm(OS_DateAndTime *date_and_time)
 {
+	ASSERT(date_and_time);
+	
 	// TODO:
 	panic("Not implemented");
 	

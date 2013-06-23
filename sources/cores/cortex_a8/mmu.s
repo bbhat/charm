@@ -3,7 +3,7 @@
 @						Copyright 2013 xxxxxxx, xxxxxxx
 @	File:	mmu.s
 @	Author: Bala B. (bhat.balasubramanya@gmail.com)
-@	Description: MMU Related functions
+@	Description: MMU Related functions for Cortex A8
 @
 @-------------------------------------------------------------------------------
 

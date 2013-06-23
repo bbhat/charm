@@ -22,8 +22,6 @@
 #define CONVERT_us_TO_TICKS(us)		((((UINT64)TIMER0_TICK_FREQ * (us)) + (1000000-1)) / 1000000)
 #define CONVERT_TICKS_TO_us(tick)	((((tick) * 1000000ull) + (TIMER0_TICK_FREQ - 1)) / TIMER0_TICK_FREQ)
 
-#define MAX_TIMER_COUNT		0xffff
-
 #define TIMER0_START		0x001
 #define TIMER0_RUNNING		0x001
 #define TIMER0_UPDATE		0x002

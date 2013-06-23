@@ -13,6 +13,7 @@
 #include "os_core.h"
 #include "soc.h"
 #include "uart.h"
+#include "os_core.h"
 
 static UINT8 Uart_init_status = 0;
 
@@ -59,12 +60,9 @@ void Uart_Init(UART_Channel ch)
 
 void Uart_Print(UART_Channel ch, const INT8 *buf) 
 {
-	if(!buf) return;
-	
-	if(!(Uart_init_status & (1 << ch)))
-	{
-		Uart_Init(ch);
-	}
+	ASSERT(buf);
+	ASSERT(Uart_init_status & (1 << ch));
+
 	while(*buf)
 	{
 		// Wait till FIFO is not full
@@ -83,13 +81,8 @@ void Uart_Print(UART_Channel ch, const INT8 *buf)
 
 void Uart_Write(UART_Channel ch, const INT8 *buf, UINT32 count) 
 {
-	if(!buf) 
-		return;
-	
-	if(!(Uart_init_status & (1 << ch)))
-	{
-		Uart_Init(ch);
-	}
+	ASSERT(buf);
+	ASSERT(Uart_init_status & (1 << ch));
 	
 	while(count)
 	{
@@ -110,13 +103,8 @@ void Uart_Write(UART_Channel ch, const INT8 *buf, UINT32 count)
 
 void Uart_ReadB(UART_Channel ch, INT8 *buf, UINT32 count) 
 {
-	if(!buf) 
-		return;
-	
-	if(!(Uart_init_status & (1 << ch)))
-	{
-		Uart_Init(ch);
-	}
+	ASSERT(buf);
+	ASSERT(Uart_init_status & (1 << ch));
 	
 	while(count)
 	{		
@@ -136,13 +124,7 @@ void Uart_ReadB(UART_Channel ch, INT8 *buf, UINT32 count)
 
 void Uart_ReadNB(UART_Channel ch, INT8 *buf, UINT32 *count) 
 {
-	if(!buf || !count) 
-		return;
-		
-	if(!(Uart_init_status & (1 << ch)))
-	{
-		Uart_Init(ch);
-	}
+	ASSERT(buf && count);
 	
 	UINT32 available = rUFSTAT(ch) & 0x3f;
 	if (available > *count)
@@ -164,10 +146,7 @@ void Uart_ReadNB(UART_Channel ch, INT8 *buf, UINT32 *count)
 // Non Blocking single ASCII character read. When there is no data available, it returns 0
 INT8 Uart_GetChar(UART_Channel ch)
 {
-	if(!(Uart_init_status & (1 << ch)))
-	{
-		Uart_Init(ch);
-	}
+	ASSERT(Uart_init_status & (1 << ch));
 	
 	UINT32 available = rUFSTAT(ch) & 0x3f;
 	if(available)
@@ -180,10 +159,7 @@ INT8 Uart_GetChar(UART_Channel ch)
 
 INT8 Uart_PutChar(UART_Channel ch, UINT8 data)
 {
-	if(!(Uart_init_status & (1 << ch)))
-	{
-		Uart_Init(ch);
-	}
+	ASSERT(Uart_init_status & (1 << ch));
 	
 	// Check if FIFO is full
 	if(rUFSTAT(ch) & (1 << 14)) {

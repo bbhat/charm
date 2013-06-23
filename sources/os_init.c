@@ -37,6 +37,9 @@ void _OS_Init()
 	// Call system initialization routine
 	_OS_SystemInit();
 	
+	// Initialize debug UART
+	Uart_Init(UART0);
+	
 	if(ramdisk_init((void *)&__ramdisk_start__) != SUCCESS) {
 		panic("ramdisk_init failed\n");
 	}

@@ -26,8 +26,8 @@
 
 #define CLK_DIV0_MASK		0x7fffffff
 
-#define APLL_MDIV       	0x7d
-#define APLL_PDIV       	0x3
+#define APLL_MDIV       		0x7d
+#define APLL_PDIV       		0x3
 #define APLL_SDIV      	 	0x1
 #define MPLL_MDIV			0x29b
 #define MPLL_PDIV			0xc
