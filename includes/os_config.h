@@ -10,51 +10,6 @@
 #ifndef _OS_CONFIG_H
 #define _OS_CONFIG_H
 
-#if defined(TARGET_TQ2440)
-
-	#define FIN 	(12000000)				// 12MHz Crystal
-
-	#define FCLK (405000000)				// Main Processor clock	405 MHz
-	#define HCLK (FCLK/3)					// AHB Clock	135 MHz
-	#define PCLK (HCLK/2)					// APB Clock	67.5 MHz
-	#define UCLK (48000000)					// USB Clock
-
-	#define	TIMER_PRESCALAR_0	(0x3f)		// PCLK/64
-	#define	TIMER0_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
-	#define	TIMER1_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
-	#define	TIMER0_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
-	#define	TIMER1_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
-
-	// (65535 * 1000000) / TIMER0_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
-	// This way there will be at least one interrupt every 100ms
-	#define	MAX_TIMER0_INTERVAL_uS		100000		
-
-	// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 120ms for this.
-	#define	MAX_TIMER1_INTERVAL_uS		120000
-
-#elif defined(TARGET_MINI210S)
-
-	#define FIN 	(24000000)				// 24MHz Crystal
-
-	#define FCLK (1000000000)				// Main Processor clock	1GHz MHz
-	#define HCLK (FCLK/3)					// AHB Clock	135 MHz
-	#define PCLK (HCLK/2)					// APB Clock	67.5 MHz
-
-	#define	TIMER_PRESCALAR_0	(0x3f)		// PCLK/64
-	#define	TIMER0_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
-	#define	TIMER1_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
-	#define	TIMER0_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
-	#define	TIMER1_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
-
-	// (65535 * 1000000) / TIMER0_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
-	// This way there will be at least one interrupt every 100ms
-	#define	MAX_TIMER0_INTERVAL_uS		100000		
-
-	// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 120ms for this.
-	#define	MAX_TIMER1_INTERVAL_uS		120000
-
-#endif
-
 // Drivers to include
 #define ENABLE_RTC						1
 #define ENABLE_RTC_ALARM			1

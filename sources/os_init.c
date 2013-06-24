@@ -11,6 +11,7 @@
 #include "os_queue.h"
 #include "os_process.h"
 #include "cache.h"
+#include "uart.h"
 
 // External functions used in here
 extern void _OS_InitTimer();

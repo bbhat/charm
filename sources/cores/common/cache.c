@@ -9,6 +9,8 @@
 
 #include "cache.h"
 
+#if ENABLE_DATA_CACHE == 1
+
 void _OS_CleanInvalidateDCache(void * va, UINT32 len)
 {
 	// Get a 32 Byte aligned address
@@ -30,3 +32,5 @@ void _OS_CleanInvalidateDCache(void * va, UINT32 len)
 		}		
 	}
 }
+
+#endif	// ENABLE_DATA_CACHE

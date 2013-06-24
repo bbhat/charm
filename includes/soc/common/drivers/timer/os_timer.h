@@ -21,7 +21,7 @@ enum
 
 #if defined(SOC_S5PV210)
 	#define MAX_TIMER_COUNT		0xffffffff
-#elseif defined(SOC_ARM920T)
+#elif defined(SOC_ARM920T)
 	#define MAX_TIMER_COUNT		0xffff
 #endif
 

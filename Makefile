@@ -34,13 +34,13 @@ ifeq ($(SOC), s5pv210)
 	CORE := cortex-a8
 endif
 
-BUILD_DIR		:=	$(DST)/$(CONFIG)-$(TARGET)
-MAP_FILE		:=	$(BUILD_DIR)/$(TARGET).map
+BUILD_DIR			:=	$(DST)/$(CONFIG)-$(TARGET)
+MAP_FILE				:=	$(BUILD_DIR)/$(TARGET).map
 BOOT_MAP_FILE	:=	$(BUILD_DIR)/boot.map
 LINKERS_SCRIPT	:=	scripts/$(TARGET)/memmap.ld
-BOOT_LSCRIPT	:=	scripts/$(TARGET)/boot.ld
-DEP_DIR			:=	$(BUILD_DIR)/dep
-OBJ_DIR			:=	$(BUILD_DIR)/obj
+BOOT_LSCRIPT		:=	scripts/$(TARGET)/boot.ld
+DEP_DIR				:=	$(BUILD_DIR)/dep
+OBJ_DIR				:=	$(BUILD_DIR)/obj
 KERNEL_TARGET	:=	$(BUILD_DIR)/$(TARGET).elf
 BOOT_TARGET		:=	$(BUILD_DIR)/boot.elf
 RAMDISK_TARGET	:=	$(BUILD_DIR)/ramdisk.img
@@ -143,11 +143,11 @@ ramdisk:
 
 $(OBJ_DIR)/%.o: %.S
 	@test -d $(dir $@) || mkdir -pm 775 $(dir $@)
-	$(ASM) $(AFLAGS) -c -o $@ $<
+	$(ASM) $(AFLAGS) $(INCLUDES) -c -o $@ $<
 		
 $(OBJ_DIR)/%.o: %.s
 	@test -d $(dir $@) || mkdir -pm 775 $(dir $@)
-	$(ASM) $(AFLAGS) -c -o $@ $<
+	$(ASM) $(AFLAGS) $(INCLUDES) -c -o $@ $<
 
 $(OBJ_DIR)/%.o: %.c
 	@test -d $(dir $@) || mkdir -pm 775 $(dir $@)

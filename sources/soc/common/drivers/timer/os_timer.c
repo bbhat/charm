@@ -11,6 +11,7 @@
 #include "os_core.h"
 #include "os_stat.h"
 #include "soc.h"
+#include "target.h"
 
 //The S3C2440A has five 16-bit timers. Timer 0, 1, 2, and 3 have Pulse Width Modulation (PWM) function. 
 // Timer 4 has an internal timer only with no output pins. The timer 0 has a dead-zone generator, 
@@ -55,8 +56,8 @@ void _OS_InitTimer ()
 		timer0_count_buffer = 0;
 				
 		// Configure the two prescalars
-		rTCFG0 = (rTCFG0 & 0xffffff00) | TIMER_PRESCALAR_0;	 // Prescaler=1/256 for Timer0 & Timer1
-		rTCFG1 = (rTCFG1 & 0xffffff00) | (TIMER1_DIVIDER << 4) | TIMER0_DIVIDER;  // Mux=1/8 for Timer0 & Timer1
+		rTCFG0 = (rTCFG0 & 0xffffff00) | TIMER_PRESCALAR_0;	 // Set the Pre-scaler 0
+		rTCFG1 = (rTCFG1 & 0xffffff00) | (TIMER1_DIVIDER << 4) | TIMER0_DIVIDER;		// Set the divider
 		
 		// Set the interrupt handlers. This also unmasks that interrupt
 		OS_SetInterruptVector(_OS_Timer0ISRHandler, TIMER0_INT_VECTOR_INDEX);

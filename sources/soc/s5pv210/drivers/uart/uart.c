@@ -12,6 +12,7 @@
 #include "os_config.h"
 #include "os_core.h"
 #include "soc.h"
+#include "target.h"
 #include "uart.h"
 #include "os_core.h"
 
@@ -41,7 +42,7 @@ void Uart_Init(UART_Channel ch)
 	if(ch == UART0) {
 		GPA0CON = (GPA0CON & 0xFFFF0000) | 0x00002222;
 	}
-	else (ch == UART0) {
+	else if(ch == UART1) {
 		GPA0CON = (GPA0CON & 0x0000FFFF) | 0x22220000;
 	}
 	else {
@@ -75,7 +76,7 @@ void Uart_Init(UART_Channel ch)
 	UCON(ch) = (1 << 0) | (1 << 2) | (UART_LOOPBACK_MODE << 5) | (0 << 10);
 	
 	// UART BAUD RATE DIVISOR REGISTER
-	UBRDIV(ch) = ((PCLK / UART_BAUD_RATE) >> 4) - 1;
+	UBRDIV(ch) = ((PCLK_PSYS / UART_BAUD_RATE) >> 4) - 1;
 	UDIVSLOT(ch) = 1;
 	
 	// Rx & Tx FIFO Reset

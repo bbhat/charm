@@ -1,3 +1,12 @@
+///////////////////////////////////////////////////////////////////////////////
+//	
+//	File:	soc.h
+//	Description: s5pv210 register definition file
+//	
+///////////////////////////////////////////////////////////////////////////////
+
+#define __REG(reg)	(*(volatile unsigned long *) (reg))
+
 /* S5PC110 device base addresses */
 #define ELFIN_DMA_BASE			0xE0900000
 #define ELFIN_LCD_BASE			0xF8000000
@@ -24,7 +33,7 @@
 #define VPLL_LOCK_OFFSET		0x20
 #define APLL_CON0_OFFSET		0x100
 #define APLL_CON1_OFFSET		0x104
-#define MPLL_CON_OFFSET			0x108
+#define MPLL_CON_OFFSET		0x108
 #define EPLL_CON_OFFSET			0x110
 #define VPLL_CON_OFFSET			0x120
 
@@ -60,6 +69,31 @@
 #define CLK_MUX_STAT0_OFFSET		0x1100
 #define CLK_MUX_STAT1_OFFSET		0x1104
 #define SW_RST_OFFSET			0x2000
+
+#define rAPLL_LOCK		__REG(ELFIN_CLOCK_POWER_BASE + APLL_LOCK_OFFSET)
+#define rMPLL_LOCK		__REG(ELFIN_CLOCK_POWER_BASE + MPLL_LOCK_OFFSET)
+
+#define rAPLL_CON0 		__REG(ELFIN_CLOCK_POWER_BASE + APLL_CON0_OFFSET)
+#define rAPLL_CON1 		__REG(ELFIN_CLOCK_POWER_BASE + APLL_CON1_OFFSET)	
+#define rMPLL_CON 		__REG(ELFIN_CLOCK_POWER_BASE + MPLL_CON_OFFSET)
+
+#define rCLK_SRC0 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC0_OFFSET)
+#define rCLK_SRC1 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC1_OFFSET)
+#define rCLK_SRC2 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC2_OFFSET)
+#define rCLK_SRC3 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC3_OFFSET)
+#define rCLK_SRC4 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC4_OFFSET)
+#define rCLK_SRC5 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC5_OFFSET)
+#define rCLK_SRC6 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC6_OFFSET)
+#define rCLK_SRC_MASK0 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC_MASK0_OFFSET)
+#define rCLK_SRC_MASK1 		__REG(ELFIN_CLOCK_POWER_BASE + CLK_SRC_MASK1_OFFSET)
+#define rCLK_DIV0 			__REG(ELFIN_CLOCK_POWER_BASE + CLK_DIV0_OFFSET)
+#define rCLK_DIV1 			__REG(ELFIN_CLOCK_POWER_BASE + CLK_DIV1_OFFSET)
+#define rCLK_DIV2 			__REG(ELFIN_CLOCK_POWER_BASE + CLK_DIV2_OFFSET)
+#define rCLK_DIV3 			__REG(ELFIN_CLOCK_POWER_BASE + CLK_DIV3_OFFSET)
+#define rCLK_DIV4 			__REG(ELFIN_CLOCK_POWER_BASE + CLK_DIV4_OFFSET)
+#define rCLK_DIV5 			__REG(ELFIN_CLOCK_POWER_BASE + CLK_DIV5_OFFSET)
+#define rCLK_DIV6 			__REG(ELFIN_CLOCK_POWER_BASE + CLK_DIV6_OFFSET)
+#define rCLK_DIV7 			__REG(ELFIN_CLOCK_POWER_BASE + CLK_DIV7_OFFSET)
 
 #define ONEDRAM_CFG_OFFSET		0x6208
 
@@ -324,8 +358,8 @@
 #define GPJ4CONPDN_OFFSET 		0x2D0
 #define GPJ4PUDPDN_OFFSET 		0x2D4
 
-#define  rGPJ2CON		__REG(ELFIN_GPIO_BASE + GPJ2CON_OFFSET))
-#define  rGPJ2DAT		__REG(ELFIN_GPIO_BASE + GPJ2DAT_OFFSET))
+#define  rGPJ2CON		__REG(ELFIN_GPIO_BASE + GPJ2CON_OFFSET)
+#define  rGPJ2DAT		__REG(ELFIN_GPIO_BASE + GPJ2DAT_OFFSET)
 
 /*
  * Interrupt
@@ -333,7 +367,7 @@
 #define ELFIN_VIC0_BASE_ADDR		(0xF2000000)
 #define ELFIN_VIC1_BASE_ADDR		(0xF2100000)
 #define ELFIN_VIC2_BASE_ADDR		(0xF2200000)
-#define ELFIN_VIC2_BASE_ADDR		(0xF2300000)
+#define ELFIN_VIC3_BASE_ADDR		(0xF2300000)
 
 #define ELFIN_TZIC0_BASE_ADDR		(0xF2800000)
 #define ELFIN_TZIC1_BASE_ADDR		(0xF2900000)
@@ -406,24 +440,24 @@
  */
 #define ELFIN_TIMER_BASE		0xE2500000
 
-#define rTCFG0_REG			__REG(0xE2500000)
-#define rTCFG1_REG			__REG(0xE2500004)
-#define rTCON_REG			__REG(0xE2500008)
-#define rTCNTB0_REG			__REG(0xE250000c)
-#define rTCMPB0_REG			__REG(0xE2500010)
-#define rTCNTO0_REG			__REG(0xE2500014)
-#define rTCNTB1_REG			__REG(0xE2500018)
-#define rTCMPB1_REG			__REG(0xE250001c)
-#define rTCNTO1_REG			__REG(0xE2500020)
-#define rTCNTB2_REG			__REG(0xE2500024)
-#define rTCMPB2_REG			__REG(0xE2500028)
-#define rTCNTO2_REG			__REG(0xE250002c)
-#define rTCNTB3_REG			__REG(0xE2500030)
-#define rTCMPB3_REG			__REG(0xE2500034)
-#define rTCNTO3_REG			__REG(0xE2500038)
-#define rTCNTB4_REG			__REG(0xE250003c)
-#define rTCNTO4_REG			__REG(0xE2500040)
-#define rTINT_CSTAT			__REG(0xE2500044)
+#define rTCFG0				__REG(0xE2500000)
+#define rTCFG1				__REG(0xE2500004)
+#define rTCON				__REG(0xE2500008)
+#define rTCNTB0			__REG(0xE250000c)
+#define rTCMPB0			__REG(0xE2500010)
+#define rTCNTO0			__REG(0xE2500014)
+#define rTCNTB1			__REG(0xE2500018)
+#define rTCMPB1			__REG(0xE250001c)
+#define rTCNTO1			__REG(0xE2500020)
+#define rTCNTB2			__REG(0xE2500024)
+#define rTCMPB2			__REG(0xE2500028)
+#define rTCNTO2			__REG(0xE250002c)
+#define rTCNTB3			__REG(0xE2500030)
+#define rTCMPB3			__REG(0xE2500034)
+#define rTCNTO3			__REG(0xE2500038)
+#define rTCNTB4			__REG(0xE250003c)
+#define rTCNTO4			__REG(0xE2500040)
+#define rTINT_CSTAT		__REG(0xE2500044)
 
 /* Fields */
 #define fTCFG0_DZONE			Fld(8,16)       /* the dead zone length (= timer 0) */
@@ -781,6 +815,226 @@
 #define DMC_QOSCONTROL15 		0xD8
 #define DMC_QOSCONFIG15 		0xDC
 
+/*
+ * Vectored Interrupt Controller
+ */
+ 
+//INT NUM - VIC0
+#define NUM_EINT0				(0)
+#define NUM_EINT1				(1)
+#define NUM_EINT2				(2)
+#define NUM_EINT3				(3)
+#define NUM_EINT4				(4)
+#define NUM_EINT5				(5)
+#define NUM_EINT6				(6)
+#define NUM_EINT7				(7)
+#define NUM_EINT8				(8)
+#define NUM_EINT9				(9)
+#define NUM_EINT10				(10)
+#define NUM_EINT11				(11)
+#define NUM_EINT12				(12)
+#define NUM_EINT13				(13)
+#define NUM_EINT14				(14)
+#define NUM_EINT15				(15)
+#define NUM_EINT16_31			(16)
+#define NUM_Reserved17			(17) 
+#define NUM_MDMA				(18)
+#define NUM_PDMA0				(19)
+#define NUM_PDMA1				(20)
+#define NUM_TIMER0				(21)
+#define NUM_TIMER1				(22)
+#define NUM_TIMER2				(23)
+#define NUM_TIMER3				(24)
+#define NUM_TIMER4				(25)
+#define NUM_SYSTIMER			(26)
+#define NUM_WDT					(27)
+#define NUM_RTC_ALARM			(28)
+#define NUM_RTC_TICK			(29)
+#define NUM_GPIOINT				(30)
+#define NUM_FIMC3				(31)
+
+//INT NUM - VIC1
+#define NUM_CORTEX0				(32+0)
+#define NUM_CORTEX1				(32+1)
+#define NUM_CORTEX2				(32+2)
+#define NUM_CORTEX3				(32+3)
+#define NUM_CORTEX4				(32+4)
+#define NUM_IEM_APC				(32+5)
+#define NUM_IEM_IEC				(32+6)
+#define NUM_Reserved39			(32+7)
+#define NUM_NFC					(32+8)
+#define NUM_CFC					(32+9)
+#define NUM_UART0				(32+10)
+#define NUM_UART1				(32+11)
+#define NUM_UART2				(32+12)
+#define NUM_UART3				(32+13)
+#define NUM_I2C					(32+14)
+#define NUM_SPI0				(32+15)
+#define NUM_SPI1				(32+16)
+#define NUM_SPI2				(32+17)
+#define NUM_AUDIO				(32+18)
+#define NUM_I2C_PMIC			(32+19)
+#define NUM_I2C_HDMI			(32+20)
+#define NUM_HSIRX				(32+21)
+#define NUM_HSITX				(32+22)
+#define NUM_UHOST				(32+23)
+#define NUM_OTG					(32+24)
+#define NUM_MSM					(32+25)
+#define NUM_HSMMC0				(32+26)
+#define NUM_HSMMC1				(32+27)
+#define NUM_HSMMC2				(32+28)
+#define NUM_MIPI_CSI			(32+29)
+#define NUM_MIPI_DSI			(32+30)
+#define NUM_ONENAND_AUDI		(32+31)
+
+//INT NUM - VIC2
+#define NUM_LCD0				(64+0)
+#define NUM_LCD1				(64+1)
+#define NUM_LCD2				(64+2)
+#define NUM_LCD3				(64+3)
+#define NUM_ROTATOR				(64+4)
+#define NUM_FIMC_A				(64+5)
+#define NUM_FIMC_B				(64+6)
+#define NUM_FIMC_C				(64+7)
+#define NUM_JPEG				(64+8)
+#define NUM_2D					(64+9)
+#define NUM_3D					(64+10)
+#define NUM_MIXER				(64+11)
+#define NUM_HDMI				(64+12)
+#define NUM_HDMI_I2C			(64+13)
+#define NUM_MFC					(64+14)
+#define NUM_TVENC				(64+15)
+#define NUM_I2S0				(64+16)
+#define NUM_I2S1				(64+17)
+#define NUM_I2S2				(64+18)
+#define NUM_AC97				(64+19)
+#define NUM_PCM0				(64+20)
+#define NUM_PCM1				(64+21)
+#define NUM_SPDIF				(64+22)
+#define NUM_ADC 				(64+23)
+#define NUM_PENDN				(64+24)
+#define NUM_KEYPAD				(64+25)
+#define NUM_Reserved90			(64+26) 
+#define NUM_HASH				(64+27) 
+#define NUM_FEEDCTRL			(64+28) 
+#define NUM_PCM2				(64+29)
+#define NUM_SDM_IRQ				(64+30)
+#define NUM_SMD_FIQ				(64+31)
+
+//INT NUM - VIC3
+#define NUM_IPC					(96+0)
+#define NUM_HOSTIF				(96+1)
+#define NUM_HSMMC3				(96+2)
+#define NUM_CEC					(96+3)
+#define NUM_TSI					(96+4)
+#define NUM_MDNIE0				(96+5)
+#define NUM_MDNIE1				(96+6)
+#define NUM_MDNIE2				(96+7)
+#define NUM_MDNIE3				(96+8)
+#define NUM_ADC1				(96+9)
+#define NUM_PENDN1				(96+10)
+#define NUM_ALL					(200)
+
+#define VIC0_BASE					(0xF2000000)
+#define VIC1_BASE					(0xF2100000)
+#define VIC2_BASE					(0xF2200000)
+#define VIC3_BASE					(0xF2300000)
+
+// VIC0
+#define VIC0IRQSTATUS			__REG(VIC0_BASE + 0x00)
+#define VIC0FIQSTATUS			__REG(VIC0_BASE + 0x04)
+#define VIC0RAWINTR			__REG(VIC0_BASE + 0x08)
+#define VIC0INTSELECT			__REG(VIC0_BASE + 0x0c)
+#define VIC0INTENABLE			__REG(VIC0_BASE + 0x10)
+#define VIC0INTENCLEAR		__REG(VIC0_BASE + 0x14)
+#define VIC0SOFTINT				__REG(VIC0_BASE + 0x18)
+#define VIC0SOFTINTCLEAR	__REG(VIC0_BASE + 0x1c)
+#define VIC0PROTECTION		__REG(VIC0_BASE + 0x20)
+#define VIC0SWPRIORITYMASK	__REG(VIC0_BASE + 0x24)
+#define VIC0PRIORITYDAISY		__REG(VIC0_BASE + 0x28)
+#define VIC0VECTADDR			(VIC0_BASE + 0x100)
+#define VIC0VECPRIORITY		__REG(VIC0_BASE + 0x200)
+#define VIC0ADDR					__REG(VIC0_BASE + 0xf00)
+#define VIC0PERID0				__REG(VIC0_BASE + 0xfe0)
+#define VIC0PERID1				__REG(VIC0_BASE + 0xfe4)
+#define VIC0PERID2				__REG(VIC0_BASE + 0xfe8)
+#define VIC0PERID3				__REG(VIC0_BASE + 0xfec)
+#define VIC0PCELLID0			__REG(VIC0_BASE + 0xff0)
+#define VIC0PCELLID1			__REG(VIC0_BASE + 0xff4)
+#define VIC0PCELLID2			__REG(VIC0_BASE + 0xff8)
+#define VIC0PCELLID3			__REG(VIC0_BASE + 0xffc)
+
+// VIC1
+#define VIC1IRQSTATUS			__REG(VIC1_BASE + 0x00)
+#define VIC1FIQSTATUS			__REG(VIC1_BASE + 0x04)
+#define VIC1RAWINTR			__REG(VIC1_BASE + 0x08)
+#define VIC1INTSELECT			__REG(VIC1_BASE + 0x0c)
+#define VIC1INTENABLE			__REG(VIC1_BASE + 0x10)
+#define VIC1INTENCLEAR		__REG(VIC1_BASE + 0x14)
+#define VIC1SOFTINT				__REG(VIC1_BASE + 0x18)
+#define VIC1SOFTINTCLEAR	__REG(VIC1_BASE + 0x1c)
+#define VIC1PROTECTION		__REG(VIC1_BASE + 0x20)
+#define VIC1SWPRIORITYMASK	__REG(VIC1_BASE + 0x24)
+#define VIC1PRIORITYDAISY		__REG(VIC1_BASE + 0x28)
+#define VIC1VECTADDR			(VIC1_BASE + 0x100)
+#define VIC1VECPRIORITY		__REG(VIC1_BASE + 0x200)
+#define VIC1ADDR					__REG(VIC1_BASE + 0xf00)
+#define VIC1PERID0				__REG(VIC1_BASE + 0xfe0)
+#define VIC1PERID1				__REG(VIC1_BASE + 0xfe4)
+#define VIC1PERID2				__REG(VIC1_BASE + 0xfe8)
+#define VIC1PERID3				__REG(VIC1_BASE + 0xfec)
+#define VIC1PCELLID0			__REG(VIC1_BASE + 0xff0)
+#define VIC1PCELLID1			__REG(VIC1_BASE + 0xff4)
+#define VIC1PCELLID2			__REG(VIC1_BASE + 0xff8)
+#define VIC1PCELLID3			__REG(VIC1_BASE + 0xffc)
+
+// VIC2
+#define VIC2IRQSTATUS			__REG(VIC2_BASE + 0x00)
+#define VIC2FIQSTATUS			__REG(VIC2_BASE + 0x04)
+#define VIC2RAWINTR			__REG(VIC2_BASE + 0x08)
+#define VIC2INTSELECT			__REG(VIC2_BASE + 0x0c)
+#define VIC2INTENABLE			__REG(VIC2_BASE + 0x10)
+#define VIC2INTENCLEAR		__REG(VIC2_BASE + 0x14)
+#define VIC2SOFTINT				__REG(VIC2_BASE + 0x18)
+#define VIC2SOFTINTCLEAR		__REG(VIC2_BASE + 0x1c)
+#define VIC2PROTECTION			__REG(VIC2_BASE + 0x20)
+#define VIC2SWPRIORITYMASK	__REG(VIC2_BASE + 0x24)
+#define VIC2PRIORITYDAISY		__REG(VIC2_BASE + 0x28)
+#define VIC2VECTADDR			(VIC2_BASE + 0x100)
+#define VIC2VECPRIORITY		__REG(VIC2_BASE + 0x200)
+#define VIC2ADDR					__REG(VIC2_BASE + 0xf00)
+#define VIC2PERID0				__REG(VIC2_BASE + 0xfe0)
+#define VIC2PERID1				__REG(VIC2_BASE + 0xfe4)
+#define VIC2PERID2				__REG(VIC2_BASE + 0xfe8)
+#define VIC2PERID3				__REG(VIC2_BASE + 0xfec)
+#define VIC2PCELLID0			__REG(VIC2_BASE + 0xff0)
+#define VIC2PCELLID1			__REG(VIC2_BASE + 0xff4)
+#define VIC2PCELLID2			__REG(VIC2_BASE + 0xff8)
+#define VIC2PCELLID3			__REG(VIC2_BASE + 0xffc)
+
+// VIC3
+#define VIC3IRQSTATUS			__REG(VIC3_BASE + 0x00)
+#define	 VIC3FIQSTATUS		__REG(VIC3_BASE + 0x04)
+#define	 VIC3RAWINTR			__REG(VIC3_BASE + 0x08)
+#define	 VIC3INTSELECT			__REG(VIC3_BASE + 0x0c)
+#define	 VIC3INTENABLE		__REG(VIC3_BASE + 0x10)
+#define	 VIC3INTENCLEAR		__REG(VIC3_BASE + 0x14)
+#define	 VIC3SOFTINT			__REG(VIC3_BASE + 0x18)
+#define	 VIC3SOFTINTCLEAR	__REG(VIC3_BASE + 0x1c)
+#define	 VIC3PROTECTION		__REG(VIC3_BASE + 0x20)
+#define	 VIC3SWPRIORITYMASK	__REG(VIC3_BASE + 0x24)
+#define	 VIC3PRIORITYDAISY		__REG(VIC3_BASE + 0x28)
+#define VIC3VECTADDR			(VIC3_BASE + 0x100)
+#define VIC3VECPRIORITY		__REG(VIC3_BASE + 0x200)
+#define VIC3ADDR					__REG(VIC3_BASE + 0xf00)
+#define VIC3PERID0				__REG(VIC3_BASE + 0xfe0)
+#define VIC3PERID1				__REG(VIC3_BASE + 0xfe4)
+#define VIC3PERID2				__REG(VIC3_BASE + 0xfe8)
+#define VIC3PERID3				__REG(VIC3_BASE + 0xfec)
+#define VIC3PCELLID0			__REG(VIC3_BASE + 0xff0)
+#define VIC3PCELLID1			__REG(VIC3_BASE + 0xff4)
+#define VIC3PCELLID2			__REG(VIC3_BASE + 0xff8)
+#define VIC3PCELLID3			__REG(VIC3_BASE + 0xffc)
 
 /*
 * Memory Chip direct command
