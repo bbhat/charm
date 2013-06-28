@@ -15,6 +15,7 @@ MEMORY
 	SRAM		: ORIGIN = 0x40000000,  LENGTH = 0x1000	
 	DRAM		: ORIGIN = 0x30000000,  LENGTH = 0x4000000	
 
+	VECTORS		: ORIGIN = 0xD0037400,  LENGTH = 0x80
 	OS_MEM		: ORIGIN = 0x30000000,  LENGTH = 0x100000	
 	RAMDISK		: ORIGIN = 0x30100000,  LENGTH = 0x100000	
 	APP_MEM		: ORIGIN = 0x30200000,  LENGTH = 0x3E00000
@@ -23,7 +24,7 @@ MEMORY
 PHDRS
 {
    code_seg		PT_LOAD;
-   rodata_seg	PT_LOAD;
+   rodata_seg		PT_LOAD;
    data_seg		PT_LOAD;
 }
 
@@ -31,6 +32,14 @@ SECTIONS
 {
 	/* Creating space for Ramdisk */
 	__ramdisk_start__ = 0x30100000;
+	
+	/* Interrupt Vectors */
+	.vector :
+	{
+		*(.vector)
+		
+	} > VECTORS : code_seg
+
 
 	/* Place other sections */
 	.text :

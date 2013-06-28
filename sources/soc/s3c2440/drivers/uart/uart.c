@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //	
 //						Copyright 2013 xxxxxxx, xxxxxxx
-//	File:	Uart.c
+//	File:	uart.c
 //	Author:	Bala B.
 //	Description: S3C2440 UART Serial Driver
 //

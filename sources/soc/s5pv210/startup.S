@@ -26,9 +26,17 @@ NOINT  		= 0xc0
 
    	.global _OS_Init
 	.global _start
-	.global	_IRQHandler_
 	.global	_SVC_StackTop_
 	.global _platform_clock_init
+	
+	.global	_undefined_instr_handler
+	.global	_software_interrupt_handler
+	.global	_prefetch_abort_handler
+	.global	_data_abort_handler
+	.global	_reserved_interrupt
+	.global	_IRQ_handler
+	.global	_FIQ_handler
+
 
 //---------------------------------------------------------------------
 //  Start routine
@@ -38,7 +46,7 @@ NOINT  		= 0xc0
    	.code 32
 
 _start:
-ResetHandler:
+_reset_handler:
 
 	// Disable the WDT
 	ldr	r0, =ELFIN_WATCHDOG_BASE			
@@ -205,36 +213,20 @@ _OS_SystemInit:
 	.LTORG   
 
 //------------------------------------------------------------------------------
-// Interrupt vector in DRAM. We get control into this section from the 
-// Vector table in the flash at address zero
+// Interrupt vector in Internal SRAM. We get control into this section from the  IROM. 
+// The iROM has fixed the address of interrupt vector table at 0xD0037400
 //------------------------------------------------------------------------------
-	.section .text.vector       // AREA ???, CODE, READONLY
+	.section .vector       	// AREA ???, CODE, READONLY
 	.code 32             		// CODE32
 	
-HandleReset:  					// Reset  
-	b		ResetHandler
-	.space  28		
-HandleUndef:         			// Undefined Instruction Exception
-	b		.
-	.space  28		
-HandleSWI:      				// Software Interrupt Exception
-	b		.
-	.space  28		
-HandlePabort:   				// Prefetch Abort Exception
-	b		.
-	.space  28		
-HandleDabort:   				// Data Abort Exception
-	b		.
-	.space  28		
-HandleReserved: 				// Reserved
-	b		.
-	.space  28		
-HandleIRQ:      				// IRQ Exception
-	b		_IRQHandler_
-	.space  28		
-HandleFIQ:      				// FIQ Exception
-	b		.
-	.space  28		
+	b		_reset_handler
+	b		_undefined_instr_handler
+	b		_software_interrupt_handler
+	b		_prefetch_abort_handler
+	b		_data_abort_handler
+	b		_reserved_interrupt
+	b		_IRQ_handler
+	b		_FIQ_handler
 
 
 //------------------------------------------------------------------------------
