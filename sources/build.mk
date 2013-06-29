@@ -3,6 +3,9 @@ SOURCE_DIRS	+=	sources/cores/$(CORE)
 SOURCE_DIRS	+=	sources/cores/common
 SOURCE_DIRS	+=	sources/soc/$(SOC) 
 SOURCE_DIRS	+=	sources/soc/$(SOC)/drivers/uart
+ifeq ($(SOC), s5pv210)
+	SOURCE_DIRS	+=	sources/soc/$(SOC)/drivers/vic
+endif
 SOURCE_DIRS	+=	sources/soc/common/drivers/rtc
 SOURCE_DIRS	+=	sources/soc/common/drivers/timer
 SOURCE_DIRS	+=	sources/target/$(TARGET)

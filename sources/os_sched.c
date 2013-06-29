@@ -33,6 +33,7 @@ static UINT32	g_current_timeout;	// The time for which the timer is currently se
 
 static OS_AperiodicTask g_idle_task;	// A TCB for the idle task
 static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
+static char os_name_string [] = { OS_NAME_STRING };
 
 // External functions used in here
 extern void _OS_InitInterrupts();
@@ -50,7 +51,9 @@ void _OS_SetAlarm(OS_PeriodicTask *task,
 					BOOL update_timer);
 static void _OS_SetNextTimeout(void);
 void _OS_ReSchedule(void);
+void _OS_Exit(void);
 void kernel_process_entry(void * pdata);
+void main(int argc, char **argv);
 
 // Static methods
 static void _OS_idle_task(void * ptr);
@@ -145,7 +148,7 @@ void kernel_process_entry(void * pdata)
 	// Call main from the kernel process which will create more processes
 	// Note that main() should return in order for normal scheduling to start
 	// This is a difference in the other OS and this OS.
-	main(1, " chARM");
+	main(1, (char **)(&os_name_string));
 }
 
 ///////////////////////////////////////////////////////////////////////////////

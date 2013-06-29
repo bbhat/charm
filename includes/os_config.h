@@ -10,24 +10,27 @@
 #ifndef _OS_CONFIG_H
 #define _OS_CONFIG_H
 
+// OS Name
+#define OS_NAME_STRING					"chARM"
+
 // Drivers to include
 #define ENABLE_RTC						1
-#define ENABLE_RTC_ALARM			1
+#define ENABLE_RTC_ALARM				1
 
 // Instruction and Data Cache related
 #if defined(SOC_S3C2440)
-#define ENABLE_INSTRUCTION_CACHE	1
+#define ENABLE_INSTRUCTION_CACHE		1
 #define ENABLE_DATA_CACHE				1
 #else
-#define ENABLE_INSTRUCTION_CACHE	0
+#define ENABLE_INSTRUCTION_CACHE		0
 #define ENABLE_DATA_CACHE				0
 #endif
 
 // Process related
-#define OS_PROCESS_NAME_SIZE		16
+#define OS_PROCESS_NAME_SIZE			16
 
 // MMU Related
-#define ENABLE_MMU				1
+#define ENABLE_MMU						1
 
 // Since the OS timer is not a fixed interval timer, there can be a very small drift
 // over a long period of time. The RTOS actually calculates the time spent in the 
@@ -57,7 +60,7 @@
 #endif
 
 // Task related configuration parameters
-#define MIN_PRIORITY					255
+#define MIN_PRIORITY				255
 #define OS_IDLE_TASK_STACK_SIZE		0x40		// In Words
 #define OS_STAT_TASK_STACK_SIZE		0x40		// In Words
 #define STAT_TASK_PERIOD			5000000		// 5 sec
@@ -72,7 +75,7 @@
 
 // Following values depend a lot on the timer resolution which is not very good in this case
 #define TASK_MIN_PERIOD				100	// 100 uSec
-#define TASK_MIN_BUDGET			100 // 100 uSec
+#define TASK_MIN_BUDGET				100 // 100 uSec
 
 #define MAX_OPEN_FILES_PER_PROCESS	8	// This should be <= 32
 
@@ -83,19 +86,19 @@ typedef enum
 {
 	KLOG_CONTEXT_SWITCH 	= (1 << 0),
 	KLOG_OS_TIMER_ISR 		= (1 << 1),
-	KLOG_TBE_EXCEPTION	= (1 << 2),
-	KLOG_OS_TIMER_SET 	= (1 << 3),
+	KLOG_TBE_EXCEPTION		= (1 << 2),
+	KLOG_OS_TIMER_SET 		= (1 << 3),
 	KLOG_SYNC_TIMER_ISR 	= (1 << 4),
 	
-	KLOG_MISC 			= (1 << 31)
+	KLOG_MISC 				= (1 << 31)
 	
 } Klog_MaskType;
 
-#define OS_ENABLE_CPU_STATS		1		// Enable OS & CPU Stats
+#define OS_ENABLE_CPU_STATS			1		// Enable OS & CPU Stats
 #define OS_WITH_VALIDATE_TASK		1
 
-#define	OS_KERNEL_LOGGING		0
-#define	OS_KLOG_MASK			(KLOG_SYNC_TIMER_ISR)
+#define	OS_KERNEL_LOGGING			0
+#define	OS_KLOG_MASK				(KLOG_SYNC_TIMER_ISR)
 #define DEBUG_UART_CHANNEL			0
 
 #endif // _OS_CONFIG_H

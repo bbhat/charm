@@ -8,6 +8,10 @@
 
 #include "os_core.h"
 #include "vic.h"
+#include "soc.h"
+
+static volatile unsigned long * vic_status_regs[4] = { VIC0IRQSTATUS, VIC1IRQSTATUS, VIC2IRQSTATUS, VIC3IRQSTATUS };
+static volatile unsigned long * vic_addr_regs[4] = { VIC0ADDR, VIC1ADDR, VIC2ADDR, VIC3ADDR };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Primary ARM Interrupt Handlers
@@ -38,10 +42,7 @@ void _reserved_interrupt(void)
 }
 
 void _IRQ_handler(void)
-{
-	static volatile unsigned long * vic_status_regs[4] = { VIC0IRQSTATUS, VIC1IRQSTATUS, VIC2IRQSTATUS, VIC3IRQSTATUS };
-	static volatile unsigned long * vic_addr_regs[4] = { VIC0ADDR, VIC1ADDR, VIC2ADDR, VIC3ADDR };
-	
+{	
 	OS_InterruptVector isr;
 
 	if(*vic_status_regs[VIC0])

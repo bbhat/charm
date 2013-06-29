@@ -166,7 +166,7 @@ _IRQHandler_:
 	@ Now that we have cleared the IRQ stack, we can re-enable interrupts
 @	bic		r7, r7, #I_Bit			
 @	msr		cpsr_c, r7			@ Reenable IRQ interrupt
-	
+		
 	@ Now it is safe to jump to the user defined interrupt handler
 	@ TODO: You are using thread stack this is not good
 	@ Note: r0 has the old g_current_task that will be passed to the called function
