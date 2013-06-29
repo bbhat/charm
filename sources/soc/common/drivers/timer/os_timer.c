@@ -18,6 +18,8 @@
 // which is used with a large current device.
 // For the purpose of OS, lets use Timer 0 & 1
 
+// Similarly S5PV210 has 5 32-bit timers. We use timers 0 and 1 for the OS
+
 // TODO: I need to make below calculations extremely efficient.
 // Use 64 bit calculation for accuracy and always round up
 #define CONVERT_us_TO_TICKS(us)		((((UINT64)TIMER0_TICK_FREQ * (us)) + (1000000-1)) / 1000000)
