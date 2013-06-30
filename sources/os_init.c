@@ -41,9 +41,11 @@ void _OS_Init()
 	// Initialize debug UART
 	Uart_Init(UART0);
 	
+#if ENABLE_RAMDISK==1	
 	if(ramdisk_init((void *)&__ramdisk_start__) != SUCCESS) {
 		panic("ramdisk_init failed\n");
 	}
+#endif
 	
 	// Initialize Instruction and Data Caches
 #if ENABLE_INSTRUCTION_CACHE == 1
