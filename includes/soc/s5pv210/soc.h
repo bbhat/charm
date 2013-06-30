@@ -5,6 +5,10 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
+
+#ifndef _SOC_H
+#define _SOC_H
+
 #define __REG(reg)		((volatile unsigned long *)(reg))
 #define __REG_V(reg)		(*(volatile unsigned long *)(reg))
 
@@ -441,24 +445,24 @@
  */
 #define ELFIN_TIMER_BASE		0xE2500000
 
-#define rTCFG0			__REG(0xE2500000)
-#define rTCFG1			__REG(0xE2500004)
-#define rTCON			__REG(0xE2500008)
-#define rTCNTB0			__REG(0xE250000c)
-#define rTCMPB0			__REG(0xE2500010)
-#define rTCNTO0			__REG(0xE2500014)
-#define rTCNTB1			__REG(0xE2500018)
-#define rTCMPB1			__REG(0xE250001c)
-#define rTCNTO1			__REG(0xE2500020)
-#define rTCNTB2			__REG(0xE2500024)
-#define rTCMPB2			__REG(0xE2500028)
-#define rTCNTO2			__REG(0xE250002c)
-#define rTCNTB3			__REG(0xE2500030)
-#define rTCMPB3			__REG(0xE2500034)
-#define rTCNTO3			__REG(0xE2500038)
-#define rTCNTB4			__REG(0xE250003c)
-#define rTCNTO4			__REG(0xE2500040)
-#define rTINT_CSTAT		__REG(0xE2500044)
+#define rTCFG0			__REG_V(0xE2500000)
+#define rTCFG1			__REG_V(0xE2500004)
+#define rTCON			__REG_V(0xE2500008)
+#define rTCNTB0			__REG_V(0xE250000c)
+#define rTCMPB0			__REG_V(0xE2500010)
+#define rTCNTO0			__REG_V(0xE2500014)
+#define rTCNTB1			__REG_V(0xE2500018)
+#define rTCMPB1			__REG_V(0xE250001c)
+#define rTCNTO1			__REG_V(0xE2500020)
+#define rTCNTB2			__REG_V(0xE2500024)
+#define rTCMPB2			__REG_V(0xE2500028)
+#define rTCNTO2			__REG_V(0xE250002c)
+#define rTCNTB3			__REG_V(0xE2500030)
+#define rTCMPB3			__REG_V(0xE2500034)
+#define rTCNTO3			__REG_V(0xE2500038)
+#define rTCNTB4			__REG_V(0xE250003c)
+#define rTCNTO4			__REG_V(0xE2500040)
+#define rTINT_CSTAT		__REG_V(0xE2500044)
 
 /* Fields */
 #define fTCFG0_DZONE		Fld(8,16)       /* the dead zone length (= timer 0) */
@@ -953,9 +957,9 @@
 #define VIC0PROTECTION		__REG(VIC0_BASE + 0x20)
 #define VIC0SWPRIORITYMASK	__REG(VIC0_BASE + 0x24)
 #define VIC0PRIORITYDAISY		__REG(VIC0_BASE + 0x28)
-#define VIC0VECTADDR(vec)		__REG(VIC0_BASE + 0x100 + ((vec)<< 2))
+#define VIC0VECTADDR		__REG(VIC0_BASE + 0x100)
 #define VIC0VECPRIORITY		__REG(VIC0_BASE + 0x200)
-#define VIC0ADDR					__REG(VIC0_BASE + 0xf00)
+#define VIC0ADDR				__REG(VIC0_BASE + 0xf00)
 #define VIC0PERID0				__REG(VIC0_BASE + 0xfe0)
 #define VIC0PERID1				__REG(VIC0_BASE + 0xfe4)
 #define VIC0PERID2				__REG(VIC0_BASE + 0xfe8)
@@ -979,7 +983,7 @@
 #define VIC1PRIORITYDAISY		__REG(VIC1_BASE + 0x28)
 #define VIC1VECTADDR			__REG(VIC1_BASE + 0x100)
 #define VIC1VECPRIORITY		__REG(VIC1_BASE + 0x200)
-#define VIC1ADDR					__REG(VIC1_BASE + 0xf00)
+#define VIC1ADDR				__REG(VIC1_BASE + 0xf00)
 #define VIC1PERID0				__REG(VIC1_BASE + 0xfe0)
 #define VIC1PERID1				__REG(VIC1_BASE + 0xfe4)
 #define VIC1PERID2				__REG(VIC1_BASE + 0xfe8)
@@ -1003,7 +1007,7 @@
 #define VIC2PRIORITYDAISY		__REG(VIC2_BASE + 0x28)
 #define VIC2VECTADDR			__REG(VIC2_BASE + 0x100)
 #define VIC2VECPRIORITY		__REG(VIC2_BASE + 0x200)
-#define VIC2ADDR					__REG(VIC2_BASE + 0xf00)
+#define VIC2ADDR				__REG(VIC2_BASE + 0xf00)
 #define VIC2PERID0				__REG(VIC2_BASE + 0xfe0)
 #define VIC2PERID1				__REG(VIC2_BASE + 0xfe4)
 #define VIC2PERID2				__REG(VIC2_BASE + 0xfe8)
@@ -1027,7 +1031,7 @@
 #define	 VIC3PRIORITYDAISY		__REG(VIC3_BASE + 0x28)
 #define VIC3VECTADDR			__REG(VIC3_BASE + 0x100)
 #define VIC3VECPRIORITY		__REG(VIC3_BASE + 0x200)
-#define VIC3ADDR					__REG(VIC3_BASE + 0xf00)
+#define VIC3ADDR				__REG(VIC3_BASE + 0xf00)
 #define VIC3PERID0				__REG(VIC3_BASE + 0xfe0)
 #define VIC3PERID1				__REG(VIC3_BASE + 0xfe4)
 #define VIC3PERID2				__REG(VIC3_BASE + 0xfe8)
@@ -1081,3 +1085,6 @@
 #define ELFIN_TZPC1_BASE		0xFAD00000
 #define ELFIN_TZPC2_BASE		0xE0600000
 #define ELFIN_TZPC3_BASE		0xE1C00000
+
+
+#endif // _SOC_H

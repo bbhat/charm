@@ -135,14 +135,14 @@ R1_nF		=	(1<<30)
 
    	.global _OS_Init
 	.global _start	
-	.global	_IRQHandler_
 	.global	_SVC_StackTop_
+	.global _reset_handler
 
 //---------------------------------------------------------------------
 //  Start routine
 //---------------------------------------------------------------------
 _start:
-ResetHandler:
+_reset_handler:
 
     ldr	r0,=WTCON       // watch dog disable
     ldr	r1,=0x0
@@ -173,28 +173,6 @@ ResetHandler:
 
 	.LTORG   
 	
-//---------------------------------------------------------------------
-// Function to set custom IRQ Interrupt vector
-// OS_InterruptVector OS_SetInterruptVector(OS_InterruptVector isr, UINT32 index)
-//---------------------------------------------------------------------
-	.global OS_SetInterruptVector
-OS_SetInterruptVector:
-
-	ldr		r2,=HandleEINT0		// Load the first IRQ handler address
-	add		r2, r1, LSL #2
-	swp		r0, r0, [r2]		// Read the old interrupt vector and replace with the new one
-	
-	mov		r3, #1
-	mov		r3, r3, LSL r1
-	ldr		r2,=INTMSK			// Clear appropriate bit in INTMSK
-	ldr		r1, [r2]			// Read INTMSK
-	bic		r1, r1, r3
-	str		r1, [r2]
-		
-	mov      pc, lr
-	
-	.LTORG	
-
 //---------------------------------------------------------------------
 //  Initialize Stack
 //---------------------------------------------------------------------
@@ -320,78 +298,6 @@ _OS_SystemInit:
 	mov   	pc, lr
 
 	.LTORG   
-
-//------------------------------------------------------------------------------
-// Interrupt vector in DRAM. We get control into this section from the 
-// Vector table in the flash at address zero
-//------------------------------------------------------------------------------
-	.section .text.vector       // AREA ???, CODE, READONLY
-	.code 32             		// CODE32
-	
-HandleReset:  					// Reset  
-	b		ResetHandler
-	.space  28		
-HandleUndef:         			// Undefined Instruction Exception
-	b		.
-	.space  28		
-HandleSWI:      				// Software Interrupt Exception
-	b		.
-	.space  28		
-HandlePabort:   				// Prefetch Abort Exception
-	b		.
-	.space  28		
-HandleDabort:   				// Data Abort Exception
-	b		.
-	.space  28		
-HandleReserved: 				// Reserved
-	b		.
-	.space  28		
-HandleIRQ:      				// IRQ Exception
-	b		_IRQHandler_
-	.space  28		
-HandleFIQ:      				// FIQ Exception
-	b		.
-	.space  28		
-
-// IRQ Interrupts
-
-	.global		_IRQ_TABLE_
-_IRQ_TABLE_:
-
-HandleEINT0:	mov    pc, lr
-HandleEINT1:	mov    pc, lr
-HandleEINT2:	mov    pc, lr
-HandleEINT3:	mov    pc, lr
-HandleEINT4_7:	mov    pc, lr
-HandleEINT8_23:	mov    pc, lr
-HandleCAM:		mov    pc, lr		// Added for 2440.
-HandleBATFLT:	mov    pc, lr
-HandleTICK:		mov    pc, lr
-HandleWDT:		mov    pc, lr
-HandleTIMER0: 	mov    pc, lr
-HandleTIMER1: 	mov    pc, lr
-HandleTIMER2: 	mov    pc, lr
-HandleTIMER3: 	mov    pc, lr
-HandleTIMER4: 	mov    pc, lr
-HandleUART2:  	mov    pc, lr
-HandleLCD: 		mov    pc, lr
-HandleDMA0:		mov    pc, lr
-HandleDMA1:		mov    pc, lr
-HandleDMA2:		mov    pc, lr
-HandleDMA3:		mov    pc, lr
-HandleMMC:		mov    pc, lr
-HandleSPI0:		mov    pc, lr
-HandleUART1:	mov    pc, lr
-HandleNFCON:	mov    pc, lr		// Added for 2440.
-HandleUSBD:		mov    pc, lr
-HandleUSBH:		mov    pc, lr
-HandleIIC:		mov    pc, lr
-HandleUART0: 	mov    pc, lr
-HandleSPI1: 	mov    pc, lr
-HandleRTC: 		mov    pc, lr
-HandleADC: 		mov    pc, lr
-VectorTableEnd:	mov    pc, lr
-
 
 //------------------------------------------------------------------------------
 // Some global variables

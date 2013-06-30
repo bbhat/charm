@@ -75,16 +75,20 @@ OS_Error elf_load(void * elfdata, void ** start_address)
 	// DCache, ICache, and memory coherence is generally achieved by:
 	// 		cleaning the DCache to ensure memory is up to date with all changes
 	// 		invalidating the ICache to ensure that the ICache is forced to re-fetch instructions from memory.
-	
+		
+#if ENABLE_DATA_CACHE==1	
 	// Flush the data cache
 	_OS_CleanInvalidateDCache(NULL, 0);	// Passing NULL, 0 invalidates the whole cache
+#endif
 	
+#if ENABLE_INSTRUCTION_CACHE==1	
 	// Invalidate the Instruction Cache
 	_OS_flushICache();
+#endif
 
 	// Update the start address
 	if(start_address) {
-		*start_address = elf_hdr->e_entry;
+		*start_address = (void *)elf_hdr->e_entry;
 	}
 	
 	// The ELF file was loaded successfully

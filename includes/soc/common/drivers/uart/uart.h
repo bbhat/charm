@@ -23,7 +23,7 @@ typedef enum {
 
 #if defined(SOC_S5PV210)
 	#define UART_FIFO_SIZE(ch)	((ch == UART0) ? 256 : 64)
-#elif defined(SOC_ARM920T)
+#elif defined(SOC_S3C2440)
 	#define UART_FIFO_SIZE	64
 #endif
 

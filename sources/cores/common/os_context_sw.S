@@ -66,6 +66,7 @@ INTMASK     = 0xc0
 .global	g_current_task
 .global	g_current_process
 .global	_SVC_STACK_TOP_
+.global _jump_to_custom_IRQ_Handler
 
 	.code 32             		// CODE32
 	
@@ -154,29 +155,21 @@ _IRQHandler_:
 	// Switch to SVC mode before calling User defined ISR
 	bic		r3, r3, #MODEMASK
 	orr		r3, r3, #SVCMODE
-	msr		cpsr_c, r3			// Switch to SVC mode
+	msr		cpsr_c, r3					// Switch to SVC mode
 
 	// Now that we don`t have a good stack to use, we should use the SVC stack
 	ldr		sp,[r1]						// Load _SVC_STACK_TOP_
 
-	ldr     r1,=INTOFFSET		// Read the INTOFFSET register before enabling interrupts
-	ldr     r1,[r1]  
-
-	// TODO: Enable interrupts once you have debugged the simpler case
-	// Now that we have cleared the IRQ stack, we can re-enable interrupts
-// 	bic		r7, r7, #I_Bit			
-// 	msr		cpsr_c, r7			// Reenable IRQ interrupt
-		
 	// Now it is safe to jump to the user defined interrupt handler
-	// TODO: You are using thread stack this is not good
-	// Note: r0 has the old g_current_task that will be passed to the called function
-	ldr      r2,=_IRQ_TABLE_
-	add      r2,r2,r1,lsl #2	// Use INTOFFSET register value to dereference the Vector table
-	mov      lr, pc
-	ldr      pc,[r2]
+	// Register r0 has the old g_current_task that will be passed to the called function
+	b 		_jump_to_custom_IRQ_Handler
+
+
+// ----------------------------------------------------------------------------
+// Context Restore
+// ----------------------------------------------------------------------------
 	
 	// Restore the new task (fall to below code)
-
 _OS_ContextRestore:		// void C6713_ContextRestore(new_thread_pointer)
 
 	// Disable Interrupt and retain the SVC mode

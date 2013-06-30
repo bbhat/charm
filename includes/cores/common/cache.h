@@ -24,7 +24,7 @@
 	// Or else we will flush individual addresses
 	#define WHOLE_CACHE_OP_THRESHOLD		0x4000
 
-#elif defined(SOC_ARM920T)
+#elif defined(SOC_S3C2440)
 
 	// ARM920T has 16KB Instruction and Data Caches
 	#define ICACHE_SIZE				0x4000

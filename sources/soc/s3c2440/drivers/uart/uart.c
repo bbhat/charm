@@ -13,6 +13,7 @@
 #include "os_core.h"
 #include "soc.h"
 #include "uart.h"
+#include "target.h"
 #include "os_core.h"
 
 static UINT8 Uart_init_status = 0;

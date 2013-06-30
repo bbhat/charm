@@ -11,6 +11,7 @@
 #define _MMU_H_
 
 #include "os_types.h"
+#include "os_config.h"
 
 void MMU_EnableICache(void);
 void MMU_DisableICache(void);
@@ -26,6 +27,10 @@ void MMU_CleanInvalidateDCacheIndex(UINT32 index);
 void MMU_CleanInvalidateDCache(void);
 void MMU_WaitForInterrupt(void);
 
-#define _OS_WaitForInterrupt() MMU_WaitForInterrupt();
+#if ENABLE_MMU==1
+	#define _OS_WaitForInterrupt() MMU_WaitForInterrupt();
+#else
+	#define _OS_WaitForInterrupt()
+#endif
 
 #endif // _MMU_H_

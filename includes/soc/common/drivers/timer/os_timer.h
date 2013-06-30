@@ -13,6 +13,10 @@
 #include "os_core.h"
 #include "os_types.h"
 
+#if defined(SOC_S5PV210)
+	#include "vic.h"
+#endif
+
 enum
 {
 	TIMER0 = 0,
@@ -21,7 +25,7 @@ enum
 
 #if defined(SOC_S5PV210)
 	#define MAX_TIMER_COUNT		0xffffffff
-#elif defined(SOC_ARM920T)
+#elif defined(SOC_S3C2440)
 	#define MAX_TIMER_COUNT		0xffff
 #endif
 
@@ -34,6 +38,22 @@ void _OS_InitTimer ();
 void _OS_StartSyncTimer();
 
 #endif	// ENABLE_SYNC_TIMER
+
+#if defined(SOC_S3C2440)
+
+	#define TIMER0_INTERRUPT_INDEX		10
+	#define TIMER1_INTERRUPT_INDEX		11
+	
+	#define ACK_TIMER_INTERRUPT(intr_index)	{ rSRCPND = rINTPND = (1 << (intr_index)); }
+
+#elif defined(SOC_S5PV210)
+
+	#define TIMER0_INTERRUPT_INDEX		21
+	#define TIMER1_INTERRUPT_INDEX		22
+
+	#define ACK_TIMER_INTERRUPT(intr_index)	{ _vic_ack_irq(intr_index); }
+
+#endif
 
 // The following function sets up the OS timer.
 // Input:

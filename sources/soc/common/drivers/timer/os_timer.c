@@ -52,8 +52,8 @@ void _OS_InitTimer ()
 		rTCON &= ~0xfff;
 		
 		// Clear any pending interrupts
-		rSRCPND = (3 << 10);
-		rINTPND = (3 << 10);
+		ACK_TIMER_INTERRUPT(TIMER0_INTERRUPT_INDEX);
+		ACK_TIMER_INTERRUPT(TIMER1_INTERRUPT_INDEX);
 		
 		timer0_count_buffer = 0;
 				
@@ -62,10 +62,10 @@ void _OS_InitTimer ()
 		rTCFG1 = (rTCFG1 & 0xffffff00) | (TIMER1_DIVIDER << 4) | TIMER0_DIVIDER;		// Set the divider
 		
 		// Set the interrupt handlers. This also unmasks that interrupt
-		OS_SetInterruptVector(_OS_Timer0ISRHandler, TIMER0_INT_VECTOR_INDEX);
+		OS_SetInterruptVector(_OS_Timer0ISRHandler, TIMER0_INTERRUPT_INDEX);
 		
 #if ENABLE_SYNC_TIMER==1		// Setup SYNC timer
-		OS_SetInterruptVector(_OS_Timer1ISRHandler, TIMER1_INT_VECTOR_INDEX);		
+		OS_SetInterruptVector(_OS_Timer1ISRHandler, TIMER1_INTERRUPT_INDEX);		
 #endif // ENABLE_SYNC_TIMER
 
 		// Set the initialized flag
@@ -107,10 +107,9 @@ void _OS_TimerInterrupt(UINT32 timer)
 	// Hence comment following code
 	//rTCON &= ~(0x0f << (timer << 3));
 	
-	// Clear the interrupt flag in the SRCPND and INTPND registers
-	rSRCPND = (BIT_TIMER0 << timer);
-	rINTPND = (BIT_TIMER0 << timer);
-	
+	// Acknowledge the interrupt
+	ACK_TIMER_INTERRUPT(TIMER0_INTERRUPT_INDEX + timer);
+
 	// Since there has been an interrupt, the timer must have reloaded MAX_TIMER_COUNT
 	// rTCNTB register. So reload the right value to use.
 	switch(timer)
@@ -177,10 +176,6 @@ UINT32 _OS_UpdateTimer(UINT32 * delay_in_us)
 		req_count = 0;
 		Klog32(KLOG_OS_TIMER_SET, "OS Timer Set (disabling) - ", 0);
 	}
-	
-	// Clear the interrupt flag in the SRCPND and INTPND registers
-	rSRCPND = BIT_TIMER0;
-	rINTPND = BIT_TIMER0;
 	
 	// Calculate the elapsed time. There are following 4 cases:
 	// 1. The OS timer has expired and the ISR has finished.

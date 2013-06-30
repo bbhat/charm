@@ -1,71 +1,99 @@
 ///////////////////////////////////////////////////////////////////////////////
 //	
 //						Copyright 2013 xxxxxxx, xxxxxxx
-//	File:	int_vectors.c
+//	File:	int_vectors.S
 //	Author:	Bala B.
 //	Description: S5PV210 Interrupt handlers
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "os_core.h"
-#include "vic.h"
-#include "soc.h"
+VIC0_BASE	=	0xF2000000
+VIC1_BASE	=	0xF2100000
+VIC2_BASE	=	0xF2200000
+VIC3_BASE	=	0xF2300000
 
-static volatile unsigned long * vic_status_regs[4] = { VIC0IRQSTATUS, VIC1IRQSTATUS, VIC2IRQSTATUS, VIC3IRQSTATUS };
-static volatile unsigned long * vic_addr_regs[4] = { VIC0ADDR, VIC1ADDR, VIC2ADDR, VIC3ADDR };
+// VIC0
+VIC0IRQSTATUS	=	(VIC0_BASE + 0x00)
+VIC0FIQSTATUS	=	(VIC0_BASE + 0x04)
+VIC0ADDR		=	(VIC0_BASE + 0xf00)
 
-///////////////////////////////////////////////////////////////////////////////
-// Primary ARM Interrupt Handlers
-///////////////////////////////////////////////////////////////////////////////
-void _undefined_instr_handler(void)
-{
-	panic("Unandled FIQ");
-}
+// VIC1
+VIC1IRQSTATUS	=	(VIC1_BASE + 0x00)
+VIC1FIQSTATUS	=	(VIC1_BASE + 0x04)
+VIC1ADDR		=	(VIC1_BASE + 0xf00)
 
-void _software_interrupt_handler(void)
-{
-	panic("Unandled FIQ");
-}
+// VIC2
+VIC2IRQSTATUS	=	(VIC2_BASE + 0x00)
+VIC2FIQSTATUS	=	(VIC2_BASE + 0x04)
+VIC2ADDR		=	(VIC2_BASE + 0xf00)
 
-void _prefetch_abort_handler(void)
-{
-	panic("Unandled FIQ");
-}
+// VIC3
+VIC3IRQSTATUS	=	(VIC3_BASE + 0x00)
+VIC3FIQSTATUS	=	(VIC3_BASE + 0x04)
+VIC3ADDR		=	(VIC3_BASE + 0xf00)
 
-void _data_abort_handler(void)
-{
-	panic("Unandled FIQ");
-}
+.global _jump_to_custom_IRQ_Handler
+.global _reset_handler
+.global	_undefined_instr_handler
+.global	_software_interrupt_handler
+.global	_prefetch_abort_handler
+.global	_data_abort_handler
+.global	_reserved_interrupt
+.global	_IRQHandler_
+.global	_FIQHandler_
 
-void _reserved_interrupt(void)
-{
-	panic("Unandled FIQ");
-}
-
-void _IRQ_handler(void)
-{	
-	OS_InterruptVector isr;
-
-	if(*vic_status_regs[VIC0])
-	{
-		isr = (OS_InterruptVector) (*vic_addr_regs[VIC0]);
-	}
-	else if(*vic_status_regs[VIC1])
-	{
-		isr = (OS_InterruptVector) (*vic_addr_regs[VIC1]);
-	}
-	else if(*vic_status_regs[VIC2])
-	{
-		isr = (OS_InterruptVector) (*vic_addr_regs[VIC2]);
-	}
-	else if(*vic_status_regs[VIC3])
-	{
-		isr = (OS_InterruptVector) (*vic_addr_regs[VIC3]);
-	}
+//------------------------------------------------------------------------------
+// Interrupt vector in Internal SRAM. We get control into this section from the  IROM. 
+// The iROM has fixed the address of interrupt vector table at 0xD0037400
+//------------------------------------------------------------------------------
+	.section .text.vector   // AREA ???, CODE, READONLY
+	.code 32             	// CODE32
 	
-	if(isr) (*isr)();		// Invoke the 	 ISR
-}
+b	_reset_handler
+b	_undefined_instr_handler
+b	_software_interrupt_handler
+b	_prefetch_abort_handler
+b	_data_abort_handler
+b	_reserved_interrupt
+b	_FIQHandler_
+b	_FIQHandler_
 
-void _FIQ_handler(void)
-{
-	panic("Unandled FIQ");
-}
+	.section .text       	// AREA ???, CODE, READONLY
+	.code 32             	// CODE32
+	
+//-------------------------------------------------------------------------	
+// Function to jump to custom IRQ Handler
+// void _jump_to_custom_IRQ_Handler(old task)
+//-------------------------------------------------------------------------
+_jump_to_custom_IRQ_Handler:
+	
+	// Check VIC0
+	ldr		r1,=VIC0IRQSTATUS
+	ldr 	r1,[r1]
+	cmp		r1, #0
+	ldrne 	r2,=VIC0ADDR
+	ldrne	pc,[r2]			// We dont retrun from here
+
+	// Check VIC1
+	ldr		r1,=VIC0IRQSTATUS
+	ldr 	r1,[r1]
+	cmp		r1, #0
+	ldrne 	r2,=VIC1ADDR
+	ldrne	pc,[r2]			// We dont retrun from here
+
+	// Check VIC2
+	ldr		r1,=VIC2IRQSTATUS
+	ldr 	r1,[r1]
+	cmp		r1, #0
+	ldrne 	r2,=VIC2ADDR
+	ldrne	pc,[r2]			// We dont retrun from here
+
+	// Check VIC3
+	ldr		r1,=VIC3IRQSTATUS
+	ldr 	r1,[r1]
+	cmp		r1, #0
+	ldrne 	r2,=VIC3ADDR
+	ldrne	pc,[r2]			// We dont retrun from here
+
+	// If we dont find any interrupts, lets hangup. This should never happen
+	b		.
+	

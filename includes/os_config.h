@@ -30,7 +30,7 @@
 #define OS_PROCESS_NAME_SIZE			16
 
 // MMU Related
-#define ENABLE_MMU						1
+#define ENABLE_MMU						0
 
 // Since the OS timer is not a fixed interval timer, there can be a very small drift
 // over a long period of time. The RTOS actually calculates the time spent in the 

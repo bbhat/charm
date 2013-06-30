@@ -155,6 +155,7 @@ int readFileData( int rdfile, off_t off, size_t size, char *buf )
 
 int readFile(int rdfile, Node_File *file)
 {
+	int i;
     if(!file || rdfile < 0) {
 		fprintf(stderr,"ERROR: readFile invalid arguments\n");
 		return -1;
@@ -162,7 +163,7 @@ int readFile(int rdfile, Node_File *file)
 
 	if((file->fileHdr.flags & F_DIR_MASK) == F_DIR) 
 	{
-		for(int i = 0; i < file->fileHdr.fileCount; i++)
+		for(i = 0; i < file->fileHdr.fileCount; i++)
 		{
             Node_File * child = (Node_File *)malloc(sizeof(Node_File));
             if(!child)
@@ -1077,11 +1078,13 @@ Exit:
 //////////////////////////////////////////////////////////////////////////////////////////
 void printFileName(Node_File * file, int depth)
 {
+	int i;
+	
 	if(!file) return;
 	
 	// First create proper indentation for the file / folder name
 	printf("\n");
-	for(int i = 0; i < depth; i++)
+	for(i = 0; i < depth; i++)
 	{
 		printf("   ");
 	}

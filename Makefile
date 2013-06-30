@@ -10,7 +10,7 @@
 ASM=arm-elf-gcc
 CC:=arm-elf-gcc
 LINK:=arm-elf-ld
-LIBPATH:=/usr/local/dev-arm/i386-Darwin-arm-gcc-4.6.1/lib/gcc/arm-elf/4.6.1
+LIBPATH:=/usr/local/dev-arm/i386-Darwin-arm-gcc-4.6.1/lib/gcc/arm-elf/4.6.1 /opt/local/lib/gcc/arm-elf/4.6.1/fpu /opt/local/arm-elf/lib/fpu
 
 ## Initialize default arguments
 TARGET		?=	mini210s
@@ -34,13 +34,13 @@ ifeq ($(SOC), s5pv210)
 	CORE := cortex-a8
 endif
 
-BUILD_DIR			:=	$(DST)/$(CONFIG)-$(TARGET)
-MAP_FILE				:=	$(BUILD_DIR)/$(TARGET).map
+BUILD_DIR		:=	$(DST)/$(CONFIG)-$(TARGET)
+MAP_FILE		:=	$(BUILD_DIR)/$(TARGET).map
 BOOT_MAP_FILE	:=	$(BUILD_DIR)/boot.map
 LINKERS_SCRIPT	:=	scripts/$(TARGET)/memmap.ld
-BOOT_LSCRIPT		:=	scripts/$(TARGET)/boot.ld
-DEP_DIR				:=	$(BUILD_DIR)/dep
-OBJ_DIR				:=	$(BUILD_DIR)/obj
+BOOT_LSCRIPT	:=	scripts/$(TARGET)/boot.ld
+DEP_DIR			:=	$(BUILD_DIR)/dep
+OBJ_DIR			:=	$(BUILD_DIR)/obj
 KERNEL_TARGET	:=	$(BUILD_DIR)/$(TARGET).elf
 BOOT_TARGET		:=	$(BUILD_DIR)/boot.elf
 RAMDISK_TARGET	:=	$(BUILD_DIR)/ramdisk.img
@@ -48,7 +48,10 @@ ROOTFS_PATH		:=	rootfs
 
 ## Create INCLUDES 
 include $(wildcard includes/*.mk)
-INCLUDES			:=	$(addprefix -I ,includes $(INCLUDES))
+INCLUDES		:=	$(addprefix -I ,includes $(INCLUDES))
+
+## Create LIBPATH
+LIBPATH			:=	$(addprefix -L , $(LIBPATH))
 
 ## Build list of source and object files
 SUBDIRS			:=	sources main
@@ -61,13 +64,13 @@ include $(wildcard boot/$(TARGET)/*.mk)
 include $(foreach sdir, $(SUBDIRS), $(wildcard $(sdir)/*.mk))
 
 ## Build a list of corresponding object files
-OBJS			:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
+OBJS		:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
 BOOT_OBJS	:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(BOOT_SOURCES))))
 
 ## Build flags
-AFLAGS		:=	-mcpu=$(CORE) -g
-CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian
-LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Map $(MAP_FILE) -L $(LIBPATH) -lgcc
+AFLAGS		:=	-mcpu=$(CORE) -g -mfpu=fpa
+CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian -mfpu=fpa
+LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Map $(MAP_FILE) $(LIBPATH) -lgcc
 ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)
 else ifeq ($(CONFIG),release)
@@ -83,7 +86,7 @@ ifeq ($(TARGET), mini210s)
 endif
 
 ifeq ($(SOC), s3c2440)
-	CFLAGS := $(CFLAGS) -D SOC_ARM920T
+	CFLAGS := $(CFLAGS) -D SOC_S3C2440
 endif
 ifeq ($(SOC), s5pv210)
 	CFLAGS := $(CFLAGS) -D SOC_S5PV210

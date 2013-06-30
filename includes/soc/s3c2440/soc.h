@@ -577,7 +577,4 @@
 #define BIT_SUB_TXD0	(0x1<<1)
 #define BIT_SUB_RXD0	(0x1<<0)
 
-#define TIMER0_INT_VECTOR_INDEX		10
-#define TIMER1_INT_VECTOR_INDEX		11
-
 #endif  //_SOC_H

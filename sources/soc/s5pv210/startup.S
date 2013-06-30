@@ -28,15 +28,7 @@ NOINT  		= 0xc0
 	.global _start
 	.global	_SVC_StackTop_
 	.global _platform_clock_init
-	
-	.global	_undefined_instr_handler
-	.global	_software_interrupt_handler
-	.global	_prefetch_abort_handler
-	.global	_data_abort_handler
-	.global	_reserved_interrupt
-	.global	_IRQ_handler
-	.global	_FIQ_handler
-
+	.global _reset_handler
 
 //---------------------------------------------------------------------
 //  Start routine
@@ -100,28 +92,6 @@ _mask_interrupts:
 	
     .LTORG 
 	
-//---------------------------------------------------------------------
-//  Function to set custom IRQ Interrupt vector
-// OS_InterruptVector OS_SetInterruptVector(OS_InterruptVector isr, UINT32 index)
-//---------------------------------------------------------------------
-	.global OS_SetInterruptVector
-OS_SetInterruptVector:
-
-	ldr		r2,=HandleEINT0		// Load the first IRQ handler address
-	add		r2, r1, LSL #2
-	swp		r0, r0, [r2]		// Read the old interrupt vector and replace with the new one
-	
-	mov		r3, #1
-	mov		r3, r3, LSL r1
-	ldr		r2,=INTMSK			// Clear appropriate bit in INTMSK
-	ldr		r1, [r2]			// Read INTMSK
-	bic		r1, r1, r3
-	str		r1, [r2]
-		
-	mov      pc, lr
-	
-	.LTORG	
-
 //---------------------------------------------------------------------
 //  Initialize Stack
 //---------------------------------------------------------------------
@@ -211,23 +181,6 @@ _OS_SystemInit:
 	mov   	pc, lr
 
 	.LTORG   
-
-//------------------------------------------------------------------------------
-// Interrupt vector in Internal SRAM. We get control into this section from the  IROM. 
-// The iROM has fixed the address of interrupt vector table at 0xD0037400
-//------------------------------------------------------------------------------
-	.section .vector       	// AREA ???, CODE, READONLY
-	.code 32             		// CODE32
-	
-	b		_reset_handler
-	b		_undefined_instr_handler
-	b		_software_interrupt_handler
-	b		_prefetch_abort_handler
-	b		_data_abort_handler
-	b		_reserved_interrupt
-	b		_IRQ_handler
-	b		_FIQ_handler
-
 
 //------------------------------------------------------------------------------
 // Some global variables
