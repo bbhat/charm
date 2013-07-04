@@ -7,9 +7,12 @@
 ##
 ###################################################################################
 
-ASM=arm-elf-gcc
-CC:=arm-elf-gcc
-LINK:=arm-elf-ld
+ASM		:=	arm-elf-gcc
+CC		:=	arm-elf-gcc
+LINK	:=	arm-elf-ld
+OBJCOPY	:=	arm-elf-objcopy
+OBJDUMP	:=	arm-elf-objdump
+
 LIBPATH:=/usr/local/dev-arm/i386-Darwin-arm-gcc-4.6.1/lib/gcc/arm-elf/4.6.1 /opt/local/lib/gcc/arm-elf/4.6.1/fpu /opt/local/arm-elf/lib/fpu
 
 ## Initialize default arguments
@@ -94,7 +97,7 @@ endif
 
 
 ## Rule specifications
-.PHONY:	all boot dep clean ramdiskmk elfmerge tools kernel usrlib ramdisk
+.PHONY:	all boot dep clean ramdiskmk elfmerge tools kernel usrlib ramdisk mkv210_image write2sd
 
 all:
 	make boot
@@ -175,6 +178,7 @@ tools:
 	@echo
 	make ramdiskmk 
 	make elfmerge
+	make mkv210_image
 
 ramdiskmk:
 	make -C tools/$@
@@ -182,11 +186,18 @@ ramdiskmk:
 elfmerge:
 	make -C tools/$@
 
+mkv210_image:
+	make -C tools/$@
+	
+write2sd: $(BOOT_TARGET) mkv210_image
+	./tools/mkv210_image/write2sd.sh $(BOOT_TARGET)
+
 clean:
 	rm -rf $(DST)
 	make -C usr/lib clean
 	make -C tools/elfmerge clean
 	make -C tools/ramdiskmk clean
+	make -C tools/mkv210_image clean
 	rm -rf $(ROOTFS_PATH)/kernel/bin
 
 ## Validate the arguments for build

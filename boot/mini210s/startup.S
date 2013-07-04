@@ -27,82 +27,169 @@
 #define LED2	0xb
 #define LED3	0x7
 
+#define ELFIN_VIC0_BASE_ADDR		(0xF2000000)
+#define ELFIN_VIC1_BASE_ADDR		(0xF2100000)
+#define ELFIN_VIC2_BASE_ADDR		(0xF2200000)
+#define ELFIN_VIC3_BASE_ADDR		(0xF2300000)
+
+#define GPJ2CON						(0xE0200280)
 //-------------------------------------------------------------------------------
 // Pre-defined constants
 //-------------------------------------------------------------------------------
-	USERMODE    = 0x10
-	FIQMODE     = 0x11
-	IRQMODE     = 0x12
-	SVCMODE     = 0x13
-	ABORTMODE   = 0x17
-	UNDEFMODE   = 0x1b
-	SYSMODE     = 0x1f
-	MODEMASK    = 0x1f
-	INTMASK     = 0xc0
+USERMODE    = 0x10
+FIQMODE     = 0x11
+IRQMODE     = 0x12
+SVCMODE     = 0x13
+ABORTMODE   = 0x17
+UNDEFMODE   = 0x1b
+SYSMODE     = 0x1f
+MODEMASK    = 0x1f
+INTMASK     = 0xc0
+
+NOINT  		= 0xc0
+
+//-------------------------------------------------------------------------------
+// Startup code
+// NOTE: that iROM has alredy done lot of work. Refer to S5PV210 RISC Microprocessor
+// IROM(Internal ROM) Booting Application Note
+//
+// iROM(BL0) boot-up sequence (Refer 2.3 V210 boot-up diagram)
+// 1. Disable the Watch-Dog Timer
+// 2. Initialize the instruction cache
+// 3. Initialize the stack region (see “memory map” on chap 2.5)
+// 4. Initialize the heap region. (see “memory map” on chap 2.5)
+// 5. Initialize the Block Device Copy Function. (see “Device Copy Function” on chap 2.7)
+// 6. Initialize the PLL and Set system clock. (see “clock configuration” on chap 2.11)
+// 7. Copy the BL1 to the internal SRAM region (see “Device Copy Function” on chap 2.7)
+// 8. Verify the checksum of BL1.
+// If checksum fails, iROM will try the second boot up. (SD/MMC channel 2)
+// 9. Check if it is secure-boot mode or not. In Mini210s board, it is NOT secure boot.
+// 		If the security key value is written in S5PV210, It’s secure-boot mode.
+// 		If it is secure-boot mode, verify the integrity of BL1.
+// 10. Jump to the start address of BL1
+//-------------------------------------------------------------------------------
 
 	.section	.startup
-
+	
+//-------------------------------------------------------------------------------
+// Start function:
+// Here we should not repeat the iROM functionality
+// Note that stack is alredy setup in iROM
+//-------------------------------------------------------------------------------
 	.global _start
 _start:
 
-	// Disable the WDT
-	ldr	r0, =ELFIN_WATCHDOG_BASE			
-	mov	r1, #0
-	str	r1, [r0]
-
+	// Configure GPIO for LEDs
+	bl configure_leds
+	
 	// Reset all LEDs	
 	mov r0, #0
-	bl set_led
+	bl set_leds
+	
+	// Mask all interrupts
+	bl _mask_interrupts
 
-	// Initialize SVC Stack
-	bl stack_init
-				
+	// Disable Interrupts
+	bl _disable_interrupt
+	
 	// Init SDRAM
 	bl SDRAM_init						
 
 	// Set LED0 to indicate that this step in the boot is over	
 	ldr r0, =LED0
-	bl set_led
+	bl set_leds
 	
-halt_cpu:
-	// Wait for the debugger to connect.
 	// The current version of boot just prepares the target for debugging.
 	// We need a full fledged Boot to be implemented later.
 	// Issue #20
+
+halt_cpu:
+
+	// Wait for interrupt or debugger to connect. This wakes up CPU even if the interrupt is masked.
+	wfi
+	
+	// Just in case	
 	b halt_cpu
 	
-	.section	.text
+		
+//---------------------------------------------------------------------
+//  Function to mask all interrupts
+//---------------------------------------------------------------------
+_mask_interrupts:
+
+	// Mask all interrupts in VIC0
+    ldr		r0,=ELFIN_VIC0_BASE_ADDR
+    ldr		r1,=0xFFFFFFFF
+    str		r1,[r0, #oINTMSK]
+    str		r1,[r0, #oINTSUBMSK]
+
+	// Mask all interrupts in VIC1
+    ldr		r0,=ELFIN_VIC1_BASE_ADDR
+    ldr		r1,=0xFFFFFFFF
+    str		r1,[r0, #oINTMSK]
+    str		r1,[r0, #oINTSUBMSK]
+
+	// Mask all interrupts in VIC2
+    ldr		r0,=ELFIN_VIC2_BASE_ADDR
+    ldr		r1,=0xFFFFFFFF
+    str		r1,[r0, #oINTMSK]
+    str		r1,[r0, #oINTSUBMSK]
+    
+    // Mask all interrupts in VIC3
+    ldr		r0,=ELFIN_VIC3_BASE_ADDR
+    ldr		r1,=0xFFFFFFFF
+    str		r1,[r0, #oINTMSK]
+    str		r1,[r0, #oINTSUBMSK]
+
+	mov 	pc, lr
 	
+    .LTORG 
+    
 //---------------------------------------------------------------------
-//  Initialize Stack
+//  OS Helper function: _disable_interrupt
+//  UINT32 _disable_interrupt(void)
 //---------------------------------------------------------------------
-stack_init:
-   mrs      r0, cpsr
-   bic      r0, r0, #MODEMASK
-
-   orr      r1, r0, #SVCMODE
-   msr      cpsr_c, r1                      // Supervisor Mode
-   ldr      sp, =__STACK_SVC_END__
-
-   mov      pc, lr
+	.global _disable_interrupt
+_disable_interrupt:
+	mrs 	r0,cpsr
+	orr 	r1,r0,#NOINT
+	msr 	cpsr_c,r1
+	and	r0, r0,#INTMASK		// Return old interrupt bits
+	mov	pc, lr
+	
+	.LTORG   	
 
 //---------------------------------------------------------------------
-//  Initialize Stack
+//  OS Helper function: _disable_interrupt
+//  void _enable_interrupt(UINT32 arg)
+//  Here the argument is the value returned by _disable_interrupt
+//---------------------------------------------------------------------
+	.global _enable_interrupt
+_enable_interrupt:
+	mrs 	r1,cpsr
+	bic 	r1,r1,#INTMASK
+	orr		r1,r1,r0		// Mask 
+	msr 	cpsr_c,r1
+	mov   	pc, lr
+	
+	.LTORG
+
+//---------------------------------------------------------------------
+//	configure LEDs
+//---------------------------------------------------------------------
+configure_leds:
+	ldr		r1, =GPJ2CON
+	ldr		r0, =0x00001111		// Configure as output pins
+	str		r0, [r1]
+	
+	mov     pc, lr
+
+//---------------------------------------------------------------------
 //	r0 - should have leds to be set or reset
 //---------------------------------------------------------------------
-set_led:
+set_leds:
 
 	ldr r1, =REG_LED
 	str r0, [r1]
 	
 	mov      pc, lr
-	
-//------------------------------------------------------------------------------
-// The location for stacks
-//------------------------------------------------------------------------------
-
-	.section .stack
-	
-	.space   0x600
-	
-__STACK_SVC_END__:

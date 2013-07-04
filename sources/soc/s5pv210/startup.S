@@ -65,30 +65,30 @@ _reset_handler:
 _mask_interrupts:
 
 	// Mask all interrupts in VIC0
-    ldr	r0,=ELFIN_VIC0_BASE_ADDR
-    ldr	r1,=0xFFFFFFFF
-    str	r1,[r0, #oINTMSK]
-    str	r1,[r0, #oINTSUBMSK]
+    ldr		r0,=ELFIN_VIC0_BASE_ADDR
+    ldr		r1,=0xFFFFFFFF
+    str		r1,[r0, #oINTMSK]
+    str		r1,[r0, #oINTSUBMSK]
 
 	// Mask all interrupts in VIC1
-    ldr	r0,=ELFIN_VIC1_BASE_ADDR
-    ldr	r1,=0xFFFFFFFF
-    str	r1,[r0, #oINTMSK]
-    str	r1,[r0, #oINTSUBMSK]
+    ldr		r0,=ELFIN_VIC1_BASE_ADDR
+    ldr		r1,=0xFFFFFFFF
+    str		r1,[r0, #oINTMSK]
+    str		r1,[r0, #oINTSUBMSK]
 
 	// Mask all interrupts in VIC2
-    ldr	r0,=ELFIN_VIC2_BASE_ADDR
-    ldr	r1,=0xFFFFFFFF
-    str	r1,[r0, #oINTMSK]
-    str	r1,[r0, #oINTSUBMSK]
+    ldr		r0,=ELFIN_VIC2_BASE_ADDR
+    ldr		r1,=0xFFFFFFFF
+    str		r1,[r0, #oINTMSK]
+    str		r1,[r0, #oINTSUBMSK]
     
     // Mask all interrupts in VIC3
-    ldr	r0,=ELFIN_VIC3_BASE_ADDR
-    ldr	r1,=0xFFFFFFFF
-    str	r1,[r0, #oINTMSK]
-    str	r1,[r0, #oINTSUBMSK]
+    ldr		r0,=ELFIN_VIC3_BASE_ADDR
+    ldr		r1,=0xFFFFFFFF
+    str		r1,[r0, #oINTMSK]
+    str		r1,[r0, #oINTSUBMSK]
 
-	mov pc, lr
+	mov 	pc, lr
 	
     .LTORG 
 	
