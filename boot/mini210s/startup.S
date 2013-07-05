@@ -33,6 +33,9 @@
 #define ELFIN_VIC3_BASE_ADDR		(0xF2300000)
 
 #define GPJ2CON						(0xE0200280)
+#define GPD0CON						(0xE02000A0)
+#define GPD0DAT						(0xE02000A4)
+
 //-------------------------------------------------------------------------------
 // Pre-defined constants
 //-------------------------------------------------------------------------------
@@ -47,6 +50,15 @@ MODEMASK    = 0x1f
 INTMASK     = 0xc0
 
 NOINT  		= 0xc0
+
+
+//-------------------------------------------------------------------------------
+// Global Symbols
+//-------------------------------------------------------------------------------
+	.global lcd_init
+	.global lcd_clear_screen
+	.global SDRAM_init
+	.global _platform_clock_init
 
 //-------------------------------------------------------------------------------
 // Startup code
@@ -79,25 +91,46 @@ NOINT  		= 0xc0
 	.global _start
 _start:
 
+	// Disable the WDT
+	ldr	r0, =ELFIN_WATCHDOG_BASE			
+	mov	r1, #0
+	str	r1, [r0]
+
 	// Configure GPIO for LEDs
-	bl configure_leds
+	bl _configure_leds
 	
 	// Reset all LEDs	
 	mov r0, #0
-	bl set_leds
+	bl _set_leds
+	
+	// Initialize SVC Stack
+	bl _stack_init
 	
 	// Mask all interrupts
 	bl _mask_interrupts
 
 	// Disable Interrupts
 	bl _disable_interrupt
-	
+		
+	// Initialize clocks
+	bl _platform_clock_init		
+		
 	// Init SDRAM
-	bl SDRAM_init						
+	bl SDRAM_init			
 
+	// Shut off Buzzer
+	bl _shutup_buzzer
+	
+	// Clear the screen
+	ldr r0, =0x1234
+	bl lcd_clear_screen
+
+	// Handle LCD
+	bl lcd_init
+	
 	// Set LED0 to indicate that this step in the boot is over	
 	ldr r0, =LED0
-	bl set_leds
+	bl _set_leds
 	
 	// The current version of boot just prepares the target for debugging.
 	// We need a full fledged Boot to be implemented later.
@@ -106,7 +139,7 @@ _start:
 halt_cpu:
 
 	// Wait for interrupt or debugger to connect. This wakes up CPU even if the interrupt is masked.
-	wfi
+	wfe
 	
 	// Just in case	
 	b halt_cpu
@@ -143,10 +176,49 @@ _mask_interrupts:
 
 	mov 	pc, lr
 	
-    .LTORG 
+//---------------------------------------------------------------------
+// Helper function: _shutup_buzzer
+// Unless we configure the GPIO to output 0, Buzzer is ON
+//---------------------------------------------------------------------
+_shutup_buzzer:
+		
+	// Configure GPIO as output
+	ldr		r1, =GPD0CON
+	ldr		r0, [r1]
+	orr		r0, r0, #1
+	str		r0, [r1]
+
+	ldr		r1, =GPD0DAT
+	ldr		r0, [r1]
+	bic		r0, r0, #1
+	str		r0, [r1]
+	
+    mov 	pc, lr
+
+//---------------------------------------------------------------------
+//  Initialize Stack
+//---------------------------------------------------------------------
+_stack_init:
+	mrs     r0, cpsr
+	bic     r0, r0, #MODEMASK
+	orr     r1, r0, #SVCMODE
+	msr     cpsr_c, r1                      // Supervisor Mode
+	ldr     sp, =__STACK_SVC_END__
+
+	mov		pc, lr
+
+
+//---------------------------------------------------------------------
+// Helper function: _shutdown_lcd
+// By default LCD turns ON
+//---------------------------------------------------------------------
+_shutdown_lcd:
+		
+	
+    mov 	pc, lr
     
 //---------------------------------------------------------------------
-//  OS Helper function: _disable_interrupt
+//  Helper function: _disable_interrupt
 //  UINT32 _disable_interrupt(void)
 //---------------------------------------------------------------------
 	.global _disable_interrupt
@@ -154,13 +226,11 @@ _disable_interrupt:
 	mrs 	r0,cpsr
 	orr 	r1,r0,#NOINT
 	msr 	cpsr_c,r1
-	and	r0, r0,#INTMASK		// Return old interrupt bits
-	mov	pc, lr
+	and		r0, r0,#INTMASK		// Return old interrupt bits
+	mov		pc, lr
 	
-	.LTORG   	
-
 //---------------------------------------------------------------------
-//  OS Helper function: _disable_interrupt
+//  Helper function: _disable_interrupt
 //  void _enable_interrupt(UINT32 arg)
 //  Here the argument is the value returned by _disable_interrupt
 //---------------------------------------------------------------------
@@ -172,12 +242,10 @@ _enable_interrupt:
 	msr 	cpsr_c,r1
 	mov   	pc, lr
 	
-	.LTORG
-
 //---------------------------------------------------------------------
 //	configure LEDs
 //---------------------------------------------------------------------
-configure_leds:
+_configure_leds:
 	ldr		r1, =GPJ2CON
 	ldr		r0, =0x00001111		// Configure as output pins
 	str		r0, [r1]
@@ -187,9 +255,18 @@ configure_leds:
 //---------------------------------------------------------------------
 //	r0 - should have leds to be set or reset
 //---------------------------------------------------------------------
-set_leds:
+_set_leds:
 
 	ldr r1, =REG_LED
 	str r0, [r1]
 	
 	mov      pc, lr
+
+//------------------------------------------------------------------------------
+// The location for stacks
+//------------------------------------------------------------------------------
+	.section .stack
+
+	.space   0x600
+	
+__STACK_SVC_END__:

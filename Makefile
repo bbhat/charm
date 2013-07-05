@@ -76,8 +76,10 @@ CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian -mfpu=fpa
 LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Map $(MAP_FILE) $(LIBPATH) -lgcc
 ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)
+	AFLAGS	:=	-g -D DEBUG $(AFLAGS)
 else ifeq ($(CONFIG),release)
 	CFLAGS	:=	-O2 -D RELEASE $(CFLAGS)
+	AFLAGS	:=	-D RELEASE $(AFLAGS)
 endif
 
 ifeq ($(TARGET), tq2440)
@@ -178,7 +180,10 @@ tools:
 	@echo
 	make ramdiskmk 
 	make elfmerge
+ifeq ($(TARGET), mini210s)		
 	make mkv210_image
+endif
+	
 
 ramdiskmk:
 	make -C tools/$@
@@ -187,7 +192,11 @@ elfmerge:
 	make -C tools/$@
 
 mkv210_image:
+ifeq ($(TARGET), mini210s)		
 	make -C tools/$@
+else
+	echo "mkv210_image is only valid for mini210s target"
+endif
 	
 write2sd: $(BOOT_TARGET) mkv210_image
 	./tools/mkv210_image/write2sd.sh $(BOOT_TARGET)

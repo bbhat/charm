@@ -47,7 +47,13 @@ _reset_handler:
 
 	bl	_mask_interrupts			// Mask all interrupts
 
+#ifndef DEBUG
+
+	// While debugging, we cannot change the clock. 
+	// Since this is already done in the boot it is not necessary to do it any way
 	bl	_platform_clock_init		// Initialize PLL
+	
+#endif
 	
     bl  _init_stacks          		// Initialize Stack
 
@@ -55,7 +61,7 @@ _reset_handler:
 
     ldr	pc, =_OS_Init				// Call _OS_Init
 
-    b     	.						// We should never return from _OS_Init
+    b     .							// We should never return from _OS_Init
 
 	.LTORG   
 

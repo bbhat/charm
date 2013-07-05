@@ -8,13 +8,13 @@ arm-elf-objcopy -O binary $1 /tmp/sdimage.bin
 ./tools/mkv210_image/build/mkv210_image /tmp/sdimage.bin /tmp/sdimage.img
 
 echo "un-mounting SD Card to be able to format"
-diskutil unmountDisk /dev/disk4
+diskutil unmountDisk /dev/disk3
 
 echo "Writing to SD Card"
-sudo dd bs=512 if=/tmp/sdimage.img of=/dev/disk4 seek=1
+sudo dd bs=512 if=/tmp/sdimage.img of=/dev/disk3 seek=1
 
 echo "un-mounting SD Card"
-diskutil unmountDisk /dev/disk4
+diskutil unmountDisk /dev/disk3
 
 echo "Cleaning up"
 rm -rf /tmp/sdimage.bin

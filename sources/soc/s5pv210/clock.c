@@ -24,7 +24,7 @@
 void _platform_clock_init()
 {
 	// 1 to set various clock switch, temporarily using a PLL
-	//rCLK_SRC0 = 0x0;
+	rCLK_SRC0 = 0x0;
 	
 	// 2 Set lock time, use the default value
 	// Set the PLL, the clock frequency from Fin upgrade to the target, you need some time, namely lock time
