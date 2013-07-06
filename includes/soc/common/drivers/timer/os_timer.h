@@ -44,14 +44,17 @@ void _OS_StartSyncTimer();
 	#define TIMER0_INTERRUPT_INDEX		10
 	#define TIMER1_INTERRUPT_INDEX		11
 	
-	#define ACK_TIMER_INTERRUPT(intr_index)	{ rSRCPND = rINTPND = (1 << (intr_index)); }
+	#define ACK_TIMER_INTERRUPT(timer)	{ rSRCPND = rINTPND = (1 << (TIMER0_INTERRUPT_INDEX + (timer))); }
 
 #elif defined(SOC_S5PV210)
 
 	#define TIMER0_INTERRUPT_INDEX		21
 	#define TIMER1_INTERRUPT_INDEX		22
 
-	#define ACK_TIMER_INTERRUPT(intr_index)	{ _vic_ack_irq(intr_index); }
+	#define ACK_TIMER_INTERRUPT(timer)	{ \
+			_vic_ack_irq(TIMER0_INTERRUPT_INDEX + (timer)); \
+			rTINT_CSTAT |= (0x20 << timer); \
+		}
 
 #endif
 

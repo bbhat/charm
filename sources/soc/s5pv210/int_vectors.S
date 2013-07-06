@@ -32,38 +32,26 @@ VIC3FIQSTATUS	=	(VIC3_BASE + 0x04)
 VIC3ADDR		=	(VIC3_BASE + 0xf00)
 
 .global _jump_to_custom_IRQ_Handler
-.global _reset_handler
-.global	_undefined_instr_handler
-.global	_software_interrupt_handler
-.global	_prefetch_abort_handler
-.global	_data_abort_handler
-.global	_reserved_interrupt
-.global	_IRQHandler_
-.global	_FIQHandler_
+.global _interrupt_vector_table
 
 //------------------------------------------------------------------------------
 // Interrupt vector in Internal SRAM. We get control into this section from the  IROM. 
 // The iROM has fixed the address of interrupt vector table at 0xD0037400
 //------------------------------------------------------------------------------
-	.section .text.vector   // AREA ???, CODE, READONLY
-	.code 32             	// CODE32
-	
-b	_reset_handler
-b	_undefined_instr_handler
-b	_software_interrupt_handler
-b	_prefetch_abort_handler
-b	_data_abort_handler
-b	_reserved_interrupt
-b	_FIQHandler_
-b	_FIQHandler_
+	.section .vectors
 
-	.section .text       	// AREA ???, CODE, READONLY
-	.code 32             	// CODE32
+_interrupt_vector_table:
+	.space   0x80
+
 	
 //-------------------------------------------------------------------------	
 // Function to jump to custom IRQ Handler
 // void _jump_to_custom_IRQ_Handler(old task)
 //-------------------------------------------------------------------------
+
+	.section .text       	// AREA ???, CODE, READONLY
+	.code 32             	// CODE32
+
 _jump_to_custom_IRQ_Handler:
 	
 	// Check VIC0

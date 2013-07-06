@@ -52,8 +52,8 @@ void _OS_InitTimer ()
 		rTCON &= ~0xfff;
 		
 		// Clear any pending interrupts
-		ACK_TIMER_INTERRUPT(TIMER0_INTERRUPT_INDEX);
-		ACK_TIMER_INTERRUPT(TIMER1_INTERRUPT_INDEX);
+		ACK_TIMER_INTERRUPT(TIMER0);
+		ACK_TIMER_INTERRUPT(TIMER1);
 		
 		timer0_count_buffer = 0;
 				
@@ -63,10 +63,20 @@ void _OS_InitTimer ()
 		
 		// Set the interrupt handlers. This also unmasks that interrupt
 		OS_SetInterruptVector(_OS_Timer0ISRHandler, TIMER0_INTERRUPT_INDEX);
+
+#if defined(SOC_S5PV210)
+		rTINT_CSTAT |= (1 << TIMER0);	// Enable Timer0 interrupt
+#endif
 		
 #if ENABLE_SYNC_TIMER==1		// Setup SYNC timer
 		OS_SetInterruptVector(_OS_Timer1ISRHandler, TIMER1_INTERRUPT_INDEX);		
+		
+	#if defined(SOC_S5PV210)
+		rTINT_CSTAT |= (1 << TIMER1);	// Enable Timer1 interrupt
+	#endif
+	
 #endif // ENABLE_SYNC_TIMER
+
 
 		// Set the initialized flag
 		initialized = 1;
@@ -108,7 +118,7 @@ void _OS_TimerInterrupt(UINT32 timer)
 	//rTCON &= ~(0x0f << (timer << 3));
 	
 	// Acknowledge the interrupt
-	ACK_TIMER_INTERRUPT(TIMER0_INTERRUPT_INDEX + timer);
+	ACK_TIMER_INTERRUPT(timer);
 
 	// Since there has been an interrupt, the timer must have reloaded MAX_TIMER_COUNT
 	// rTCNTB register. So reload the right value to use.

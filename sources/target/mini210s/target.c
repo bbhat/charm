@@ -20,15 +20,15 @@ void configure_user_led(User_led_type led)
 
 void user_led_on(User_led_type led)
 {
-	rGPJ2DAT |= (0x1 << (led << 2));
+	rGPJ2DAT &= ~(1 << led);
 }
 
 void user_led_off(User_led_type led)
 {
-	rGPJ2DAT &= ~(0x1 << (led << 2));	
+	rGPJ2DAT |= (1 << led);
 }
 
 void user_led_toggle(User_led_type led)
 {
-	rGPJ2DAT ^= (0x1 << (led << 2));
+	rGPJ2DAT ^= (1 << led);
 }

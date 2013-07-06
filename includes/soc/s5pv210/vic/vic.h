@@ -26,6 +26,9 @@ void _vic_enable_interrupt_vector(UINT32 index);
 void _vic_disable_interrupt_vector(UINT32 index);
 void _vic_ack_irq(UINT32 index);
 
-#define OS_SetInterruptVector	_vic_set_interrupt_vector
+#define OS_SetInterruptVector(isr, index)	{ \
+		_vic_set_interrupt_vector(isr, index); \
+		_vic_enable_interrupt_vector(index); \
+	}
 
 #endif // _VIC_H

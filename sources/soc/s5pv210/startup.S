@@ -56,6 +56,8 @@ _reset_handler:
 #endif
 	
     bl  _init_stacks          		// Initialize Stack
+    
+    bl	_set_svc_stack_top			// Initialize _SVC_STACK_TOP_
 
     bl 	_init_bss               	// Clear BSS section
 
@@ -172,18 +174,17 @@ _enable_interrupt:
 	.LTORG   
 
 //-------------------------------------------------------------------------------
-// Some initializations
-// TODO: More initializations if needed
+// Initialize _SVC_STACK_TOP_
 //-------------------------------------------------------------------------------
 
-	.global _OS_SystemInit
-_OS_SystemInit:
+	.global _set_svc_stack_top
+_set_svc_stack_top:
 
-	// Update _SVC_STACK_TOP_
+	// Update _SVC_STACK_TOP_ variable
 	ldr		r2,=_SVC_STACK_TOP_
 	ldr		r3,=__STACK_SVC_END__
 	str		r3, [r2]
-	
+		
 	mov   	pc, lr
 
 	.LTORG   

@@ -15,7 +15,7 @@
 
 // External functions used in here
 extern void _OS_InitTimer();
-extern void _OS_SystemInit();
+extern void _OS_PlatformInit();
 extern OS_Error ramdisk_init(void * addr);
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
@@ -36,7 +36,7 @@ void kernel_process_entry(void * pdata);
 void _OS_Init()
 {
 	// Call system initialization routine
-	_OS_SystemInit();
+	_OS_PlatformInit();
 	
 	// Initialize debug UART
 	Uart_Init(UART0);
