@@ -12,7 +12,7 @@
 #include "os_timer.h"
 #include "os_stat.h"
 #include "util.h"
-#include "mmu.h"
+#include "sysctl.h"
 
 _OS_Queue g_ready_q;
 _OS_Queue g_wait_q;
@@ -85,6 +85,11 @@ void OS_Start()
 			g_current_process->process_entry_function(g_current_process->pdata);
 			g_current_process = g_current_process->next;
 		}
+		
+		// Enable L2 Cache if required
+#if ENABLE_UNIFIED_L2_CACHE==1
+		_MMU_EnableL2Cache();
+#endif
 		
 		// Start scheduling by creating the first interrupt
 		UINT32 delay_start = OS_FIRST_SCHED_DELAY;
@@ -159,7 +164,8 @@ static void _OS_idle_task(void * ptr)
 	while(1)
 	{
 		// Wait for interrupt at lower power state
-		_OS_WaitForInterrupt();
+		_sysctl_wait_for_interrupt();
+		
 #if OS_ENABLE_CPU_STATS==1
 		g_idle_count++;
 #endif

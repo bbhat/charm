@@ -49,12 +49,12 @@ void _OS_Init()
 	
 	// Initialize Instruction and Data Caches
 #if ENABLE_INSTRUCTION_CACHE == 1
-	_OS_flushICache();
+	_OS_InvalidateICache();
 	_OS_EnableICache();
 #endif
 
 #if ENABLE_DATA_CACHE == 1
-	_OS_flushDCache();
+	_OS_InvalidateDCache();
 	_OS_EnableDCache();
 #endif
 

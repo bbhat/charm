@@ -83,7 +83,7 @@ OS_Error elf_load(void * elfdata, void ** start_address)
 	
 #if ENABLE_INSTRUCTION_CACHE==1	
 	// Invalidate the Instruction Cache
-	_OS_flushICache();
+	_OS_InvalidateICache();
 #endif
 
 	// Update the start address

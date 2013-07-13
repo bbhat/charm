@@ -20,16 +20,16 @@ void _OS_CleanInvalidateDCache(void * va, UINT32 len)
 	if(!len || !va || (len >= WHOLE_CACHE_OP_THRESHOLD))
 	{
 		// Clean the whole cache
-		MMU_CleanInvalidateDCache();
+		_sysctl_clean_invalidate_dcache();
 	}
 	else
 	{
 		// Clean individual addresses
 		while(offset < len)
 		{
-			MMU_CleanInvalidateDCacheMVA(valigned + offset);
+			_sysctl_clean_invalidate_dcache_mva(valigned + offset);
 			offset += CACHE_LINE_SIZE;
-		}		
+		}
 	}
 }
 

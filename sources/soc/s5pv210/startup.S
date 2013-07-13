@@ -44,7 +44,8 @@ _reset_handler:
 	ldr	r0, =ELFIN_WATCHDOG_BASE			
 	mov	r1, #0
 	str	r1, [r0]
-
+	
+	// Mask all interrupts
 	bl	_mask_interrupts			// Mask all interrupts
 
 #ifndef DEBUG
@@ -54,6 +55,8 @@ _reset_handler:
 	bl	_platform_clock_init		// Initialize PLL
 	
 #endif
+	
+	bl	_sysctl_disable_l2cache		// Disable L2 Cache
 	
     bl  _init_stacks          		// Initialize Stack
     

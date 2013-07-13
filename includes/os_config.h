@@ -18,19 +18,16 @@
 #define ENABLE_RTC_ALARM				1
 
 // Instruction and Data Cache related
-#if defined(SOC_S3C2440)
 #define ENABLE_INSTRUCTION_CACHE		1
 #define ENABLE_DATA_CACHE				1
-#else
-#define ENABLE_INSTRUCTION_CACHE		0
-#define ENABLE_DATA_CACHE				0
+
+// L2 Cache preference. Not all platforms have L2 cache
+#if defined(SOC_S5PV210)
+#define ENABLE_L2_CACHE					1
 #endif
 
 // Process related
 #define OS_PROCESS_NAME_SIZE			16
-
-// MMU Related
-#define ENABLE_MMU						0
 
 // Do we use Ramdisk? If we want processes to be separate entities, 
 // then keeping them in the ramdisk is the only way
