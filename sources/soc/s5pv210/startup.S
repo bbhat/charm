@@ -56,10 +56,12 @@ _reset_handler:
 	
 #endif
 	
-	bl	_sysctl_disable_l2cache		// Disable L2 Cache
-	
     bl  _init_stacks          		// Initialize Stack
     
+    bl	_sysctl_init				// Initialize System Control Coprocessor
+    
+    bl	_sysctl_disable_l2cache		// Disable L2 Cache
+	
     bl	_set_svc_stack_top			// Initialize _SVC_STACK_TOP_
 
     bl 	_init_bss               	// Clear BSS section

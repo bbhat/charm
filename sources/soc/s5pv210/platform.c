@@ -7,7 +7,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 void _OS_PlatformInit(void)
-{
+{	
 	// Install exception handlers
-	_OS_install_exception_handlers();		
+	_OS_install_exception_handlers();
 }

@@ -56,4 +56,18 @@ void _sysctl_wait_for_interrupt(void);
 	void _sysctl_enable_l2cache(void);
 #endif
 
+
+//----------------------------------------------------------------------------------------
+//  Global Data members
+//----------------------------------------------------------------------------------------
+extern UINT32 _icache_set_count;
+extern UINT32 _icache_ways_count;
+extern UINT32 _icache_line_size;
+extern UINT32 _dcache_set_count;
+extern UINT32 _dcache_ways_count;
+extern UINT32 _dcache_line_size;
+extern UINT32 _l2_cache_set_count;
+extern UINT32 _l2_cache_ways_count;
+extern UINT32 _l2_cache_line_size;
+
 #endif // _SYSCTL_H_

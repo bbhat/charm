@@ -158,11 +158,9 @@ _reset_handler:
 
 	bl	InitPLL				// Initialize PLL
 	
-	// TODO: You should enable Instruction and Data cache here. And flush the cache too.
-	
-	// TODO: You can save power by disabling clock to many peripherals using CLKCON register
-
     bl  InitStacks          // Initialize Stack
+    
+    bl	_sysctl_init		// Initialize System Control Coprocessor
     
     bl	_set_svc_stack_top	// Initialize _SVC_STACK_TOP_
 

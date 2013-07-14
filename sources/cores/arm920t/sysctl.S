@@ -9,6 +9,20 @@
 
 	.code 32             		//  CODE32
 
+	.global _sysctl_init		// This function requires a valid stack
+_sysctl_init:
+	
+	stmfd	sp!, {lr}			// This function requires a valid stack
+	
+	// Initialize cache parameters
+	bl _sysctl_query_icache_params
+	bl _sysctl_query_dcache_params
+	
+	ldmfd 	sp!, {lr}
+	
+	// Done for now
+	mov  pc, lr
+
 //----------------------------------------------------------------------------------------
 //  Functions to enable / disable  instruction and data caches
 //----------------------------------------------------------------------------------------
@@ -110,3 +124,111 @@ next_index:
 _sysctl_wait_for_interrupt:
    mcr  p15,0,r0,c7,c0,4 
    mov  pc, lr
+
+//----------------------------------------------------------------------------------------
+//  Functions to read various cache sizes
+//----------------------------------------------------------------------------------------		
+	SELECT_DCACHE	=	0
+	SELECT_ICACHE	=	1
+	
+_sysctl_query_icache_params:
+	// Select icache in Cache Size Selection Register (CSSELR)
+	mov  r0, #SELECT_ICACHE
+	mcr  p15,2,r0,c0,c0,0        	   	// Write to CSSELR
+	
+	// Now read Cache Size ID Registers (CCSIDR)
+	mrc  p15,1,r0,c0,c0,0        	   	// Read CCSIDR
+	
+	// Extract counts
+	// First cache line size
+	and  r1, r0, #7						// Extract bits[2:0]
+	add  r1, r1, #2						// Add #2
+	mov  r2, #4
+	lsl  r2, r2, r1						// Number of Bytes
+	ldr	 r1, =_icache_line_size
+	str  r2, [r1]
+
+	// Extract number of ways
+	lsr  r1, r0, #0x3
+	ldr  r2, =0x3ff						// Extract bits[12:3]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_icache_ways_count
+	str  r2, [r1]
+	
+	// Extract number of sets
+	lsr  r1, r0, #13
+	ldr  r2, =0x7fff					// Extract bits[27:13]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_icache_set_count
+	str  r2, [r1]
+	
+	mov  pc, lr
+	
+_sysctl_query_dcache_params:
+	// Select dcache in Cache Size Selection Register (CSSELR)
+	mov  r0, #SELECT_DCACHE
+	mcr  p15,2,r0,c0,c0,0        	   	// Write to CSSELR
+	
+	// Now read Cache Size ID Registers (CCSIDR)
+	mrc  p15,1,r0,c0,c0,0        	   	// Read CCSIDR
+	
+	// Extract counts
+	// First cache line size
+	and  r1, r0, #7						// Extract bits[2:0]
+	add  r1, r1, #2						// Add #2
+	mov  r2, #4
+	lsl  r2, r2, r1						// Number of Bytes
+	ldr	 r1, =_dcache_line_size
+	str  r2, [r1]
+
+	// Extract number of ways
+	lsr  r1, r0, #3
+	ldr  r2, =0x3ff						// Extract bits[12:3]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_dcache_ways_count
+	str  r2, [r1]
+	
+	// Extract number of sets
+	lsr  r1, r0, #13
+	ldr  r2, =0x7fff					// Extract bits[27:13]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_dcache_set_count
+	str  r2, [r1]
+
+	mov  pc, lr
+	
+//----------------------------------------------------------------------------------------
+// Some global variables to hold cache attributes
+//----------------------------------------------------------------------------------------
+	.section .data
+
+//---------- Instruction cache ------------
+
+	.global	_icache_set_count
+_icache_set_count:
+	.space		4
+
+	.global	_icache_ways_count
+_icache_ways_count:
+	.space		4
+
+	.global	_icache_line_size
+_icache_line_size:
+	.space		4
+
+//---------- Data cache ------------
+	.global	_dcache_set_count
+_dcache_set_count:
+	.space		4
+
+	.global	_dcache_ways_count
+_dcache_ways_count:
+	.space		4
+
+	.global	_dcache_line_size
+_dcache_line_size:
+	.space		4

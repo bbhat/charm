@@ -9,6 +9,7 @@
 
 #include "os_core.h"
 #include "target.h"
+#include "sysctl.h"
 
 #define TEST_KERNEL		1
 
@@ -100,6 +101,21 @@ void process_entry(void * pdata)
 int main(int argc, char *argv[])
 {
 	SyslogStr("Calling - ",  __func__);
+	
+	// Print some general info about the platform
+	Klog32(KLOG_GENERAL_INFO, "icache line len - ", _icache_line_size);
+	Klog32(KLOG_GENERAL_INFO, "icache set num - ", _icache_set_count);
+	Klog32(KLOG_GENERAL_INFO, "icache ways - ", _icache_ways_count);
+	
+	Klog32(KLOG_GENERAL_INFO, "dcache line len - ", _dcache_line_size);
+	Klog32(KLOG_GENERAL_INFO, "dcache set num - ", _dcache_set_count);
+	Klog32(KLOG_GENERAL_INFO, "dcache ways - ", _dcache_ways_count);
+
+#if ENABLE_L2_CACHE
+	Klog32(KLOG_GENERAL_INFO, "l2 cache line len - ", _l2_cache_line_size);
+	Klog32(KLOG_GENERAL_INFO, "l2 cache set num - ", _l2_cache_set_count);
+	Klog32(KLOG_GENERAL_INFO, "l2 cache ways - ", _l2_cache_ways_count);
+#endif
 
 #if TEST_KERNEL==1
 	OS_CreateProcess(&test_proc, "test_os", process_entry, NULL);

@@ -10,6 +10,29 @@
 	.code 32             		//  CODE32
 
 //----------------------------------------------------------------------------------------
+//  Function to initialize System Control Coprocessor
+//----------------------------------------------------------------------------------------
+	.global _sysctl_init		
+_sysctl_init:
+	
+	stmfd	sp!, {r0-r3, lr}	// This function requires a valid stack
+	
+	// Lets use SWP instructions
+	mrc  p15,0,r0,c1,c0,0
+	orr  r0, r0, #(1<<10)		// Set the SW bit in System Control Register (SCTLR)
+	mcr  p15,0,r0,c1,c0,0
+	
+	// Initialize cache parameters
+	bl _sysctl_query_icache_params
+	bl _sysctl_query_dcache_params
+	bl _sysctl_query_l2_cache_params
+	
+	ldmfd 	sp!, {r0-r3, lr}
+	
+	// Done for now
+	mov  pc, lr
+	
+//----------------------------------------------------------------------------------------
 //  Functions to enable / disable  instruction and data caches
 //----------------------------------------------------------------------------------------
 
@@ -85,7 +108,18 @@ _sysctl_invalidate_dcache_mva:
 	
 	.global _sysctl_invalidate_dcache
 _sysctl_invalidate_dcache:
-	// TODO
+    mov  r1, #0                        //  Initialize set counter 
+next_segment1:
+    mov  r0, #0                        //  Initialize way counter 
+next_index1:
+    orr  r2, r1, r0                    //  Generate set and line address
+    mcr  p15,0,r2,c7,c6,2        	   //  Invalidate the cache line
+    add  r0, r0, #0x20                 //  Increment to next line
+    cmp  r0, #0x400                    //  Complete all entries in one segment?
+    bne  next_index1                   //  If not branch back to next_index
+    add  r1, r1, #0x40000000           //  Increment segment counter
+    cmp  r1, #0x0                      //  Complete all segments
+    bne  next_segment1                 //  If not branch back to next_segment
 	mov  pc, lr
 
 
@@ -118,17 +152,17 @@ _sysctl_clean_invalidate_dcache_mva:
 	.global _sysctl_clean_invalidate_dcache
 _sysctl_clean_invalidate_dcache:
     mov  r1, #0                        //  Initialize segment counter 
-next_segment:
+next_segment2:
     mov  r0, #0                        //  Initialize cache line counter 
-next_index:
+next_index2:
     orr  r2, r1, r0                    //  Generate segment and line address
     mcr  p15,0,r2,c7,c14,2        	   //  Clean and flush the line
     add  r0, r0, #0x20                 //  Increment to next line
     cmp  r0, #0x400                    //  Complete all entries in one segment?
-    bne  next_index                    //  If not branch back to next_index
+    bne  next_index2                   //  If not branch back to next_index
     add  r1, r1, #0x40000000           //  Increment segment counter
     cmp  r1, #0x0                      //  Complete all segments
-    bne  next_segment                  //  If not branch back to next_segment
+    bne  next_segment2                 //  If not branch back to next_segment
 	mov  pc, lr
 
 //----------------------------------------------------------------------------------------
@@ -138,3 +172,162 @@ next_index:
 _sysctl_wait_for_interrupt:
 	wfi									// There is wfi instruction available in armv7
 	mov  pc, lr
+
+
+//----------------------------------------------------------------------------------------
+//  Functions to read various cache sizes
+//----------------------------------------------------------------------------------------		
+	SELECT_DCACHE	=	0
+	SELECT_ICACHE	=	1
+	SELECT_L2_CACHE	=	2
+	
+_sysctl_query_icache_params:
+	// Select icache in Cache Size Selection Register (CSSELR)
+	mov  r0, #SELECT_ICACHE
+	mcr  p15,2,r0,c0,c0,0        	   	// Write to CSSELR
+	
+	// Now read Cache Size ID Registers (CCSIDR)
+	mrc  p15,1,r0,c0,c0,0        	   	// Read CCSIDR
+	
+	// Extract counts
+	// First cache line size
+	and  r1, r0, #7						// Extract bits[2:0]
+	add  r1, r1, #2						// Add #2
+	mov  r2, #4
+	lsl  r2, r2, r1						// Number of Bytes
+	ldr	 r1, =_icache_line_size
+	str  r2, [r1]
+
+	// Extract number of ways
+	lsr  r1, r0, #0x3
+	ldr  r2, =0x3ff						// Extract bits[12:3]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_icache_ways_count
+	str  r2, [r1]
+	
+	// Extract number of sets
+	lsr  r1, r0, #13
+	ldr  r2, =0x7fff					// Extract bits[27:13]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_icache_set_count
+	str  r2, [r1]
+	
+	mov  pc, lr
+	
+_sysctl_query_dcache_params:
+	// Select dcache in Cache Size Selection Register (CSSELR)
+	mov  r0, #SELECT_DCACHE
+	mcr  p15,2,r0,c0,c0,0        	   	// Write to CSSELR
+	
+	// Now read Cache Size ID Registers (CCSIDR)
+	mrc  p15,1,r0,c0,c0,0        	   	// Read CCSIDR
+	
+	// Extract counts
+	// First cache line size
+	and  r1, r0, #7						// Extract bits[2:0]
+	add  r1, r1, #2						// Add #2
+	mov  r2, #4
+	lsl  r2, r2, r1						// Number of Bytes
+	ldr	 r1, =_dcache_line_size
+	str  r2, [r1]
+
+	// Extract number of ways
+	lsr  r1, r0, #3
+	ldr  r2, =0x3ff						// Extract bits[12:3]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_dcache_ways_count
+	str  r2, [r1]
+	
+	// Extract number of sets
+	lsr  r1, r0, #13
+	ldr  r2, =0x7fff					// Extract bits[27:13]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_dcache_set_count
+	str  r2, [r1]
+
+	mov  pc, lr
+	
+_sysctl_query_l2_cache_params:
+	// Select l2 cache in Cache Size Selection Register (CSSELR)
+	mov  r0, #SELECT_L2_CACHE
+	mcr  p15,2,r0,c0,c0,0        	   	// Write to CSSELR
+	
+	// Now read Cache Size ID Registers (CCSIDR)
+	mrc  p15,1,r0,c0,c0,0        	   	// Read CCSIDR
+	
+	// Extract counts
+	// First cache line size
+	and  r1, r0, #7						// Extract bits[2:0]
+	add  r1, r1, #2						// Add #2
+	mov  r2, #4
+	lsl  r2, r2, r1						// Number of Bytes
+	ldr	 r1, =_l2_cache_line_size
+	str  r2, [r1]
+
+	// Extract number of ways
+	lsr  r1, r0, #3
+	ldr  r2, =0x3ff						// Extract bits[12:3]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_l2_cache_ways_count
+	str  r2, [r1]
+	
+	// Extract number of sets
+	lsr  r1, r0, #13
+	ldr  r2, =0x7fff					// Extract bits[27:13]
+	and  r1, r1, r2
+	add  r2, r1, #1						// Add #1
+	ldr	 r1, =_l2_cache_set_count
+	str  r2, [r1]
+	
+	mov  pc, lr
+
+//----------------------------------------------------------------------------------------
+// Some global variables to hold cache attributes
+//----------------------------------------------------------------------------------------
+	.section .data
+
+//---------- Instruction cache ------------
+
+	.global	_icache_set_count
+_icache_set_count:
+	.space		4
+
+	.global	_icache_ways_count
+_icache_ways_count:
+	.space		4
+
+	.global	_icache_line_size
+_icache_line_size:
+	.space		4
+
+//---------- Data cache ------------
+	.global	_dcache_set_count
+_dcache_set_count:
+	.space		4
+
+	.global	_dcache_ways_count
+_dcache_ways_count:
+	.space		4
+
+	.global	_dcache_line_size
+_dcache_line_size:
+	.space		4
+
+//---------- L2 cache ------------
+
+	.global	_l2_cache_set_count
+_l2_cache_set_count:
+	.space		4
+
+	.global	_l2_cache_ways_count
+_l2_cache_ways_count:
+	.space		4
+
+	.global	_l2_cache_line_size
+_l2_cache_line_size:
+	.space		4
