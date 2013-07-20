@@ -20,18 +20,18 @@
 	
 	// Clock Dividers for best performance
 	#define DIVAPLL				0
-	#define DIVA2M					4
-	#define DIVHCLKM				4
-	#define DIVPCLKM				1
+	#define DIVA2M				4
+	#define DIVHCLKM			4
+	#define DIVPCLKM			1
 	
-	#define DIVHCLKD				3
-	#define DIVPCLKD				1
+	#define DIVHCLKD			3
+	#define DIVPCLKD			1
 	
-	#define DIVHCLKP				4
-	#define DIVPCLKP				1
+	#define DIVHCLKP			4
+	#define DIVPCLKP			1
 
 	// MSYS Domain will use APLL
-	#define ARMCLK					(APLL / (DIVAPLL+1))									// 1GHz
+	#define ARMCLK				(APLL / (DIVAPLL+1))						// 1GHz
 	#define HCLK_MSYS			((APLL / (DIVAPLL+1)) / (DIVHCLKM+1))		// 200 MHz
 	#define PCLK_MSYS 			(HCLK_MSYS / (DIVPCLKM+1))					// 100 MHz
 

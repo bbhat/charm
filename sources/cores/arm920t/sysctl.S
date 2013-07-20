@@ -7,7 +7,24 @@
 // 
 // -------------------------------------------------------------------------------
 
+// -------------------------------------------------------------------------------
+// cache_line_size - get the cache line size from the CSIDR register
+// (available on ARMv7+). It assumes that the CSSR register was configured
+// to access the L1 data cache CSIDR.
+// -------------------------------------------------------------------------------
+	.macro	dcache_line_size, reg, tmp
+	mrc	p15, 1, \tmp, c0, c0, 0		// read CSIDR
+	and	\tmp, \tmp, #7				// cache line size encoding
+	mov	\reg, #16					// size offset
+	mov	\reg, \reg, lsl \tmp		// actual cache line size
+	.endm
+
 	.code 32             		//  CODE32
+
+//----------------------------------------------------------------------------------------
+// Function to initialize System Control Coprocessor
+// Registers used r0-r3, lr
+//----------------------------------------------------------------------------------------
 
 	.global _sysctl_init		// This function requires a valid stack
 _sysctl_init:
@@ -59,18 +76,18 @@ _sysctl_disable_dcache:
 //  Functions to invalidate instruction and data caches
 //----------------------------------------------------------------------------------------
 	
-	.global _sysctl_invalidate_icache
-_sysctl_invalidate_icache:
+	.global _sysctl_invalidate_icache_all
+_sysctl_invalidate_icache_all:
 	mcr  p15,0,r0,c7,c5,0
 	mov  pc, lr
 	
-	.global _sysctl_invalidate_dcache
-_sysctl_invalidate_dcache:
+	.global _sysctl_invalidate_dcache_all
+_sysctl_invalidate_dcache_all:
 	mcr  p15,0,r0,c7,c6,0
 	mov  pc, lr
 
-	.global _sysctl_invalidate_cache
-_sysctl_invalidate_cache:
+	.global _sysctl_invalidate_cache_all
+_sysctl_invalidate_cache_all:
 	mcr  p15,0,r0,c7,c7,0
 	mov  pc, lr
 
@@ -78,44 +95,82 @@ _sysctl_invalidate_cache:
 //  Functions to clean data cache
 //----------------------------------------------------------------------------------------
 
-	.global _sysctl_clean_dcache_mva
-_sysctl_clean_dcache_mva:
-	mcr  p15,0,r0,c7,c10,1 
-	mov  pc, lr
-
-	.global _sysctl_clean_dcache_index
-_sysctl_clean_dcache_index:
-	mcr  p15,0,r0,c7,c10,2 
+	.global _sysctl_clean_dcache_all
+_sysctl_clean_dcache_all:
+	mcr  p15,0,r0,c7,c10,0
 	mov  pc, lr
 
 //----------------------------------------------------------------------------------------
 //  Functions to clean and invalidate data cache
 //----------------------------------------------------------------------------------------
-	.global _sysctl_clean_invalidate_dcache_mva
-_sysctl_clean_invalidate_dcache_mva:
-	mcr  p15,0,r0,c7,c14,1 
+	.global _sysctl_clean_invalidate_dcache_all
+_sysctl_clean_invalidate_dcache_all:
+	mcr  p15,0,r0,c7,c14,0
 	mov  pc, lr
 
-	.global _sysctl_clean_invalidate_dcache_index
-_sysctl_clean_invalidate_dcache_index:
-	mcr  p15,0,r0,c7,c14,2 
-	mov  pc, lr
+//----------------------------------------------------------------------------------------
+// Cache functions that operate on a range of virtual addresses
+// Invalidate the data cache within the specified region; we will
+// be performing a DMA operation in this region and we want to
+// purge old data in the cache.
+//
+// start   - r0 -virtual start address of region
+// end     - r1 - virtual end address of region
+// 
+// Note: If the start and end addresses are not cache line aligned, then we should
+// clean & invalidate those two lines while other lines are just invalidated
+//----------------------------------------------------------------------------------------		
+	.global _sysctl_invalidate_dcache_range
+_sysctl_invalidate_dcache_range:
+	dcache_line_size r2, r3
+	sub	r3, r2, #1
+	tst	r0, r3
+	bic	r0, r0, r3
+	mcrne	p15, 0, r0, c7, c14, 1		// clean & invalidate D / U cache line
 
-	.global _sysctl_clean_invalidate_dcache
-_sysctl_clean_invalidate_dcache:
-    mov    r1, #0                        //  Initialize segment counter 
-next_segment:
-    mov    r0, #0                        //  Initialize cache line counter 
-next_index:
-    orr    r2, r1, r0                    //  Generate segment and line address
-    mcr    p15, 0, r2, c7, c14, 2        //  Clean and flush the line
-    add    r0, r0, #0x20                 //  Increment to next line
-    cmp    r0, #0x400                    //  Complete all entries in one segment?
-    bne    next_index                    //  If not branch back to next_index
-    add    r1, r1, #0x40000000           //  Increment segment counter
-    cmp    r1, #0x0                      //  Complete all segments
-    bne    next_segment                  //  If not branch back to next_segment
-	mov  pc, lr
+	tst	r1, r3
+	bic	r1, r1, r3
+	mcrne	p15, 0, r1, c7, c14, 1		// clean & invalidate D / U cache line
+1:
+	mcr	p15, 0, r0, c7, c6, 1			// invalidate D / U cache line
+	add	r0, r0, r2
+	cmp	r0, r1
+	blo	1b
+	mov	pc, lr
+
+//----------------------------------------------------------------------------------------
+// Invalidate the data cache within the specified region
+// start   - r0 -virtual start address of region
+// end     - r1 - virtual end address of region
+//----------------------------------------------------------------------------------------
+	.global _sysctl_clean_dcache_range
+_sysctl_clean_dcache_range:
+	dcache_line_size r2, r3
+	sub	r3, r2, #1
+	bic	r0, r0, r3
+1:
+	mcr	p15, 0, r0, c7, c10, 1		@ clean D / U cache line
+	add	r0, r0, r2
+	cmp	r0, r1
+	blo	1b
+	mov	pc, lr
+ 
+//----------------------------------------------------------------------------------------
+// Clean & Invalidate the data cache within the specified region
+// start   - r0 -virtual start address of region
+// end     - r1 - virtual end address of region
+//----------------------------------------------------------------------------------------
+	.global _sysctl_clean_invalidate_dcache_range
+_sysctl_clean_invalidate_dcache_range:
+	dcache_line_size r2, r3
+	sub	r3, r2, #1
+	bic	r0, r0, r3
+1:
+	mcr	p15, 0, r0, c7, c14, 1		@ clean & invalidate D / U cache line
+	add	r0, r0, r2
+	cmp	r0, r1
+	blo	1b
+	mov	pc, lr
 
 //----------------------------------------------------------------------------------------
 //  wait for interrupt 

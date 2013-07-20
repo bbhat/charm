@@ -47,6 +47,10 @@ void _OS_Init()
 	}
 #endif
 	
+#if ENABLE_L2_CACHE == 1
+	_OS_Enable_L2_Cache();
+#endif
+
 	// Initialize Instruction and Data Caches
 #if ENABLE_INSTRUCTION_CACHE == 1
 	_OS_InvalidateICache();

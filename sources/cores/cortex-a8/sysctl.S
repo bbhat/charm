@@ -7,15 +7,29 @@
 // 
 // -------------------------------------------------------------------------------
 
+// -------------------------------------------------------------------------------
+// cache_line_size - get the cache line size from the CSIDR register
+// (available on ARMv7+). It assumes that the CSSR register was configured
+// to access the L1 data cache CSIDR.
+// -------------------------------------------------------------------------------
+	.macro	dcache_line_size, reg, tmp
+	mrc	p15, 1, \tmp, c0, c0, 0		// read CSIDR
+	and	\tmp, \tmp, #7				// cache line size encoding
+	mov	\reg, #16					// size offset
+	mov	\reg, \reg, lsl \tmp		// actual cache line size
+	.endm
+	
+	
 	.code 32             		//  CODE32
 
 //----------------------------------------------------------------------------------------
-//  Function to initialize System Control Coprocessor
+// Function to initialize System Control Coprocessor
+// Registers used r0-r3, lr
 //----------------------------------------------------------------------------------------
 	.global _sysctl_init		
 _sysctl_init:
 	
-	stmfd	sp!, {r0-r3, lr}	// This function requires a valid stack
+	stmfd	sp!, {lr}			// This function requires a valid stack
 	
 	// Lets use SWP instructions
 	mrc  p15,0,r0,c1,c0,0
@@ -27,7 +41,7 @@ _sysctl_init:
 	bl _sysctl_query_dcache_params
 	bl _sysctl_query_l2_cache_params
 	
-	ldmfd 	sp!, {r0-r3, lr}
+	ldmfd 	sp!, {lr}
 	
 	// Done for now
 	mov  pc, lr
@@ -83,88 +97,195 @@ _sysctl_disable_l2cache:
 	mov	 pc, lr
 
 //----------------------------------------------------------------------------------------
-//  Functions to invalidate instruction and data caches
+// Invalidate the whole instruction cache
 //----------------------------------------------------------------------------------------
-
-	.global _sysctl_invalidate_icache
-_sysctl_invalidate_icache:
+	.global _sysctl_invalidate_icache_all
+_sysctl_invalidate_icache_all:
 	mcr  p15, 0, r1, c7, c5, 0           @ invalidate I cache
 	mov  pc, lr
 
-	.global _sysctl_invalidate_icache_mva
-_sysctl_invalidate_icache_mva:
-	mcr  p15, 0, r1, c7, c5, 1           @ invalidate I cache given MVA
-	mov  pc, lr
+//----------------------------------------------------------------------------------------
+// Invalidate the whole D-cache.
+// Registers used: r0-r7, r9-r11 (r6 only in Thumb mode)
+// Note: This function requires a valid stack
+// Reference: See section B2-16 of ARMv7-A ARM Architecture Reference Manual
+//----------------------------------------------------------------------------------------		
+	.global _sysctl_invalidate_dcache_all
+_sysctl_invalidate_dcache_all:
+	stmfd sp!, {r4-r5, r7, r9-r11}	// Store registers used here. We dont have to store r0-r3
+	dmb								// ensure ordering with previous memory accesses
+	mrc	p15, 1, r0, c0, c0, 1		// read Cache Level ID register
+	ands r3, r0, #0x7000000			// extract loc from clidr
+	mov	r3, r3, lsr #23				// left align loc bit field
+	beq	finished1					// if loc is 0, then no need to clean
+	mov	r10, #0						// start clean at cache level 0
+loop1:
+	add	r2, r10, r10, lsr #1		// work out 3x current cache level
+	mov	r1, r0, lsr r2				// extract cache type bits from clidr
+	and	r1, r1, #7					// mask of the bits for current cache only
+	cmp	r1, #2						// see what cache we have at this level
+	blt	skip1						// skip if no cache, or just i-cache
+	mcr	p15, 2, r10, c0, c0, 0		// select current cache level in cssr
+	isb								// isb to sych the new cssr & csidr
+	mrc	p15, 1, r1, c0, c0, 0		// read the new csidr
+	and	r2, r1, #7					// extract the length of the cache lines
+	add	r2, r2, #4					// add 4 for the line length offset (log2 16 bytes)
+	ldr	r4, =0x3ff
+	ands r4, r4, r1, lsr #3			// R4 is the max number on the way size (right aligned)
+	clz	r5, r4						// R5 is the bit position of the way size increment
+	ldr	r7, =0x7fff
+	ands	r7, r7, r1, lsr #13		// R7 is the max number of the index size (right aligned)
+loop2:
+	mov	r9, r4						// R9 working copy of the max way size (right aligned)
+loop3:
+ 	orr	r11, r10, r9, lsl r5		// factor way and cache number into r11
+ 	orr	r11, r11, r7, lsl r2		// factor index number into r11
+	mcr  p15, 0, r0, c7, c6, 2		// invalidate by set/way
+	subs r9, r9, #1					// decrement the way
+	bge	loop3
+	subs r7, r7, #1					// decrement the index
+	bge	loop2
+skip1:
+	add	r10, r10, #2				// increment cache number
+	cmp	r3, r10
+	bgt	loop1
+finished1:
+	mov	r10, #0						// swith back to cache level 0
+	mcr	p15, 2, r10, c0, c0, 0		// select current cache level in cssr
+	ldmfd sp!, {r4-r5, r7, r9-r11}	// Restore register
+	dsb
+	isb
+	mov	pc, lr
 
-	.global _sysctl_invalidate_dcache_index
-_sysctl_invalidate_dcache_index:
-	mcr  p15,0,r0,c7,c6,2
-	mov  pc, lr
+//----------------------------------------------------------------------------------------
+// Invalidate the whole cache system (instruction & data)
+// Note: This function requires a valid stack
+//----------------------------------------------------------------------------------------		
+	.global _sysctl_invalidate_cache_all
+_sysctl_invalidate_cache_all:
+	stmfd	sp!, {lr}			// This function requires a valid stack
+	bl _sysctl_invalidate_dcache_all
+	bl _sysctl_invalidate_icache_all
+	ldmfd	sp!, {lr}			// This function requires a valid stack
+	mov	pc, lr
 
-	.global _sysctl_invalidate_dcache_mva
-_sysctl_invalidate_dcache_mva:
-	mcr  p15,0,r0,c7,c6,1
-	mov  pc, lr
+//----------------------------------------------------------------------------------------
+// clean & invalidate the whole D-cache.
+// Registers used: r0-r7, r9-r11 (r6 only in Thumb mode)
+// Note: This function requires a valid stack
+// Reference: See section B2-16 of ARMv7-A ARM Architecture Reference Manual
+//----------------------------------------------------------------------------------------		
+	.global _sysctl_clean_invalidate_dcache_all
+_sysctl_clean_invalidate_dcache_all:
+	stmfd sp!, {r4-r5, r7, r9-r11}	// Store registers used here. We dont have to store r0-r3
+	dmb								// ensure ordering with previous memory accesses
+	mrc	p15, 1, r0, c0, c0, 1		// read Cache Level ID register
+	ands r3, r0, #0x7000000			// extract loc from clidr
+	mov	r3, r3, lsr #23				// left align loc bit field
+	beq	finished11					// if loc is 0, then no need to clean
+	mov	r10, #0						// start clean at cache level 0
+loop11:
+	add	r2, r10, r10, lsr #1		// work out 3x current cache level
+	mov	r1, r0, lsr r2				// extract cache type bits from clidr
+	and	r1, r1, #7					// mask of the bits for current cache only
+	cmp	r1, #2						// see what cache we have at this level
+	blt	skip11						// skip if no cache, or just i-cache
+	mcr	p15, 2, r10, c0, c0, 0		// select current cache level in cssr
+	isb								// isb to sych the new cssr & csidr
+	mrc	p15, 1, r1, c0, c0, 0		// read the new csidr
+	and	r2, r1, #7					// extract the length of the cache lines
+	add	r2, r2, #4					// add 4 for the line length offset (log2 16 bytes)
+	ldr	r4, =0x3ff
+	ands r4, r4, r1, lsr #3			// R4 is the max number on the way size (right aligned)
+	clz	r5, r4						// R5 is the bit position of the way size increment
+	ldr	r7, =0x7fff
+	ands	r7, r7, r1, lsr #13		// R7 is the max number of the index size (right aligned)
+loop21:
+	mov	r9, r4						// R9 working copy of the max way size (right aligned)
+loop31:
+ 	orr	r11, r10, r9, lsl r5		// factor way and cache number into r11
+ 	orr	r11, r11, r7, lsl r2		// factor index number into r11
+	mcr	p15, 0, r11, c7, c14, 2		// clean & invalidate by set/way
+	subs r9, r9, #1					// decrement the way
+	bge	loop31
+	subs r7, r7, #1					// decrement the index
+	bge	loop21
+skip11:
+	add	r10, r10, #2				// increment cache number
+	cmp	r3, r10
+	bgt	loop11
+finished11:
+	mov	r10, #0						// swith back to cache level 0
+	mcr	p15, 2, r10, c0, c0, 0		// select current cache level in cssr
+	ldmfd sp!, {r4-r5, r7, r9-r11}	// Restore register
+	dsb
+	isb
+	mov	pc, lr
+
+//----------------------------------------------------------------------------------------
+// Cache functions that operate on a range of virtual addresses
+// Invalidate the data cache within the specified region; we will
+// be performing a DMA operation in this region and we want to
+// purge old data in the cache.
+//
+// start   - r0 -virtual start address of region
+// end     - r1 - virtual end address of region
+//----------------------------------------------------------------------------------------		
+	.global _sysctl_invalidate_dcache_range
+_sysctl_invalidate_dcache_range:
+	dcache_line_size r2, r3
+	sub	r3, r2, #1
+	tst	r0, r3
+	bic	r0, r0, r3
+	mcrne	p15, 0, r0, c7, c14, 1		// clean & invalidate D / U cache line
+
+	tst	r1, r3
+	bic	r1, r1, r3
+	mcrne	p15, 0, r1, c7, c14, 1		// clean & invalidate D / U cache line
+1:
+	mcr	p15, 0, r0, c7, c6, 1			// invalidate D / U cache line
+	add	r0, r0, r2
+	cmp	r0, r1
+	blo	1b
+	dsb
+	mov	pc, lr
+
+//----------------------------------------------------------------------------------------
+// Invalidate the data cache within the specified region
+// start   - r0 -virtual start address of region
+// end     - r1 - virtual end address of region
+//----------------------------------------------------------------------------------------
+	.global _sysctl_clean_dcache_range
+_sysctl_clean_dcache_range:
+	dcache_line_size r2, r3
+	sub	r3, r2, #1
+	bic	r0, r0, r3
+1:
+	mcr	p15, 0, r0, c7, c10, 1		@ clean D / U cache line
+	add	r0, r0, r2
+	cmp	r0, r1
+	blo	1b
+	dsb
+	mov	pc, lr
+ 
+//----------------------------------------------------------------------------------------
+// Clean & Invalidate the data cache within the specified region
+// start   - r0 -virtual start address of region
+// end     - r1 - virtual end address of region
+//----------------------------------------------------------------------------------------
+	.global _sysctl_clean_invalidate_dcache_range
+_sysctl_clean_invalidate_dcache_range:
+	dcache_line_size r2, r3
+	sub	r3, r2, #1
+	bic	r0, r0, r3
+1:
+	mcr	p15, 0, r0, c7, c14, 1		@ clean & invalidate D / U cache line
+	add	r0, r0, r2
+	cmp	r0, r1
+	blo	1b
+	dsb
+	mov	pc, lr
 	
-	.global _sysctl_invalidate_dcache
-_sysctl_invalidate_dcache:
-    mov  r1, #0                        //  Initialize set counter 
-next_segment1:
-    mov  r0, #0                        //  Initialize way counter 
-next_index1:
-    orr  r2, r1, r0                    //  Generate set and line address
-    mcr  p15,0,r2,c7,c6,2        	   //  Invalidate the cache line
-    add  r0, r0, #0x20                 //  Increment to next line
-    cmp  r0, #0x400                    //  Complete all entries in one segment?
-    bne  next_index1                   //  If not branch back to next_index
-    add  r1, r1, #0x40000000           //  Increment segment counter
-    cmp  r1, #0x0                      //  Complete all segments
-    bne  next_segment1                 //  If not branch back to next_segment
-	mov  pc, lr
-
-
-//----------------------------------------------------------------------------------------
-//  Functions to clean data cache
-//----------------------------------------------------------------------------------------
-	.global _sysctl_clean_dcache_index
-_sysctl_clean_dcache_index:
-	mcr  p15,0,r0,c7,c10,2
-	mov  pc, lr
-
-	.global _sysctl_clean_dcache_mva
-_sysctl_clean_dcache_mva:
-	mcr  p15,0,r0,c7,c10,1
-	mov  pc, lr
-
-//----------------------------------------------------------------------------------------
-//  Functions to clean & invalidate data cache
-//----------------------------------------------------------------------------------------
-	.global _sysctl_clean_invalidate_dcache_index
-_sysctl_clean_invalidate_dcache_index:
-	mcr  p15,0,r0,c7,c14,2
-	mov  pc, lr
-
-	.global _sysctl_clean_invalidate_dcache_mva
-_sysctl_clean_invalidate_dcache_mva:
-	mcr  p15,0,r0,c7,c14,1
-	mov  pc, lr
-
-	.global _sysctl_clean_invalidate_dcache
-_sysctl_clean_invalidate_dcache:
-    mov  r1, #0                        //  Initialize segment counter 
-next_segment2:
-    mov  r0, #0                        //  Initialize cache line counter 
-next_index2:
-    orr  r2, r1, r0                    //  Generate segment and line address
-    mcr  p15,0,r2,c7,c14,2        	   //  Clean and flush the line
-    add  r0, r0, #0x20                 //  Increment to next line
-    cmp  r0, #0x400                    //  Complete all entries in one segment?
-    bne  next_index2                   //  If not branch back to next_index
-    add  r1, r1, #0x40000000           //  Increment segment counter
-    cmp  r1, #0x0                      //  Complete all segments
-    bne  next_segment2                 //  If not branch back to next_segment
-	mov  pc, lr
-
 //----------------------------------------------------------------------------------------
 //  wait for interrupt 
 //----------------------------------------------------------------------------------------		
@@ -172,7 +293,6 @@ next_index2:
 _sysctl_wait_for_interrupt:
 	wfi									// There is wfi instruction available in armv7
 	mov  pc, lr
-
 
 //----------------------------------------------------------------------------------------
 //  Functions to read various cache sizes

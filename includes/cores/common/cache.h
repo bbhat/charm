@@ -40,26 +40,30 @@
 #if ENABLE_INSTRUCTION_CACHE == 1
 	#define _OS_EnableICache() _sysctl_enable_icache()
 	#define _OS_DisableICache() _sysctl_disable_icache()
-	#define _OS_InvalidateICache() _sysctl_invalidate_icache()
+	#define _OS_InvalidateICache() _sysctl_invalidate_icache_all()
 #endif
 
 #if ENABLE_DATA_CACHE == 1
 	#define _OS_EnableDCache() _sysctl_enable_dcache()
 	#define _OS_DisableDCache() _sysctl_disable_dcache()
 
-	#define _OS_InvalidateDCache() _sysctl_invalidate_dcache()
+	#define _OS_InvalidateDCache() _sysctl_invalidate_dcache_all()
+	#define _OS_CleanInvalidateDCache() _sysctl_clean_invalidate_dcache_all()
+
+	#define _OS_InvalidateDCacheRange(start, end) _sysctl_invalidate_dcache_range(start, end)
+	#define _OS_CleanDCacheRange(start, end) _sysctl_clean_dcache_range(start, end)
+	#define _OS_CleanInvalidateDCacheRange(start, end) _sysctl_clean_invalidate_dcache_range(start, end)
 	
-	#define _OS_CleanDCacheMVA(mva) _sysctl_clean_dcache_mva(mva)
-	#define _OS_CleanDCacheIndex(index) _sysctl_clean_dcache_index(index);
-	
-	#define _OS_CleanInvalidateDCacheMVA(mva) _sysctl_clean_invalidate_dcache_mva(mva)
-	#define _OS_CleanInvalidateDCacheIndex(index) _sysctl_clean_invalidate_dcache_index(index)
-	
-	void _OS_CleanInvalidateDCache(void * va, UINT32 len);
+	void _OS_CleanInvalidateDCacheArea(void * va, UINT32 len);
+#endif
+
+#if ENABLE_L2_CACHE == 1
+	#define _OS_Enable_L2_Cache() _sysctl_enable_l2cache()
+	#define _OS_Disable_L2_Cache() _sysctl_disable_l2cache()
 #endif
 
 #if ENABLE_INSTRUCTION_CACHE == 1 || ENABLE_DATA_CACHE == 1
-	#define _OS_invalidateCache() _sysctl_invalidate_cache()
+	#define _OS_invalidateCache() _sysctl_invalidate_cache_all()
 #endif
 
 

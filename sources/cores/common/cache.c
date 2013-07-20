@@ -11,7 +11,7 @@
 
 #if ENABLE_DATA_CACHE == 1
 
-void _OS_CleanInvalidateDCache(void * va, UINT32 len)
+void _OS_CleanInvalidateDCacheArea(void * va, UINT32 len)
 {
 	// Get a 32 Byte aligned address
 	UINT8 * valigned = (UINT8*)((UINT32)va & ~0x1f);
@@ -20,16 +20,11 @@ void _OS_CleanInvalidateDCache(void * va, UINT32 len)
 	if(!len || !va || (len >= WHOLE_CACHE_OP_THRESHOLD))
 	{
 		// Clean the whole cache
-		_sysctl_clean_invalidate_dcache();
+		_sysctl_clean_invalidate_dcache_all();
 	}
 	else
 	{
-		// Clean individual addresses
-		while(offset < len)
-		{
-			_sysctl_clean_invalidate_dcache_mva(valigned + offset);
-			offset += CACHE_LINE_SIZE;
-		}
+		_sysctl_clean_invalidate_dcache_range(valigned, valigned + len);
 	}
 }
 

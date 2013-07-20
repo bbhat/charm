@@ -78,7 +78,7 @@ OS_Error elf_load(void * elfdata, void ** start_address)
 		
 #if ENABLE_DATA_CACHE==1	
 	// Flush the data cache
-	_OS_CleanInvalidateDCache(NULL, 0);	// Passing NULL, 0 invalidates the whole cache
+	_OS_CleanInvalidateDCache();	// Invalidate the whole cache
 #endif
 	
 #if ENABLE_INSTRUCTION_CACHE==1	
