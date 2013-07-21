@@ -8,14 +8,14 @@
 // -------------------------------------------------------------------------------
 
 // -------------------------------------------------------------------------------
-// cache_line_size - get the cache line size from the CSIDR register
-// (available on ARMv7+). It assumes that the CSSR register was configured
-// to access the L1 data cache CSIDR.
+// cache_line_size - get the cache line size from the CTYPE (cache type) register
+// Decoding cache line length field: 1 << (len+3) bytes 
 // -------------------------------------------------------------------------------
 	.macro	dcache_line_size, reg, tmp
-	mrc	p15, 1, \tmp, c0, c0, 0		// read CSIDR
-	and	\tmp, \tmp, #7				// cache line size encoding
-	mov	\reg, #16					// size offset
+	mrc	p15, 1, \tmp, c0, c0, 1		// read CTYPE
+	mov	\tmp, \tmp, lsl #12			// get to cache line size
+	and	\tmp, \tmp, #3				// cache line size mask
+	mov	\reg, #8					// 1 << (len+3) is same as 8 << len
 	mov	\reg, \reg, lsl \tmp		// actual cache line size
 	.endm
 

@@ -22,7 +22,9 @@
 #define ENABLE_DATA_CACHE				1
 
 // L2 Cache preference. Not all platforms have L2 cache
-#if defined(SOC_S5PV210)
+// On S5PV210, enabling L2 cache also requires the L1 data cache to be enabled
+// On S3C2440 there is no L2 cache
+#if defined(SOC_S5PV210) && (ENABLE_DATA_CACHE == 1)
 #define ENABLE_L2_CACHE					1
 #endif
 
@@ -99,7 +101,7 @@ typedef enum
 #define OS_ENABLE_CPU_STATS			1		// Enable OS & CPU Stats
 #define OS_WITH_VALIDATE_TASK		1
 
-#define	OS_KERNEL_LOGGING			1
+#define	OS_KERNEL_LOGGING			0
 #define	OS_KLOG_MASK				(KLOG_GENERAL_INFO)
 #define DEBUG_UART_CHANNEL			0
 

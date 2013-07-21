@@ -47,10 +47,6 @@ void _OS_Init()
 	}
 #endif
 	
-#if ENABLE_L2_CACHE == 1
-	_OS_Enable_L2_Cache();
-#endif
-
 	// Initialize Instruction and Data Caches
 #if ENABLE_INSTRUCTION_CACHE == 1
 	_OS_InvalidateICache();
@@ -60,6 +56,10 @@ void _OS_Init()
 #if ENABLE_DATA_CACHE == 1
 	_OS_InvalidateDCache();
 	_OS_EnableDCache();
+#endif
+
+#if ENABLE_L2_CACHE == 1
+	_OS_Enable_L2_Cache();
 #endif
 
 	// Start the scheduling timer

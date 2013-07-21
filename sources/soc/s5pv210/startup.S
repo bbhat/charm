@@ -60,7 +60,7 @@ _reset_handler:
     
     bl	_sysctl_init				// Initialize System Control Coprocessor
     
-    bl	_sysctl_disable_l2cache		// Disable L2 Cache
+    bl	_sysctl_disable_icache		// Disable instruction cache. iROM enables it at reset
 	
     bl	_set_svc_stack_top			// Initialize _SVC_STACK_TOP_
 

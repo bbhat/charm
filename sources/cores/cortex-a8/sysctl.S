@@ -79,21 +79,57 @@ _sysctl_disable_dcache:
 	mov  pc, lr
 
 //----------------------------------------------------------------------------------------
-//  Functions to enable / disable  L2 Unified cache
+// Functions to enable / disable  L2 Unified cache
+// The L2 cache is enabled when both the C bit of the CP15 Control Register c1 and the 
+// L2EN bit of the CP15 Auxiliary Control Register, c1, are both active
 //----------------------------------------------------------------------------------------
-
 	.global _sysctl_enable_l2cache
 _sysctl_enable_l2cache:
+
+	// Program the Auxiliary Control Register to set the L2EN bit to 1
 	mrc  p15,0,r0,c1,c0,1
 	orr  r0, r0, #(1<<1)
 	mcr  p15, 0, r0, c1, c0, 1	
+
+	// Program the C bit in the CP15 Control Register c1	
+	mrc  p15,0,r0,c1,c0,0 
+	orr  r0,r0,#(1<<2) 
+	mcr  p15,0,r0,c1,c0,0 
+	
 	mov  pc, lr
 
 	.global _sysctl_disable_l2cache
 _sysctl_disable_l2cache:
+
+	stmfd	sp!, {lr}			// This function requires a valid stack
+	
+	// If L2 cache is not enabled, simply return
+	mrc  p15, 0, r0, c1, c0, 1
+	tst  r0, #(1<<1)
+	beq	 1f
+	
+	// Disable the C bit.
+	mrc  p15,0,r0,c1,c0,0 
+	stmfd sp!, {r0}				// Temporarily Store the value for later restore
+	bic  r0,r0,#(1<<2) 
+	mcr  p15,0,r0,c1,c0,0 
+	
+	// Clean and Invalidate whold D Cache
+	bl _sysctl_clean_invalidate_dcache_all
+	
+	// Invalidate whole iCache
+	bl _sysctl_invalidate_icache_all
+	
+	// Disable the L2 cache by clearing the L2EN bit to 0.
 	mrc  p15, 0, r0, c1, c0, 1
 	bic  r0, r0, #(1<<1)
 	mcr  p15, 0, r0, c1, c0, 1	
+	
+	// Set the old coltrol register value
+	ldmfd sp!, {r0}
+	mcr  p15,0,r0,c1,c0,0 	
+1:	
+	ldmfd	sp!, {lr}
 	mov	 pc, lr
 
 //----------------------------------------------------------------------------------------
