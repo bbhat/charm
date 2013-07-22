@@ -11,7 +11,7 @@ CC:=arm-elf-gcc
 LINK:=arm-elf-ld
 
 ## Initialize default arguments
-TARGET		?=	tq2440
+TARGET		?=	mini210s
 DST			?=	build
 CONFIG		?=	debug
 APP			?=	test_os
@@ -21,8 +21,16 @@ ifeq ($(TARGET), tq2440)
 	SOC := s3c2440
 endif
 
+ifeq ($(TARGET), mini210s)
+	SOC := s5pv210
+endif
+
+
 ifeq ($(SOC), s3c2440)
 	CORE := arm920t
+endif
+ifeq ($(SOC), s5pv210)
+	CORE := cortex-a8
 endif
 
 ROOT_DIR		:=	$(realpath ../..)
@@ -58,7 +66,7 @@ endif
 ## Rule specifications
 .PHONY:	all clean rootfs
 
-all:
+all: 
 	@echo --------------------------------------------------------------------------------
 	@echo Starting $(APP) build with following parameters:
 	@echo --------------------------------------------------------------------------------
@@ -73,6 +81,8 @@ all:
 	@echo SOURCES=$(SOURCES)
 	@echo OBJS=$(OBJS)
 	@echo INCLUDES=$(INCLUDES)
+	@echo BUILD_TARGET=$(BUILD_TARGET)
+	@echo USR_LIB=$(USR_LIB)
 	@echo
 	make $(BUILD_TARGET)
 	make rootfs
@@ -81,10 +91,11 @@ $(OBJ_DIR)/%.o: %.c
 	@test -d $(dir $@) || mkdir -pm 775 $(dir $@)
 	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
 
-$(BUILD_TARGET): $(USR_LIB) $(OBJS)
-	$(LINK) $^ $(LDFLAGS) -o $@
+$(BUILD_TARGET): $(OBJS) $(USR_LIB)
+	$(LINK) $(LDFLAGS) $^ -o $@
 
 $(USR_LIB):
+	@echo "Building - " $@
 	make -C $(ROOT_DIR)/usr/lib
 
 rootfs: $(BUILD_TARGET)
@@ -94,6 +105,7 @@ rootfs: $(BUILD_TARGET)
 clean:
 	rm -rf $(DST)
 	rm -rf $(ROOTFS_PATH)/applications/bin/
+	make -C $(ROOT_DIR)/usr/lib clean
 
 ## Validate the arguments for build
 ifneq ($(CONFIG),debug)

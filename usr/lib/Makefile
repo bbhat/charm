@@ -11,7 +11,7 @@ CC:=arm-elf-gcc
 AR:=arm-elf-ar
 
 ## Initialize default arguments
-TARGET		?=	tq2440
+TARGET		?=	mini210s
 DST			?=	build
 CONFIG		?=	debug
 
@@ -20,8 +20,16 @@ ifeq ($(TARGET), tq2440)
 	SOC := s3c2440
 endif
 
+ifeq ($(TARGET), mini210s)
+	SOC := s5pv210
+endif
+
+
 ifeq ($(SOC), s3c2440)
 	CORE := arm920t
+endif
+ifeq ($(SOC), s5pv210)
+	CORE := cortex-a8
 endif
 
 ROOT_DIR		:=	$(realpath ../..)
@@ -73,6 +81,7 @@ $(OBJ_DIR)/%.o: %.c
 	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
 
 $(BUILD_TARGET): $(OBJS)
+	@echo "Building :" $@
 	$(AR) -r $@ $^
 
 clean:
