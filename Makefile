@@ -19,6 +19,7 @@ LIBPATH:=/usr/local/dev-arm/i386-Darwin-arm-gcc-4.6.1/lib/gcc/arm-elf/4.6.1 /opt
 TARGET		?=	mini210s
 DST			?=	build
 CONFIG		?=	debug
+APP			?=	test_os
 
 ## Initialize dependent parameters
 ifeq ($(TARGET), tq2440)
@@ -99,11 +100,12 @@ endif
 
 
 ## Rule specifications
-.PHONY:	all boot dep clean ramdiskmk elfmerge tools kernel usrlib ramdisk mkv210_image write2sd
+.PHONY:	all boot dep clean ramdiskmk elfmerge tools kernel usrlib ramdisk mkv210_image write2sd application
 
 all:
 	make boot
 	make kernel
+	make application
 	make usrlib
 	make ramdisk
 	
@@ -148,6 +150,9 @@ rootfs: $(KERNEL_TARGET)
 	
 ramdisk: 
 	make $(RAMDISK_TARGET)
+	
+application:
+	make -C applications/$(APP)
 
 $(OBJ_DIR)/%.o: %.S
 	@test -d $(dir $@) || mkdir -pm 775 $(dir $@)
@@ -203,6 +208,7 @@ write2sd: $(BOOT_TARGET) mkv210_image
 
 clean:
 	rm -rf $(DST)
+	make -C applications/$(APP) clean
 	make -C usr/lib clean
 	make -C tools/elfmerge clean
 	make -C tools/ramdiskmk clean

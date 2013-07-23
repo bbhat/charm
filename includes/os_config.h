@@ -33,7 +33,7 @@
 
 // Do we use Ramdisk? If we want processes to be separate entities, 
 // then keeping them in the ramdisk is the only way
-#define	ENABLE_RAMDISK					0
+#define	ENABLE_RAMDISK					1
 
 // Since the OS timer is not a fixed interval timer, there can be a very small drift
 // over a long period of time. The RTOS actually calculates the time spent in the 

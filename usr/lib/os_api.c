@@ -10,12 +10,6 @@
 #include "os_api.h"
 #include "os_syscall.h"
 
-OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, void * arg, void * ret, void * reserved)
-{
-
-	return SUCCESS;	
-}
-
 OS_Error OS_CreatePeriodicTask(
 	UINT32 period_in_us,
 	UINT32 deadline_in_us,

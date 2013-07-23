@@ -11,7 +11,7 @@
 #include "target.h"
 #include "sysctl.h"
 
-#define TEST_KERNEL		1
+#define TEST_KERNEL		0
 
 OS_Process test_proc;
 OS_PeriodicTask task1, task2, task3, task4;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 #else
 	// Ensure that ramdisk is enabled
 	#if ENABLE_RAMDISK==0
-		"In order to load external processes (non-kernel), please set ENABLE_RAMDISK in OS Configuration file"
+		#error "In order to load external processes (non-kernel), please set ENABLE_RAMDISK in OS Configuration file"
 	#endif
 	
 	OS_CreateProcessFromFile(&test_proc, "test_os", "applications/bin/test_os.elf", NULL);

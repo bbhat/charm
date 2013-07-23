@@ -9,6 +9,8 @@
 
 CC:=arm-elf-gcc
 AR:=arm-elf-ar
+ASM:=arm-elf-gcc
+
 
 ## Initialize default arguments
 TARGET		?=	mini210s
@@ -49,12 +51,14 @@ INCLUDES		:=	$(addprefix -I , $(INCLUDES))
 OBJS			:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
 
 ## Build flags
-AFLAGS		:=	-mcpu=arm920t -EL -g
+AFLAGS		:=	-mcpu=$(CORE) -g
 CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian
 ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)
+	AFLAGS	:=	-g -D DEBUG $(AFLAGS)
 else ifeq ($(CONFIG),release)
 	CFLAGS	:=	-O2 -D RELEASE $(CFLAGS)
+	AFLAGS	:=	-D RELEASE $(AFLAGS)
 endif
 
 ## Rule specifications
@@ -79,6 +83,14 @@ all:
 $(OBJ_DIR)/%.o: %.c
 	@test -d $(dir $@) || mkdir -pm 775 $(dir $@)
 	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
+
+$(OBJ_DIR)/%.o: %.S
+	@test -d $(dir $@) || mkdir -pm 775 $(dir $@)
+	$(ASM) $(AFLAGS) $(INCLUDES) -c -o $@ $<
+		
+$(OBJ_DIR)/%.o: %.s
+	@test -d $(dir $@) || mkdir -pm 775 $(dir $@)
+	$(ASM) $(AFLAGS) $(INCLUDES) -c -o $@ $<
 
 $(BUILD_TARGET): $(OBJS)
 	@echo "Building :" $@
