@@ -31,18 +31,36 @@ VIC3IRQSTATUS	=	(VIC3_BASE + 0x00)
 VIC3FIQSTATUS	=	(VIC3_BASE + 0x04)
 VIC3ADDR		=	(VIC3_BASE + 0xf00)
 
-.global _jump_to_custom_IRQ_Handler
-.global _interrupt_vector_table
-
-//------------------------------------------------------------------------------
-// Interrupt vector in Internal SRAM. We get control into this section from the  IROM. 
-// The iROM has fixed the address of interrupt vector table at 0xD0037400
-//------------------------------------------------------------------------------
-	.section .vectors
-
+	.global _reset_handler
+	.global _undefined_instr_handler
+	.global _software_interrupt_handler
+	.global _prefetch_abort_handler
+	.global _data_abort_handler
+	.global _reserved_interrupt
+	.global _IRQHandler_
+	.global _FIQHandler_
+//---------------------------------------------------------------------
+//  Interrupt Vectors
+//---------------------------------------------------------------------
+	.section	.text.vectors
+   	.code 32    // CODE32
+   	
+	.global _interrupt_vector_table
 _interrupt_vector_table:
-	.space   0x80
 
+	ldr	pc, =_reset_handler
+	ldr	pc, =_undefined_instr_handler
+	ldr	pc, =_software_interrupt_handler
+	ldr	pc, =_prefetch_abort_handler
+	ldr	pc, =_data_abort_handler
+	ldr	pc, =_reserved_interrupt
+	ldr	pc, =_IRQHandler_
+	ldr	pc, =_FIQHandler_
+	
+
+	.string "Copyright 2012-2013 Bala B. xxxxxxxx, xxxxxxxx"
+	.align 4 	/* re-align to the word boundary */	
+		
 	
 //-------------------------------------------------------------------------	
 // Function to jump to custom IRQ Handler
@@ -51,7 +69,8 @@ _interrupt_vector_table:
 
 	.section .text       	// AREA ???, CODE, READONLY
 	.code 32             	// CODE32
-
+	
+	.global _jump_to_custom_IRQ_Handler
 _jump_to_custom_IRQ_Handler:
 	
 	// Check VIC0
@@ -84,4 +103,3 @@ _jump_to_custom_IRQ_Handler:
 
 	// If we dont find any interrupts, lets hangup. This should never happen
 	b		.
-	

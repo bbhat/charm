@@ -14,7 +14,6 @@ MEMORY
 {
 	DRAM		: ORIGIN = 0x20000000,  LENGTH = 0x20000000	
 
-	INT_VECTORS : ORIGIN = 0xD0037400,  LENGTH = 0x80
 	OS_MEM		: ORIGIN = 0x20000000,  LENGTH = 0x100000	
 	RAMDISK		: ORIGIN = 0x20100000,  LENGTH = 0x100000	
 	APP_MEM		: ORIGIN = 0x20200000,  LENGTH = 0x1FE00000
@@ -32,16 +31,10 @@ SECTIONS
 	/* Creating space for Ramdisk */
 	__ramdisk_start__ = 0x20100000;
 
-	.vectors :
-	{
-		*(.vectors)
-		
-	} > INT_VECTORS : code_seg
-
 	/* Place other sections */
 	.text :
 	{
-		*(.text.startup)
+		*(.text.vectors)
 		*(.text)
 		*(.text.*)	
 		

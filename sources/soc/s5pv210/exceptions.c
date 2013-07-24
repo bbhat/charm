@@ -20,32 +20,42 @@ void _reset_handler(void);
 ///////////////////////////////////////////////////////////////////////////////
 void _undefined_instr_handler(void)
 {
-	panic("Unandled FIQ");
+	panic("Unandled undefined instruction exception");
 }
 
 void _software_interrupt_handler(void)
 {
-	panic("Unandled FIQ");
+	panic("Unandled software interrupt");
 }
 
 void _prefetch_abort_handler(void)
 {
-	panic("Unandled FIQ");
+	panic("Unandled prefetch abort");
 }
 
 void _data_abort_handler(void)
 {
-	panic("Unandled FIQ");
+	panic("Unandled data abort");
 }
 
 void _reserved_interrupt(void)
 {
-	panic("Unandled FIQ");
+	panic("Unandled reserved interrupt");
 }
 
 void _FIQHandler_(void)
 {
 	panic("Unandled FIQ");
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Function to set interrupt vector table
+///////////////////////////////////////////////////////////////////////////////
+static UINT32 _set_interrupt_vector(volatile UINT32 * vector_table_ptr)
+{
+	asm("mcr	p15, 0, r0, c12, c0, 0");
+	asm("mrc	p15, 0, r0, c12, c0, 0");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,13 +64,7 @@ void _FIQHandler_(void)
 void _OS_install_exception_handlers(void)
 {
 	volatile UINT32 * vector_table_ptr = &_interrupt_vector_table;
-	
-	vector_table_ptr[0] = (UINT32)_reset_handler;
-	vector_table_ptr[1] = (UINT32)_undefined_instr_handler;
-	vector_table_ptr[2] = (UINT32)_software_interrupt_handler;
-	vector_table_ptr[3] = (UINT32)_prefetch_abort_handler;
-	vector_table_ptr[4] = (UINT32)_data_abort_handler;
-	vector_table_ptr[5] = (UINT32)_reserved_interrupt;
-	vector_table_ptr[6] = (UINT32)_IRQHandler_;
-	vector_table_ptr[7] = (UINT32)_FIQHandler_;
+
+	// Update the interrupt vector address
+	_set_interrupt_vector(vector_table_ptr);
 }

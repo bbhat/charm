@@ -34,7 +34,7 @@ NOINT  		= 0xc0
 //  Start routine
 //---------------------------------------------------------------------
 
-   	.section .text.startup
+   	.section .text
    	.code 32
 
 _start:
