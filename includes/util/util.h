@@ -26,7 +26,9 @@ INT8 *itoa(UINT32 value, INT8 *str);
 INT8 bcda2bcdi(const INT8 *str, UINT32 *value);
 INT8 bcdi2bcda(UINT32 value, INT8 *str);
 
-INT32 GetFreeResIndex(UINT32 res_mask, UINT32 msb, UINT32 lsb);
+void SetResourceStatus(UINT32 res_mask[], INT32 res_index, BOOL free);
+INT32 GetFreeResIndex(UINT32 res_mask[], INT32 count);
+INT32 GetFreeResIndex32(UINT32 res_mask, UINT32 msb, UINT32 lsb);
 
 // Non Blocking single ASCII character read. Returns 0 if there is no data
 #define getchar() Uart_GetChar(DEBUG_UART_CHANNEL)

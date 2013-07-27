@@ -101,7 +101,7 @@ INT32 ramdisk_open(const INT8 * filepath, INT32 flags)
 	}
 	
 	// Now get a free FILE resource for the current process
-	INT32 res = GetFreeResIndex(g_current_process->open_files_mask, MAX_OPEN_FILES_PER_PROCESS - 1, 0);
+	INT32 res = GetFreeResIndex32(g_current_process->open_files_mask, MAX_OPEN_FILES_PER_PROCESS - 1, 0);
 	if(res < 0) 
 	{
 		FAULT("ramdisk_open failed: Process '%s' has exhausted all FILE resources\n", g_current_process->name);

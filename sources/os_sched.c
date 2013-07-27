@@ -31,7 +31,7 @@ static BOOL g_sync_expected;
 volatile void * g_current_task;
 static UINT32	g_current_timeout;	// The time for which the timer is currently setup
 
-static OS_AperiodicTask g_idle_task;	// A TCB for the idle task
+static OS_AperiodicTask * g_idle_task;	// A TCB for the idle task
 static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
 static char os_name_string [] = { OS_NAME_STRING };
 
@@ -121,33 +121,44 @@ void OS_Start()
 ///////////////////////////////////////////////////////////////////////////////
 void kernel_process_entry(void * pdata)
 {
-		// Create all kernel tasks. Currently there are:
-		// 		- Idle task
-		//		- Statistics task
+	OS_Task idle_tcb;
+#if OS_ENABLE_CPU_STATS==1
+	OS_Task stat_tcb;
+#endif
+	
+	// Create all kernel tasks. Currently there are:
+	// 		- Idle task
+	//		- Statistics task
+	
+	// Create the IDLE task 
+	_OS_CreateAperiodicTask(MIN_PRIORITY + 1,
+		g_idle_task_stack, 
+		OS_IDLE_TASK_STACK_SIZE << 2,	// In Bytes
+		"idle",
+		SYSTEM_TASK,
+		&idle_tcb,
+		_OS_idle_task,
+		NULL);
 		
-		// Create the IDLE task 
-		_OS_CreateAperiodicTask(MIN_PRIORITY + 1,
-			g_idle_task_stack, 
-			OS_IDLE_TASK_STACK_SIZE << 2,	// In Bytes
-#if OS_WITH_TASK_NAME==1
-			"idle",
-#endif //OS_WITH_TASK_NAME
-			SYSTEM_TASK,
-			&g_idle_task,
-			_OS_idle_task,
-			NULL);
+		if(idle_tcb != INVALID) 
+		{
+			g_idle_task = (OS_AperiodicTask *)&g_task_pool[idle_tcb];
+		}
 		
 		// Create the statistics task
 #if OS_ENABLE_CPU_STATS==1
-		_OS_CreatePeriodicTask(STAT_TASK_PERIOD, STAT_TASK_PERIOD, 
-			STAT_TASK_PERIOD / 50, 0, g_stat_task_stack, 
-			sizeof(g_stat_task_stack), 
-#if OS_WITH_TASK_NAME==1
-			"STATISTICS", 
-#endif
-			SYSTEM_TASK,
-			&g_stat_task, 
-			_OS_StatisticsFn, 0);
+	_OS_CreatePeriodicTask(STAT_TASK_PERIOD, STAT_TASK_PERIOD, 
+		STAT_TASK_PERIOD / 50, 0, g_stat_task_stack, 
+		sizeof(g_stat_task_stack), 
+		"STATISTICS", 
+		SYSTEM_TASK,
+		&stat_tcb, 
+		_OS_StatisticsFn, 0);
+		
+		if(stat_tcb != INVALID) 
+		{
+			g_stat_task = (OS_PeriodicTask *)&g_task_pool[stat_tcb];
+		}
 #endif
 
 	// Call main from the kernel process which will create more processes

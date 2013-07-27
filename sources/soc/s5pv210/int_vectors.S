@@ -50,7 +50,7 @@ _interrupt_vector_table:
 
 	ldr	pc, =_reset_handler
 	ldr	pc, =_undefined_instr_handler
-	ldr	pc, =_software_interrupt_handler
+	ldr	pc, =_SWIHandler_
 	ldr	pc, =_prefetch_abort_handler
 	ldr	pc, =_data_abort_handler
 	ldr	pc, =_reserved_interrupt
@@ -69,6 +69,25 @@ _interrupt_vector_table:
 
 	.section .text       	// AREA ???, CODE, READONLY
 	.code 32             	// CODE32
+	
+	.global _SWIHandler_
+_SWIHandler_:
+	
+	stmfd   sp!, {lr}  			   // Store registers
+	mrs     r3, spsr               // Get spsr into r3. Note that r3 is reserved in syscall
+	stmfd   sp!, {r3}              // Store spsr onto stack
+								   // Only required for nested SVCs.
+    ldr		r3, [lr,#-4]           // Load the instruction word and...
+    bic   	r3, r3, #0xff000000    // ...extract comment field
+
+    // r0 - r2 now contains syscall parameters
+    // r3 now contains SVC number
+    
+    bl      _software_interrupt_handler		// Call main part of handler
+    ldmfd   sp!, {r3}          	   // Get spsr from stack
+    msr     SPSR_cxsf, r3          // Restore spsr
+    ldmfd   sp!, {pc}^ 			   // Restore registers and return	
+	
 	
 	.global _jump_to_custom_IRQ_Handler
 _jump_to_custom_IRQ_Handler:

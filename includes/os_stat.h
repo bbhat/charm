@@ -28,7 +28,7 @@ extern volatile UINT32 g_idle_max_count;
 extern volatile UINT32 g_idle_count;
 extern volatile FP32 _OS_CPUUsage;
 
-extern OS_PeriodicTask g_stat_task;		// A TCB for the idle task
+extern OS_PeriodicTask * g_stat_task;		// A TCB for the idle task
 extern UINT32 g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];
 
 // OS Statistics Capture function

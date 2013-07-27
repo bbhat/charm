@@ -41,6 +41,9 @@ typedef enum
 	CONFIGURATION_ERROR = 27,
 	INVALID_ELF_FILE = 28,
 	FILE_ERROR = 29,
+	SYSCALL_ERROR = 30,
+	INVALID_SWI_ERROR = 30,
+	RESOURCE_OVER = 31,
 	
 	UNKNOWN = 99	
 
@@ -70,7 +73,7 @@ void _enable_interrupt(UINT32);
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
-// Misc OS Data codes
+// Misc OS Data types
 ///////////////////////////////////////////////////////////////////////////////
 typedef void (*OS_InterruptVector)(void *);
 
@@ -90,10 +93,8 @@ OS_Error OS_CreatePeriodicTask(
 	UINT32 phase_shift_in_us,
 	UINT32 * stack,
 	UINT32 stack_size_in_bytes,
-#if OS_WITH_TASK_NAME==1
 	const INT8 * task_name,
-#endif //OS_WITH_TASK_NAME	
-	OS_PeriodicTask *task,
+	OS_Task *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata);
 
@@ -101,10 +102,8 @@ OS_Error OS_CreateAperiodicTask(
 	UINT16 priority,				// Smaller the number, higher the priority
 	UINT32 * stack,
 	UINT32 stack_size_in_bytes,
-#if OS_WITH_TASK_NAME==1
 	const INT8 * task_name,
-#endif //OS_WITH_TASK_NAME		
-	OS_AperiodicTask *task,
+	OS_Task *task,
 	void (*task_entry_function)(void *pdata),
 	void *pdata);
 

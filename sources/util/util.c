@@ -177,11 +177,43 @@ void* memset(void * ptr, UINT32 ch, UINT32 len)
 	return ptr;
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// This function finds an available resource given a bit mask of resource availability
+// The res_mask is an array of UINT32 words. Each bit in each word stands for one resource
+// If this bit is 0, then the resource is free. Else it is used.
+// This method first searches the given array for a word (a block of 32 resources) which
+// has a free resource.
+// Then it uses binary search to find an unused bit index within a 32 bit word
+// There is no maximum limit for the number of resources
+//////////////////////////////////////////////////////////////////////////////////////////
+INT32 GetFreeResIndex(UINT32 res_mask[], INT32 res_count)
+{
+	// Get the number of 32 bit words
+	INT32 count = (res_count + 31) >> 5;
+	INT32 free_res_index = -1;
+	INT32 i;
+	
+	for(i = 0; i < count; i++)
+	{
+		if(~res_mask[i])
+		{
+			free_res_index = ((i << 5) + GetFreeResIndex32(res_mask[i], 31, 0));
+			break;
+		}
+	}
+
+	// If the res_count is not a multiple of 32, then we will find a free resource which
+	// is actually not available. So check for this condition and return -1
+	return (free_res_index < res_count) ? free_res_index : -1;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // This function finds an available resource given a bit mask of resource availability
 // Uses binary search to find an unused bit index
+// Maximum of 32 resources at a time
 //////////////////////////////////////////////////////////////////////////////////////////
-INT32 GetFreeResIndex(UINT32 res_mask, UINT32 msb, UINT32 lsb)
+INT32 GetFreeResIndex32(UINT32 res_mask, UINT32 msb, UINT32 lsb)
 {
 	if(msb >= 32 || lsb >= 32 || lsb > msb) return -1;
 	
@@ -195,17 +227,29 @@ INT32 GetFreeResIndex(UINT32 res_mask, UINT32 msb, UINT32 lsb)
 	UINT32 lmask = ((2 << midb) - 1) - ((1 << lsb) - 1);
 	if(~res_mask & lmask) 
 	{
-		return GetFreeResIndex(res_mask, midb, lsb);
+		return GetFreeResIndex32(res_mask, midb, lsb);
 	}
 	
 	UINT32 hmask = ((2 << msb) - 1) - ((1 << midb) - 1);
 	if(~res_mask & hmask) 
 	{
-		return GetFreeResIndex(res_mask, msb, midb);
+		return GetFreeResIndex32(res_mask, msb, midb);
 	}
 	
 	// If we reach this code, we did not find any resource available
 	return -1;	
+}
+
+void SetResourceStatus(UINT32 res_mask[], INT32 res_index, BOOL free)
+{
+	if(free) 
+	{
+		res_mask[res_index >> 5] |= (1 << (res_index & 0x1f));
+	}
+	else
+	{
+		res_mask[res_index >> 5] &= ~(1 << (res_index & 0x1f));
+	}
 }
 
 void * memcpy(void *dst, const void *src, UINT32 len)

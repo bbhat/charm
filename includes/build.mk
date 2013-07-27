@@ -1,3 +1,4 @@
+INCLUDES	+=	.
 INCLUDES	+=	includes/cores/common
 INCLUDES	+=	includes/util
 INCLUDES	+=	includes/soc/$(SOC)

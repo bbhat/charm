@@ -6,6 +6,8 @@
 //	Description: S5PV210 platform specific functions
 ///////////////////////////////////////////////////////////////////////////////
 
+void _OS_install_exception_handlers(void);
+
 void _OS_PlatformInit(void)
 {	
 	// Install exception handlers

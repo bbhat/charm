@@ -14,7 +14,7 @@
 #define TEST_KERNEL		0
 
 OS_Process test_proc;
-OS_PeriodicTask task1, task2, task3, task4;
+OS_Task task1, task2, task3, task4;
 
 UINT32 stack1 [0x400];
 UINT32 stack2 [0x400];

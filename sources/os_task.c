@@ -30,6 +30,10 @@ static BOOL ValidateNewThread(UINT32 period, UINT32 budget);
 static UINT32 g_task_id_counter = 0;
 static FP32 g_total_allocated_cpu = 0.0;
 
+// Placeholders for all the task control blocks
+OS_GenericTask	g_task_pool[MAX_TASK_COUNT];
+UINT32 			g_task_usage_mask[(MAX_TASK_COUNT + 31) >> 5];
+
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
@@ -54,10 +58,8 @@ OS_Error OS_CreatePeriodicTask(
 	UINT32 phase_shift_in_us,
 	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
-#if OS_WITH_TASK_NAME==1
 	const INT8 * task_name,
-#endif // OS_WITH_TASK_NAME			
-	OS_PeriodicTask *task,
+	OS_Task *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata)
 {
@@ -75,9 +77,7 @@ OS_Error OS_CreatePeriodicTask(
 			phase_shift_in_us,
 			stack,
 			stack_size_in_bytes,
-#if OS_WITH_TASK_NAME==1
 			task_name,
-#endif // OS_WITH_TASK_NAME
 			USER_TASK,
 			task,
 			periodic_entry_function,
@@ -95,17 +95,16 @@ OS_Error _OS_CreatePeriodicTask(
 	UINT32 phase_shift_in_us,
 	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
-#if OS_WITH_TASK_NAME==1
 	const INT8 * task_name,
-#endif // OS_WITH_TASK_NAME			
 	UINT16 options,
-	OS_PeriodicTask *task,
+	OS_Task *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata)
 {
 	FP32 this_thread_cpu;
 	UINT32 stack_size;
 	UINT32 intsts;
+	OS_PeriodicTask *tcb;
 
 	if(!task)
 	{
@@ -140,40 +139,49 @@ OS_Error _OS_CreatePeriodicTask(
 		return INVALID_BUDGET;
 	}
 
+	// Now get a free TCB resource from the pool
+	*task = (OS_Task) GetFreeResIndex(g_task_usage_mask, MAX_TASK_COUNT);
+	if(*task < 0) 
+	{
+		FAULT("_OS_CreateAperiodicTask failed for process %s: Exhausted all resources\n", g_current_process->name);
+		return RESOURCE_OVER;	
+	}
+
+	// Get a pointer to the actual TCB	
+	tcb = (OS_PeriodicTask *)&g_task_pool[*task];
+
 	// Ensure that the stack is 8 byte aligned
 	//ALIGNED_ARRAY(stack);
 
-	// Conver the stack_size_in_bytes into number of words
+	// Convert the stack_size_in_bytes into number of words
 	stack_size = stack_size_in_bytes >> 2; 
 
-	task->attributes = (PERIODIC_TASK | options);
+	tcb->attributes = (PERIODIC_TASK | options);
 #if OS_WITH_VALIDATE_TASK==1
-	task->signature = TASK_SIGNATURE;
+	tcb->signature = TASK_SIGNATURE;
 #endif
-#if OS_WITH_TASK_NAME==1
-	strncpy(task->name, task_name, OS_TASK_NAME_SIZE);
-#endif // OS_WITH_TASK_NAME	
+	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE);
 
-	task->budget = budget_in_us;
-	task->period = period_in_us;
-	task->deadline = deadline_in_us;
-	task->phase = phase_shift_in_us;
-	task->stack = stack;
-	task->stack_size = stack_size;
-	task->top_of_stack = stack + stack_size;	// Stack grows bottom up
-	task->task_function = periodic_entry_function;
-	task->pdata = pdata;
-	task->remaining_budget = 0;
-	task->accumulated_budget = 0;
-	task->stored_release_time = 0;
-	task->exec_count = 0;
-	task->TBE_count = 0;
-	task->dline_miss_count = 0;
+	tcb->budget = budget_in_us;
+	tcb->period = period_in_us;
+	tcb->deadline = deadline_in_us;
+	tcb->phase = phase_shift_in_us;
+	tcb->stack = stack;
+	tcb->stack_size = stack_size;
+	tcb->top_of_stack = stack + stack_size;	// Stack grows bottom up
+	tcb->task_function = periodic_entry_function;
+	tcb->pdata = pdata;
+	tcb->remaining_budget = 0;
+	tcb->accumulated_budget = 0;
+	tcb->stored_release_time = 0;
+	tcb->exec_count = 0;
+	tcb->TBE_count = 0;
+	tcb->dline_miss_count = 0;
 	//task->next_release_time = phase_shift_in_us;
-	task->alarm_time = 0;
+	tcb->alarm_time = 0;
 	
 	// Note down the owner process
-	task->owner_process = g_current_process;
+	tcb->owner_process = g_current_process;
 
 	OS_ENTER_CRITICAL(intsts);
 	//if(!ValidateNewThread(period_in_us, budget_in_us))
@@ -184,7 +192,10 @@ OS_Error _OS_CreatePeriodicTask(
 		return EXCEEDS_MAX_CPU;
 	}
 
-	task->id = ++g_task_id_counter;
+	tcb->id = ++g_task_id_counter;
+	
+	// Block the thread resource
+	SetResourceStatus(g_task_usage_mask, *task, FALSE);
 	
 	// Calculate the CPU usage of the current thread
 	this_thread_cpu = CALC_THREAD_CPU_USAGE(MIN(period_in_us, deadline_in_us), budget_in_us);
@@ -195,12 +206,12 @@ OS_Error _OS_CreatePeriodicTask(
 	OS_EXIT_CRITICAL(intsts); 	// Exit the critical section
 
 	// Build a Stack for the new thread
-	task->top_of_stack = _OS_BuildTaskStack(task->top_of_stack, 
+	tcb->top_of_stack = _OS_BuildTaskStack(tcb->top_of_stack, 
 		TaskEntryMain, task, FALSE);
 
 	OS_ENTER_CRITICAL(intsts);	// Enter critical section
 
-	_OS_QueueInsert(&g_wait_q, task, phase_shift_in_us);		
+	_OS_QueueInsert(&g_wait_q, tcb, phase_shift_in_us);		
 
 	OS_EXIT_CRITICAL(intsts); 	// Exit the critical section
 
@@ -218,10 +229,8 @@ OS_Error _OS_CreatePeriodicTask(
 ///////////////////////////////////////////////////////////////////////////////
 OS_Error OS_CreateAperiodicTask(UINT16 priority, 
 	UINT32 * stack, UINT32 stack_size_in_bytes,
-#if OS_WITH_TASK_NAME==1
 	const INT8 * task_name,
-#endif //OS_WITH_TASK_NAME
-	OS_AperiodicTask * task,
+	OS_Task * task,
 	void(* task_entry_function)(void * pdata),
 	void * pdata)
 {
@@ -240,9 +249,7 @@ OS_Error OS_CreateAperiodicTask(UINT16 priority,
 	return _OS_CreateAperiodicTask(priority,
 		stack,
 		stack_size_in_bytes,
-#if OS_WITH_TASK_NAME==1
 		task_name,
-#endif //OS_WITH_TASK_NAME
 		USER_TASK,
 		task,
 		task_entry_function,
@@ -255,16 +262,15 @@ OS_Error OS_CreateAperiodicTask(UINT16 priority,
 ///////////////////////////////////////////////////////////////////////////////
 OS_Error _OS_CreateAperiodicTask(UINT16 priority, 
 	UINT32 * stack, UINT32 stack_size_in_bytes,
-#if OS_WITH_TASK_NAME==1
 	const INT8 * task_name,
-#endif //OS_WITH_TASK_NAME
 	UINT16 options,
-	OS_AperiodicTask * task,
+	OS_Task * task,
 	void(* task_entry_function)(void * pdata),
 	void * pdata)
 {
 	UINT32 stack_size;
 	UINT32 intsts;
+	OS_AperiodicTask *tcb;
 
 	if(!task)
 	{
@@ -277,31 +283,44 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 		FAULT("One or more invalid %s arguments", "task");
 		return INVALID_ARG;
 	}
+	
+	// Now get a free TCB resource from the pool
+	*task = (OS_Task) GetFreeResIndex(g_task_usage_mask, MAX_TASK_COUNT);
+	if(*task < 0) 
+	{
+		FAULT("_OS_CreatePeriodicTask failed for process %s: Exhausted all resources\n", g_current_process->name);
+		return RESOURCE_OVER;	
+	}
+	
+	// Get a pointer to the TCB
+	tcb = (OS_AperiodicTask *)&g_task_pool[*task];
 
 	// Convert the stack_size_in_bytes into number of words
 	stack_size = stack_size_in_bytes >> 2;
 
-	task->stack = stack;
-	task->stack_size = stack_size;
-	task->top_of_stack = stack + stack_size; // Stack grows bottom up
-	task->top_of_stack = _OS_BuildTaskStack(task->top_of_stack, AperiodicTaskEntry, task, FALSE);
-	task->task_function = task_entry_function;
-	task->pdata = pdata;
-	task->priority = priority;
-	task->attributes = (APERIODIC_TASK | options);
+	tcb->stack = stack;
+	tcb->stack_size = stack_size;
+	tcb->top_of_stack = stack + stack_size; // Stack grows bottom up
+	tcb->top_of_stack = _OS_BuildTaskStack(tcb->top_of_stack, AperiodicTaskEntry, task, FALSE);
+	tcb->task_function = task_entry_function;
+	tcb->pdata = pdata;
+	tcb->priority = priority;
+	tcb->attributes = (APERIODIC_TASK | options);
 #if OS_WITH_VALIDATE_TASK==1
-	task->signature = TASK_SIGNATURE;
+	tcb->signature = TASK_SIGNATURE;
 #endif
-#if OS_WITH_TASK_NAME==1
-	strncpy(task->name, task_name, OS_TASK_NAME_SIZE);
-#endif // OS_WITH_TASK_NAME	
+	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE);
 
 	// Note down the owner process
-	task->owner_process = g_current_process;
+	tcb->owner_process = g_current_process;
 
 	OS_ENTER_CRITICAL(intsts); // Enter critical section
-	task->id = ++g_task_id_counter;
-	_OS_QueueInsert(&g_ap_ready_q, task, priority); // Add the task to aperiodic wait queue
+	tcb->id = ++g_task_id_counter;
+	
+	// Block the resource
+	SetResourceStatus(g_task_usage_mask, *task, FALSE);
+	
+	_OS_QueueInsert(&g_ap_ready_q, tcb, priority); // Add the task to aperiodic wait queue
 	OS_EXIT_CRITICAL(intsts); // Exit the critical section
 	
 	if(_OS_IsRunning)

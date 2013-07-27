@@ -23,6 +23,8 @@
 #define NULL 0
 #endif // NULL
 
+#define INVALID	(-1)
+
 ///////////////////////////////////////////////////////////////////////////////
 // Redefine datatypes so that the OS can be ported easily on
 // different platforms
@@ -40,5 +42,11 @@ typedef long long INT64; // Signed 64 bit data
 typedef float FP32; // 32 bit Floating point data
 typedef double FP64; // 64 bit Floating point data
 
+typedef INT32 _OS_KernelObj_Handle;
+
+typedef _OS_KernelObj_Handle 	OS_Task;
+typedef _OS_KernelObj_Handle 	OS_Process;
+//typedef _OS_KernelObj_Handle	OS_Sem;
+//typedef _OS_KernelObj_Handle	OS_Mutex;
 
 #endif // _OS_TYPES_H

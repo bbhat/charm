@@ -44,10 +44,9 @@ typedef enum
 ///////////////////////////////////////////////////////////////////////////////
 // OS Data types
 ///////////////////////////////////////////////////////////////////////////////
-typedef UINT32 _OS_KernelObj_Handle;
+typedef INT32 _OS_KernelObj_Handle;
 
-typedef _OS_KernelObj_Handle 	OS_PeriodicTask;
-typedef _OS_KernelObj_Handle 	OS_AperiodicTask;
+typedef _OS_KernelObj_Handle 	OS_Task;
 typedef _OS_KernelObj_Handle 	OS_Process;
 typedef _OS_KernelObj_Handle	OS_Sem;
 typedef _OS_KernelObj_Handle	OS_Mutex;
@@ -60,17 +59,19 @@ OS_Error OS_CreatePeriodicTask(
 	UINT32 deadline_in_us,
 	UINT32 budget_in_us,
 	UINT32 phase_shift_in_us,
+	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
-	OS_PeriodicTask *task,
+	OS_Task *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata);
 
 OS_Error OS_CreateAperiodicTask(
 	UINT16 priority,				// Smaller the number, higher the priority
+	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
-	OS_AperiodicTask *task,
+	OS_Task *task,
 	void (*task_entry_function)(void *pdata),
 	void *pdata);
 

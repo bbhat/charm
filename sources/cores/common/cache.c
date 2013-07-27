@@ -15,7 +15,6 @@ void _OS_CleanInvalidateDCacheArea(void * va, UINT32 len)
 {
 	// Get a 32 Byte aligned address
 	UINT8 * valigned = (UINT8*)((UINT32)va & ~0x1f);
-	UINT32 offset = 0;
 	
 	if(!len || !va || (len >= WHOLE_CACHE_OP_THRESHOLD))
 	{

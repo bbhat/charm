@@ -7,17 +7,21 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "os_process.h"
 #include "os_core.h"
+#include "os_process.h"
 #include "util.h"
 #include "fs_api.h"
 
 UINT16 g_process_id_counter;
 
-OS_Process * g_process_list_head;
-OS_Process * g_process_list_tail;
+OS_ProcessCB * g_process_list_head;
+OS_ProcessCB * g_process_list_tail;
 
-OS_Process * g_current_process;
+OS_ProcessCB * g_current_process;
+
+// Placeholders for all the process control blocks
+OS_ProcessCB	g_process_pool[MAX_PROCESS_COUNT];
+UINT32 			g_process_usage_mask[(MAX_PROCESS_COUNT + 31) >> 5];
 
 #ifdef _USE_STD_LIBS
 	#define FAULT(x, ...) printf(x, ...);
@@ -34,6 +38,7 @@ OS_Error OS_CreateProcess(
 	void *pdata)
 {
 	UINT32 intsts;
+	OS_ProcessCB *pcb;
 	
 	if(!process)
 	{
@@ -47,29 +52,43 @@ OS_Error OS_CreateProcess(
 		return INVALID_ARG;
 	}
 	
+	// Now get a free PCB resource from the pool
+	*process = (OS_Process) GetFreeResIndex(g_process_usage_mask, MAX_PROCESS_COUNT);
+	if(*process < 0) 
+	{
+		FAULT("OS_CreateProcess failed for '%s': Exhausted all resources\n", g_current_process->name);
+		return RESOURCE_OVER;	
+	}
+
+	// Get a pointer to actual PCB
+	pcb = &g_process_pool[*process];
+	
 	// Clear the process structure
-	memset(process, 0, sizeof(OS_Process));
+	memset(pcb, 0, sizeof(OS_ProcessCB));
 	
 	// Copy process name
-	strncpy(process->name, process_name, OS_PROCESS_NAME_SIZE);
+	strncpy(pcb->name, process_name, OS_PROCESS_NAME_SIZE);
 	
-	process->process_entry_function = process_entry_function;
-	process->pdata = pdata;
-	process->next = NULL;
+	pcb->process_entry_function = process_entry_function;
+	pcb->pdata = pdata;
+	pcb->next = NULL;
 	
 	OS_ENTER_CRITICAL(intsts); // Enter critical section
 	
-	process->id = ++g_process_id_counter;	// Assign a unique process id
+	pcb->id = ++g_process_id_counter;	// Assign a unique process id
+	
+	// Block the process resource
+	SetResourceStatus(g_process_usage_mask, *process, FALSE);
 	
 	// Add to the process list
 	if(g_process_list_tail)
 	{
-		g_process_list_tail->next = process;
-		g_process_list_tail = process;
+		g_process_list_tail->next = pcb;
+		g_process_list_tail = pcb;
 	}
 	else
 	{
-		g_process_list_head = g_process_list_tail = process;
+		g_process_list_head = g_process_list_tail = pcb;
 	}
 	
 	OS_EXIT_CRITICAL(intsts); 	// Exit the critical section

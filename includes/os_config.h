@@ -67,7 +67,6 @@
 #define OS_IDLE_TASK_STACK_SIZE		0x40		// In Words
 #define OS_STAT_TASK_STACK_SIZE		0x40		// In Words
 #define STAT_TASK_PERIOD			5000000		// 5 sec
-#define OS_WITH_TASK_NAME			1
 #define OS_TASK_NAME_SIZE			16
 
 // Time for the first scheduling interrupt to begin. This should be <= MAX_TIMER0_INTERVAL_uS
@@ -82,6 +81,9 @@
 
 #define MAX_OPEN_FILES_PER_PROCESS	8	// This should be <= 32
 
+#define MAX_PROCESS_COUNT			16	// This number is used to preallocate PCB
+#define MAX_TASK_COUNT				64	// This number is used to preallocate TCB
+
 // Debug & Info related
 
 // Define the Debug masks
@@ -92,7 +94,7 @@ typedef enum
 	KLOG_TBE_EXCEPTION		= (1 << 2),
 	KLOG_OS_TIMER_SET 		= (1 << 3),
 	KLOG_SYNC_TIMER_ISR 	= (1 << 4),
-	KLOG_GENERAL_INFO		= (1 << 5),
+	KLOG_WARNING			= (1 << 5),
 	
 	KLOG_MISC 				= (1 << 31)
 	
@@ -102,7 +104,7 @@ typedef enum
 #define OS_WITH_VALIDATE_TASK		1
 
 #define	OS_KERNEL_LOGGING			0
-#define	OS_KLOG_MASK				(KLOG_GENERAL_INFO)
+#define	OS_KLOG_MASK				(KLOG_WARNING)
 #define DEBUG_UART_CHANNEL			0
 
 #endif // _OS_CONFIG_H

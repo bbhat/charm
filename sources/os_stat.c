@@ -11,7 +11,7 @@
 
 #if OS_ENABLE_CPU_STATS==1
 
-OS_PeriodicTask g_stat_task;		// A TCB for the idle task
+OS_PeriodicTask * g_stat_task;		// A TCB for the idle task
 UINT32 g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];
 
 // Some statistics counters to keep track.

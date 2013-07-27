@@ -24,7 +24,7 @@ extern _OS_Queue g_block_q;
 
 extern UINT32 __ramdisk_start__;
 
-OS_Process	g_kernel_process;	// Kernel process
+OS_ProcessCB	* g_kernel_process;	// Kernel process
 
 void _OS_Init();
 void _OS_Exit();
@@ -35,6 +35,8 @@ void kernel_process_entry(void * pdata);
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_Init()
 {
+	OS_Process kernel_pcb;
+	
 	// Call system initialization routine
 	_OS_PlatformInit();
 	
@@ -72,7 +74,8 @@ void _OS_Init()
 	_OS_QueueInit(&g_block_q);
 	
 	// Initialize the Kernel process
-	OS_CreateProcess(&g_kernel_process, "kernel", &kernel_process_entry, NULL);
+	OS_CreateProcess(&kernel_pcb, "kernel", &kernel_process_entry, NULL);	
+	g_kernel_process = &g_process_pool[kernel_pcb];
 
 	// This will start the scheuling
 	OS_Start();
