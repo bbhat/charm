@@ -218,6 +218,28 @@ void * OS_GetCurrentTask();
 OS_InterruptVector OS_SetInterruptVector(OS_InterruptVector isr, UINT32 index);
 
 ///////////////////////////////////////////////////////////////////////////////
+// Some platform specific utilitynfunctions
+///////////////////////////////////////////////////////////////////////////////
+typedef enum 
+{
+	USER_LED0 = 0,
+	USER_LED1,
+	USER_LED2,
+	USER_LED3
+} LED_Number;
+
+typedef enum
+{
+	LED_ON = 0,
+	LED_OFF = 1,
+	LED_TOGGLE = 2
+} LED_Options;
+
+// The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
+// the options provided
+OS_Error PFM_SetUserLED(LED_Number led, LED_Options options);
+
+///////////////////////////////////////////////////////////////////////////////
 // Utility functions & Macros
 ///////////////////////////////////////////////////////////////////////////////
 

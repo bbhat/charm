@@ -11,6 +11,7 @@
 #include "os_config.h"
 #include "uart.h"
 #include "util.h"
+#include "target.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Function to get the currently running thread. It returns a void pointer 
@@ -29,6 +30,34 @@ UINT32 OS_GetTBECount()
 {
 	OS_PeriodicTask * task = (OS_PeriodicTask *)g_current_task;
 	return IS_PERIODIC_TASK(task) ? task->TBE_count : 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PFM_SetUserLED
+// The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
+// the options provided
+///////////////////////////////////////////////////////////////////////////////
+OS_Error PFM_SetUserLED(LED_Number led, LED_Options options)
+{
+	OS_Error status = SUCCESS;
+	
+	switch(options)
+	{
+	case LED_ON:
+		user_led_on(led);
+		break;
+	case LED_OFF:
+		user_led_off(led);
+		break;
+	case LED_TOGGLE:
+		user_led_toggle(led);
+		break;
+	default:
+		status = ARGUMENT_ERROR;
+		break;
+	}
+	
+	return status;
 }
 
 void panic(const INT8 * format, ...)

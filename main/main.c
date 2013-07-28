@@ -11,7 +11,7 @@
 #include "target.h"
 #include "sysctl.h"
 
-#define TEST_KERNEL		0
+#define TEST_KERNEL		1
 
 OS_Process test_proc;
 OS_Task task1, task2, task3, task4;
@@ -46,12 +46,6 @@ int test_kernel()
 {	
 	SyslogStr("Calling - ",  __func__);
 	
-	// Configure the LEDs
-	configure_user_led(USER_LED0);
-	configure_user_led(USER_LED1);
-	configure_user_led(USER_LED2);
-	configure_user_led(USER_LED3);
-
 	// Test Casual
 	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
   	OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);

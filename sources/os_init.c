@@ -10,6 +10,7 @@
 #include "os_core.h"
 #include "os_queue.h"
 #include "os_process.h"
+#include "target.h"
 #include "cache.h"
 #include "uart.h"
 
@@ -39,6 +40,9 @@ void _OS_Init()
 	
 	// Call system initialization routine
 	_OS_PlatformInit();
+	
+	// Target Initialization
+	_OS_TargetInit();
 	
 	// Initialize debug UART
 	Uart_Init(UART0);

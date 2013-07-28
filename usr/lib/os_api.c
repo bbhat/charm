@@ -84,3 +84,25 @@ OS_Error OS_CreateProcess(
 {
 	return SUCCESS;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Function: PFM_SetUserLED
+// The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
+// the options provided
+///////////////////////////////////////////////////////////////////////////////
+OS_Error PFM_SetUserLED(LED_Number led, LED_Options options)
+{
+	_OS_Syscall_Args param_info;
+	UINT32 arg[2];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_PFM_LED_SET;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = 0;
+	
+	arg[0] = led;
+	arg[1] = options;
+	
+	return _OS_Syscall(&param_info, &arg, NULL);
+}

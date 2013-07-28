@@ -167,4 +167,27 @@ OS_Error OS_SetAlarm(const OS_DateAndTime *date_and_time);
 OS_Error OS_GetAlarm(OS_DateAndTime *date_and_time);
 */
 
+///////////////////////////////////////////////////////////////////////////////
+// Some platform utilities
+///////////////////////////////////////////////////////////////////////////////
+typedef enum 
+{
+	USER_LED0 = 0,
+	USER_LED1,
+	USER_LED2,
+	USER_LED3
+} LED_Number;
+
+typedef enum
+{
+	LED_ON = 0,
+	LED_OFF = 1,
+	LED_TOGGLE = 2
+} LED_Options;
+
+// The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
+// the options provided
+OS_Error PFM_SetUserLED(LED_Number led, LED_Options options);
+
+
 #endif // _OS_API_H

@@ -244,11 +244,11 @@ void SetResourceStatus(UINT32 res_mask[], INT32 res_index, BOOL free)
 {
 	if(free) 
 	{
-		res_mask[res_index >> 5] |= (1 << (res_index & 0x1f));
+		res_mask[res_index >> 5] &= ~(1 << (res_index & 0x1f));
 	}
 	else
 	{
-		res_mask[res_index >> 5] &= ~(1 << (res_index & 0x1f));
+		res_mask[res_index >> 5] |= (1 << (res_index & 0x1f));
 	}
 }
 

@@ -10,6 +10,8 @@
 #ifndef _TARGET_H_
 #define _TARGET_H_
 
+#include "os_types.h"
+
 #if defined(TARGET_TQ2440)
 
 	#define FIN 	(12000000)				// 12MHz Crystal
@@ -34,16 +36,11 @@
 
 #endif
 
-typedef enum {
-	USER_LED0 = 0,
-	USER_LED1,
-	USER_LED2,
-	USER_LED3
-	} User_led_type;
+void _OS_TargetInit(void);
 
-void configure_user_led(User_led_type led);
-void user_led_on(User_led_type led);
-void user_led_off(User_led_type led);
-void user_led_toggle(User_led_type led);
+void configure_user_led(UINT32 led);
+void user_led_on(UINT32 led);
+void user_led_off(UINT32 led);
+void user_led_toggle(UINT32 led);
 
 #endif // _TARGET_H_

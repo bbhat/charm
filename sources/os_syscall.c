@@ -27,6 +27,7 @@ static OS_Error syscall_MutexLock(const _OS_Syscall_Args * param_info, const voi
 static OS_Error syscall_MutexUnlock(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_MutexDestroy(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static OS_Error syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 //////////////////////////////////////////////////////////////////////////////
 // Vector containing all syscall handlers
@@ -49,6 +50,7 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_MutexUnlock,
 		syscall_MutexDestroy,
 		syscall_GetCurTask,
+		syscall_SetUserLED,
 	};
 
 OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
@@ -70,7 +72,7 @@ static OS_Error syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, 
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
 	
-	if(((param_info->arg_bytes >> 2) < 7) || ((param_info->ret_bytes >> 2) < 1))
+	if(((param_info->arg_bytes >> 2) < 9) || ((param_info->ret_bytes >> 2) < 1))
 	{
 		return SYSCALL_ERROR;
 	}
@@ -150,4 +152,21 @@ static OS_Error syscall_MutexDestroy(const _OS_Syscall_Args * param_info, const 
 static OS_Error syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	return SYSCALL_ERROR;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Function: PFM_SetUserLED
+// The mask indicates which LEDs should be turned ON/OFF/Toggled depending on 
+// the options provided
+///////////////////////////////////////////////////////////////////////////////
+static OS_Error syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	
+	if((param_info->arg_bytes >> 2) < 2)
+	{
+		return SYSCALL_ERROR;
+	}
+	
+	return PFM_SetUserLED((UINT32)uint_args[0], (UINT32)uint_args[1]);
 }
