@@ -187,6 +187,10 @@ InitStacks:
    msr      cpsr_c, r1                      // FIQ Mode
    ldr      sp, =__STACK_FIQ_END__
 
+   orr      r1, r0, #ABORTMODE
+   msr      cpsr_c, r1                      // ABORT Mode
+   ldr      sp, =__STACK_ABORT_END__
+
    orr      r1, r0, #UNDEFMODE
    msr      cpsr_c, r1                      // UND Mode
    ldr      sp, =__STACK_UNDEF_END__

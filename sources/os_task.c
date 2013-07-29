@@ -207,7 +207,7 @@ OS_Error _OS_CreatePeriodicTask(
 
 	// Build a Stack for the new thread
 	tcb->top_of_stack = _OS_BuildTaskStack(tcb->top_of_stack, 
-		TaskEntryMain, task, FALSE);
+		TaskEntryMain, tcb, FALSE);
 
 	OS_ENTER_CRITICAL(intsts);	// Enter critical section
 
@@ -301,7 +301,7 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 	tcb->stack = stack;
 	tcb->stack_size = stack_size;
 	tcb->top_of_stack = stack + stack_size; // Stack grows bottom up
-	tcb->top_of_stack = _OS_BuildTaskStack(tcb->top_of_stack, AperiodicTaskEntry, task, FALSE);
+	tcb->top_of_stack = _OS_BuildTaskStack(tcb->top_of_stack, AperiodicTaskEntry, tcb, FALSE);
 	tcb->task_function = task_entry_function;
 	tcb->pdata = pdata;
 	tcb->priority = priority;

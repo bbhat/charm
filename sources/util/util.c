@@ -221,6 +221,12 @@ INT32 GetFreeResIndex32(UINT32 res_mask, UINT32 msb, UINT32 lsb)
 	{
 		return (~res_mask & (1 << lsb)) ? lsb : -1;
 	}
+	else if(msb == (lsb + 1))
+	{
+		if(~res_mask & (1 << lsb)) return lsb;
+		else if(~res_mask & (1 << msb)) return msb;
+		else return -1;
+	}
 	
 	UINT32 midb = (msb + lsb) >> 1;
 	

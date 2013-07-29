@@ -31,6 +31,12 @@ static SWI_Handler swi_handlers[MAX_SWI_COUNT] =
 ///////////////////////////////////////////////////////////////////////////////
 void _undefined_instr_handler(void)
 {
+	// For now, just change to previous mode so that we will get into right stack
+	// in order to help examine. More sophisticated handlers will be needed some time
+	// in the future
+	asm("mrs	r3, spsr");
+	asm("msr	cpsr_c, r3");
+
 	panic("Unandled undefined instruction exception");
 }
 
@@ -52,11 +58,23 @@ OS_Error _software_interrupt_handler(const _OS_Syscall_Args * param_info,
 
 void _prefetch_abort_handler(void)
 {
+	// For now, just change to previous mode so that we will get into right stack
+	// in order to help examine. More sophisticated handlers will be needed some time
+	// in the future
+	asm("mrs	r3, spsr");
+	asm("msr	cpsr_c, r3");
+
 	panic("Unandled prefetch abort");
 }
 
 void _data_abort_handler(void)
 {
+	// For now, just change to previous mode so that we will get into right stack
+	// in order to help examine. More sophisticated handlers will be needed some time
+	// in the future
+	asm("mrs	r3, spsr");
+	asm("msr	cpsr_c, r3");
+		
 	panic("Unandled data abort");
 }
 

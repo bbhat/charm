@@ -11,7 +11,7 @@
 #include "target.h"
 #include "sysctl.h"
 
-#define TEST_KERNEL		1
+#define TEST_KERNEL		0
 
 OS_Process test_proc;
 OS_Task task1, task2, task3, task4;

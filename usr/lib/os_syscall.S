@@ -21,4 +21,4 @@ _OS_Syscall:
 
 	stmfd   sp!, {lr}  			    // Store the return address
 	svc		0x0						// Call SVC 0x0 with parameter value in R0
-	stmfd   sp!, {pc}  			    // Restore registers and return
+	ldmfd   sp!, {pc}  			    // Restore registers and return
