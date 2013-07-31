@@ -23,6 +23,11 @@ OS_ProcessCB * g_current_process;
 OS_ProcessCB	g_process_pool[MAX_PROCESS_COUNT];
 UINT32 			g_process_usage_mask[(MAX_PROCESS_COUNT + 31) >> 5];
 
+// Placeholders for Ramdisk file structures
+FILE g_rdfile_pool[MAX_OPEN_FILES];
+UINT32 g_rdfile_usage_mask[(MAX_OPEN_FILES + 31) >> 5];
+
+	
 #ifdef _USE_STD_LIBS
 	#define FAULT(x, ...) printf(x, ...);
 #else

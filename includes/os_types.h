@@ -30,7 +30,7 @@
 // different platforms
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef unsigned char BOOL;
+typedef unsigned int BOOL;
 typedef unsigned char UINT8; // Unsigned 8 bit data
 typedef char INT8; // Singned 8 bit data
 typedef unsigned short UINT16; // Unsigned 16 bit data

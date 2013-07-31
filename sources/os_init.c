@@ -27,8 +27,9 @@ extern UINT32 __ramdisk_start__;
 
 OS_ProcessCB	* g_kernel_process;	// Kernel process
 
-void _OS_Init();
-void _OS_Exit();
+void _OS_Init(void);
+void _OS_Exit(void);
+static void _OS_InitFreeResources(void);
 void kernel_process_entry(void * pdata);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,8 +45,11 @@ void _OS_Init()
 	// Target Initialization
 	_OS_TargetInit();
 	
+	// Initialize free resource pools
+	_OS_InitFreeResources();
+	
 	// Initialize debug UART
-	Uart_Init(UART0);
+	Uart_Init(UART0);	
 		
 #if ENABLE_RAMDISK==1	
 	if(ramdisk_init((void *)&__ramdisk_start__) != SUCCESS) {
@@ -107,4 +111,20 @@ void _OS_InitInterrupts()
 	
 	// Enable IRQ and FIQ interrupts
 	_enable_interrupt(intsts);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Initialization of free resource pools
+///////////////////////////////////////////////////////////////////////////////
+static void _OS_InitFreeResources(void)
+{
+	// The resource usage masks are already cleared when BSS section is initialized
+	// Only mark the unused bits as busy
+	g_task_usage_mask[((MAX_TASK_COUNT + 31) >> 5) - 1] 
+		|= ~((1 << (32 - (MAX_TASK_COUNT & 0x1f))) - 1);	
+	g_process_usage_mask[((MAX_PROCESS_COUNT + 31) >> 5) - 1] 
+		|= ~((1 << (32 - (MAX_PROCESS_COUNT & 0x1f))) - 1);	
+	g_rdfile_usage_mask[((MAX_OPEN_FILES + 31) >> 5) - 1] 
+		|= ~((1 << (32 - (MAX_OPEN_FILES & 0x1f))) - 1);			
+	
 }

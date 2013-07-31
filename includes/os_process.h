@@ -25,9 +25,6 @@ typedef struct OS_ProcessCB
 	void * pdata;
 	UINT16 id;
 
-	FILE open_files[MAX_OPEN_FILES_PER_PROCESS];
-	UINT32 open_files_mask;
-	
 	// Pointer to next process in the list
 	struct OS_ProcessCB *next;	
 } OS_ProcessCB;
@@ -44,4 +41,7 @@ extern OS_ProcessCB	* g_kernel_process;	// Kernel process
 extern OS_ProcessCB	g_process_pool[MAX_PROCESS_COUNT];
 extern UINT32 g_process_usage_mask[];
 
+extern FILE g_rdfile_pool[MAX_OPEN_FILES];
+extern UINT32 g_rdfile_usage_mask[];
+	
 #endif // _OS_PROCESS_H

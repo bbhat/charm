@@ -11,6 +11,15 @@
 #include "os_config.h"
 #include "os_core.h"
 
+static __inline__ UINT32 clz(UINT32 input)
+{
+	unsigned int result;
+	
+	__asm__ volatile("clz %0, %1" : "=r" (result) : "r" (input));
+	
+	return result;
+}
+
 INT8 *strncpy(INT8 *dest, const INT8 *src, UINT32 n)
 {
 	INT32 i = 0;
@@ -198,52 +207,13 @@ INT32 GetFreeResIndex(UINT32 res_mask[], INT32 res_count)
 	{
 		if(~res_mask[i])
 		{
-			free_res_index = ((i << 5) + GetFreeResIndex32(res_mask[i], 31, 0));
-			break;
+			free_res_index = (i << 5) + (31 - clz(~res_mask[i]));
 		}
 	}
 
 	// If the res_count is not a multiple of 32, then we will find a free resource which
 	// is actually not available. So check for this condition and return -1
 	return (free_res_index < res_count) ? free_res_index : -1;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////
-// This function finds an available resource given a bit mask of resource availability
-// Uses binary search to find an unused bit index
-// Maximum of 32 resources at a time
-//////////////////////////////////////////////////////////////////////////////////////////
-INT32 GetFreeResIndex32(UINT32 res_mask, UINT32 msb, UINT32 lsb)
-{
-	if(msb >= 32 || lsb >= 32 || lsb > msb) return -1;
-	
-	if(lsb == msb) 
-	{
-		return (~res_mask & (1 << lsb)) ? lsb : -1;
-	}
-	else if(msb == (lsb + 1))
-	{
-		if(~res_mask & (1 << lsb)) return lsb;
-		else if(~res_mask & (1 << msb)) return msb;
-		else return -1;
-	}
-	
-	UINT32 midb = (msb + lsb) >> 1;
-	
-	UINT32 lmask = ((2 << midb) - 1) - ((1 << lsb) - 1);
-	if(~res_mask & lmask) 
-	{
-		return GetFreeResIndex32(res_mask, midb, lsb);
-	}
-	
-	UINT32 hmask = ((2 << msb) - 1) - ((1 << midb) - 1);
-	if(~res_mask & hmask) 
-	{
-		return GetFreeResIndex32(res_mask, msb, midb);
-	}
-	
-	// If we reach this code, we did not find any resource available
-	return -1;	
 }
 
 void SetResourceStatus(UINT32 res_mask[], INT32 res_index, BOOL free)
@@ -256,6 +226,11 @@ void SetResourceStatus(UINT32 res_mask[], INT32 res_index, BOOL free)
 	{
 		res_mask[res_index >> 5] |= (1 << (res_index & 0x1f));
 	}
+}
+
+BOOL IsResourceBusy(UINT32 res_mask[], INT32 res_index)
+{
+	return (res_mask[res_index >> 5] & (1 << (res_index & 0x1f)));
 }
 
 void * memcpy(void *dst, const void *src, UINT32 len)

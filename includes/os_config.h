@@ -79,10 +79,9 @@
 #define TASK_MIN_PERIOD				100	// 100 uSec
 #define TASK_MIN_BUDGET				100 // 100 uSec
 
-#define MAX_OPEN_FILES_PER_PROCESS	8	// This should be <= 32
-
 #define MAX_PROCESS_COUNT			16	// This number is used to preallocate PCB
 #define MAX_TASK_COUNT				64	// This number is used to preallocate TCB
+#define MAX_OPEN_FILES				16  // This number is used to preallocate FILE strctures
 
 // Debug & Info related
 

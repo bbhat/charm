@@ -27,6 +27,7 @@ static FS_FileHdr * root = NULL;
 
 // Static functions
 static BOOL ramdisk_assert_open(INT32 fd);
+static BOOL ramdisk_assert_ownership(INT32 fd);
 static INT32 getToken(INT8 * dst, const INT8 * path);
 
 OS_Error ramdisk_init(void * addr)
@@ -34,12 +35,6 @@ OS_Error ramdisk_init(void * addr)
 	if(!addr) {
 		FAULT("ramdisk_init failed: address argument is NULL\n");
 		return ARGUMENT_ERROR;
-	}
-
-	// Validate that MAX_OPEN_FILES_PER_PROCESS is <= 32
-	if(MAX_OPEN_FILES_PER_PROCESS > 32) {
-		FAULT("ramdisk_init failed: MAX_OPEN_FILES_PER_PROCESS in config.h should not exceed 32\n");
-		return CONFIGURATION_ERROR;
 	}
 		
 	ramdisk = (FS_RamdiskHdr *)addr;
@@ -101,15 +96,15 @@ INT32 ramdisk_open(const INT8 * filepath, INT32 flags)
 	}
 	
 	// Now get a free FILE resource for the current process
-	INT32 res = GetFreeResIndex32(g_current_process->open_files_mask, MAX_OPEN_FILES_PER_PROCESS - 1, 0);
+	INT32 res = GetFreeResIndex(g_rdfile_usage_mask, MAX_OPEN_FILES);
 	if(res < 0) 
 	{
-		FAULT("ramdisk_open failed: Process '%s' has exhausted all FILE resources\n", g_current_process->name);
+		FAULT("ramdisk_open failed: Exhausted all %d FILE resources\n", MAX_OPEN_FILES);
 		return -1;	
 	}
 
 	// Clear the FILE descriptor
-	FILE * fp = &g_current_process->open_files[res];
+	FILE * fp = &g_rdfile_pool[res];
 	memset(fp, 0, sizeof(FILE));
 
 	// Start searching from the root folder
@@ -178,9 +173,10 @@ INT32 ramdisk_open(const INT8 * filepath, INT32 flags)
 	// Store the file attributes for this file
 	fp->data = (void *)((INT8*) ramdisk + search_file->offset);
 	fp->length = search_file->length;
+	fp->owner = g_current_process;
 	
 	// Mark the resource spot as occupied
-	g_current_process->open_files_mask |= (1 << res);
+	SetResourceStatus(g_rdfile_usage_mask, res, FALSE);
 	
 	return res;
 }
@@ -188,21 +184,14 @@ INT32 ramdisk_open(const INT8 * filepath, INT32 flags)
 static BOOL ramdisk_assert_open(INT32 fd)
 {
 	// Validate the inputs
-	if(fd < 0 || fd >= 32)
+	if(fd < 0 || fd >= MAX_OPEN_FILES)
 	{
 		FAULT("ramdisk_assert_open: Invalid file handle\n");
 		return FALSE;
 	}
 	
-	// Check the process context
-	if(!g_current_process)
-	{
-		FAULT("ramdisk_assert_open failed: This function should be called within a process\n");
-		return FALSE;	
-	}
-	
-	// Check if this file is open in the current process
-	if(!(g_current_process->open_files_mask & (1 << fd)))
+	// Check if this file is open
+	if(!IsResourceBusy(g_rdfile_usage_mask, fd))
 	{
 		FAULT("ramdisk_assert_open failed: Invalid file handle %d. File is not open\n", fd);
 		return FALSE;	
@@ -214,24 +203,30 @@ static BOOL ramdisk_assert_open(INT32 fd)
 INT32 ramdisk_close(INT32 fd)
 {
 	// Assert that the file is actually open
-	ramdisk_assert_open(fd);
+	if(!ramdisk_assert_open(fd)) return -1;
+	
+	// Assert the file ownership
+	if(!ramdisk_assert_ownership(fd)) return -1;
 		
 	// Reset the open_files_mask
-	g_current_process->open_files_mask &= ~(1 << fd);
-	
+	SetResourceStatus(g_rdfile_usage_mask, fd, TRUE);
+
+	// Reset the file structure
+	memset(&g_rdfile_pool[fd], 0, sizeof(FILE));
+		
 	return 0;
 }
 
 INT32 ramdisk_read(INT32 fd, void * ptr, INT32 numbytes)
 {
 	// Assert that the file is actually open
-	if(!ramdisk_assert_open(fd))
-	{
-		return -1;
-	}
+	if(!ramdisk_assert_open(fd)) return -1;
+	
+	// Assert the file ownership
+	if(!ramdisk_assert_ownership(fd)) return -1;
 
 	// Get a pointer to file structure
-	FILE * fp = &g_current_process->open_files[fd];
+	FILE * fp = &g_rdfile_pool[fd];
 	
 	INT32 read_length = ((fp->cur_offset + numbytes) <= fp->length) ? 
 						numbytes : (fp->length - fp->cur_offset);
@@ -246,13 +241,13 @@ INT32 ramdisk_lseek(INT32 fd, INT32 position, INT32 startpoint)
 	INT32 result = -1;
 	
 	// Assert that the file is actually open
-	if(!ramdisk_assert_open(fd))
-	{
-		return -1;
-	}
+	if(!ramdisk_assert_open(fd)) return -1;
+	
+	// Assert the file ownership
+	if(!ramdisk_assert_ownership(fd)) return -1;
 
 	// Get a pointer to file structure
-	FILE * fp = &g_current_process->open_files[fd];
+	FILE * fp = &g_rdfile_pool[fd];
 	
 	switch(startpoint)
 	{
@@ -277,19 +272,34 @@ INT32 ramdisk_lseek(INT32 fd, INT32 position, INT32 startpoint)
 	return result;
 }
 
+static BOOL ramdisk_assert_ownership(INT32 fd)
+{
+	// Check the process context
+	if(!g_current_process)
+	{
+		FAULT("ramdisk_assert_ownership failed: This function should be called within a process\n");
+		return FALSE;	
+	}	
+	
+	if(g_rdfile_pool[fd].owner != g_current_process && g_rdfile_pool[fd].owner != g_kernel_process)
+	{
+		FAULT("ramdisk_assert_ownership failed: This file is not owned by the current process\n");
+		return FALSE;	
+	}
+	
+	return TRUE;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Function to get file size
 //////////////////////////////////////////////////////////////////////////////////////////
 INT32 ramdisk_GetFileSize(INT32 fd)
 {
 	// Assert that the file is actually open
-	if(!ramdisk_assert_open(fd))
-	{
-		return -1;
-	}
-
+	if(!ramdisk_assert_open(fd)) return -1;
+	
 	// Get a pointer to file structure
-	FILE * fp = &g_current_process->open_files[fd];
+	FILE * fp = &g_rdfile_pool[fd];
 	
 	return fp->length;
 }
@@ -302,13 +312,13 @@ INT32 ramdisk_GetFileSize(INT32 fd)
 void * ramdisk_GetDataPtr(INT32 fd, UINT32 * length)
 {
 	// Assert that the file is actually open
-	if(!ramdisk_assert_open(fd))
-	{
-		return NULL;
-	}
-
+	if(!ramdisk_assert_open(fd)) return NULL;
+	
+	// Assert the file ownership
+	if(!ramdisk_assert_ownership(fd)) return NULL;
+	
 	// Get a pointer to file structure
-	FILE * fp = &g_current_process->open_files[fd];
+	FILE * fp = &g_rdfile_pool[fd];
 
 	// Update length 
 	if(length)
@@ -329,7 +339,7 @@ static INT32 getToken(INT8 * dst, const INT8 * path)
 {
 	INT32 i = 0;
 	INT32 j = 0;
-	if(!dst || ! path)
+	if(!dst || !path)
 	{
 		FAULT("ERROR: getBaseFolderName: Argument error\n");
 		return -1;	

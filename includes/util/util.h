@@ -28,7 +28,7 @@ INT8 bcdi2bcda(UINT32 value, INT8 *str);
 
 void SetResourceStatus(UINT32 res_mask[], INT32 res_index, BOOL free);
 INT32 GetFreeResIndex(UINT32 res_mask[], INT32 count);
-INT32 GetFreeResIndex32(UINT32 res_mask, UINT32 msb, UINT32 lsb);
+BOOL IsResourceBusy(UINT32 res_mask[], INT32 res_index);
 
 // Non Blocking single ASCII character read. Returns 0 if there is no data
 #define getchar() Uart_GetChar(DEBUG_UART_CHANNEL)
