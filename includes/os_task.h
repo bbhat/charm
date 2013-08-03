@@ -27,18 +27,20 @@
 ///////////////////////////////////////////////////////////////////////////////
 enum 
 {
-	APERIODIC_TASK 	= 0,
-	PERIODIC_TASK 	= 1,
+	APERIODIC_TASK 		= 0,
+	PERIODIC_TASK 		= 1,
+	TASK_MODE_MASK		= 1,
 	
-	SYSTEM_TASK		= 2,
-	USER_TASK		= 0
+	SYSTEM_TASK			= 2,
+	USER_TASK			= 0,
+	TASK_PRIVILEGE_MASK	= 2
 };
 
-#define IS_PERIODIC_TASK(task)	((task)->attributes & PERIODIC_TASK)
-#define IS_APERIODIC_TASK(task)	(!IS_PERIODIC_TASK(task))
+#define IS_PERIODIC_TASK(task_attr)		(((task_attr) & TASK_MODE_MASK) == PERIODIC_TASK)
+#define IS_APERIODIC_TASK(task_attr)	(((task_attr) & TASK_MODE_MASK) == APERIODIC_TASK)
 
-#define IS_SYSTEM_TASK(task)	((task)->attributes & SYSTEM_TASK)
-#define IS_USER_TASK(task)	(!IS_SYSTEM_TASK(task))
+#define IS_SYSTEM_TASK(task_attr)	(((task_attr) & TASK_PRIVILEGE_MASK) == SYSTEM_TASK)
+#define IS_USER_TASK(task_attr)		(((task_attr) & TASK_PRIVILEGE_MASK) == USER_TASK)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Task TCB 

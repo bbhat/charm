@@ -77,13 +77,14 @@ static OS_Error syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, 
 		return SYSCALL_ERROR;
 	}
 	
-	return OS_CreatePeriodicTask((UINT32)uint_args[0],
+	return _OS_CreatePeriodicTask((UINT32)uint_args[0],
 								(UINT32)uint_args[1],
 								(UINT32)uint_args[2],
 								(UINT32)uint_args[3],
 								(UINT32 *)uint_args[4],
 								(UINT32)uint_args[5],
 								(INT8 *)uint_args[6],
+								USER_TASK,
 								(OS_PeriodicTask *)uint_ret[0],
 								(void *)uint_args[7],
 								(void *)uint_args[8]);

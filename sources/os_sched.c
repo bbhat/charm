@@ -236,7 +236,7 @@ void _OS_Timer0ISRHandler(void *arg)
 	
 	// The argument in this case is the g_current_task before the interrupt
 	task = (OS_PeriodicTask *)arg;
-	if(IS_PERIODIC_TASK(task))
+	if(IS_PERIODIC_TASK(task->attributes))
 	{
 		// Adjust the remaining & accumulated budgets
 		task->accumulated_budget += g_current_timeout;
@@ -429,7 +429,7 @@ void _OS_SetNextTimeout(void)
 	if(budget_spent > 0)
 	{
 		OS_PeriodicTask * cur_task = (OS_PeriodicTask *)g_current_task;
-		if(IS_PERIODIC_TASK(cur_task))
+		if(IS_PERIODIC_TASK(cur_task->attributes))
 		{
 			if(task != cur_task)
 			{

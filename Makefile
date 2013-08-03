@@ -145,8 +145,8 @@ usrlib:
 	make -C usr/lib	
 	
 rootfs: $(KERNEL_TARGET)
-	@test -d $(dir $(ROOTFS_PATH)/kernel/bin/) || mkdir -pm 775 $(dir $(ROOTFS_PATH)/kernel/bin/)
-	cp $(KERNEL_TARGET) $(ROOTFS_PATH)/kernel/bin/
+#	@test -d $(dir $(ROOTFS_PATH)/kernel/bin/) || mkdir -pm 775 $(dir $(ROOTFS_PATH)/kernel/bin/)
+#	cp $(KERNEL_TARGET) $(ROOTFS_PATH)/kernel/bin/
 	
 ramdisk: 
 	make $(RAMDISK_TARGET)

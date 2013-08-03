@@ -68,6 +68,7 @@
 #define OS_STAT_TASK_STACK_SIZE		0x40		// In Words
 #define STAT_TASK_PERIOD			5000000		// 5 sec
 #define OS_TASK_NAME_SIZE			16
+#define OS_MIN_USER_STACK_SIZE		256			// Minimum stack size in bytes
 
 // Time for the first scheduling interrupt to begin. This should be <= MAX_TIMER0_INTERVAL_uS
 // Just few micro seconds are enough. This is to adjust the time gap b/w the timer setup

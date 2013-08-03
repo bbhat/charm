@@ -14,6 +14,9 @@
 #define TEST_KERNEL		0
 
 OS_Process test_proc;
+
+#if TEST_KERNEL==1
+
 OS_Task task1, task2, task3, task4;
 
 UINT32 stack1 [0x400];
@@ -83,6 +86,8 @@ void process_entry(void * pdata)
 {
 	test_kernel();
 }
+
+#endif // TEST_KERNEL==1
 
 ///////////////////////////////////////////////////////////////////////////////
 // main function for the Kernel

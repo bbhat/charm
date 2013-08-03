@@ -62,14 +62,7 @@ OS_Error OS_CreatePeriodicTask(
 	OS_Task *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata)
-{
-
-	if(stack_size_in_bytes < ONE_KB / 4)	// Validate for minimum stack size 256 bytes
-	{
-		FAULT("Stack size should be at least %d bytes", ONE_KB / 4);
-		return INSUFFICIENT_STACK;
-	}
-	
+{	
 	return _OS_CreatePeriodicTask(
 			period_in_us,
 			deadline_in_us,
@@ -137,6 +130,13 @@ OS_Error _OS_CreatePeriodicTask(
 	{
 		FAULT("The budget should be greater than %d uSec\n", TASK_MIN_BUDGET);
 		return INVALID_BUDGET;
+	}
+	
+	// Validate for minimum stack size for user stacks. Kernel stacks know what they want
+	if(IS_USER_TASK(options) && (stack_size_in_bytes < OS_MIN_USER_STACK_SIZE))	
+	{
+		FAULT("Stack size should be at least %d bytes", ONE_KB / 4);
+		return INSUFFICIENT_STACK;
 	}
 
 	// Now get a free TCB resource from the pool
@@ -434,7 +434,7 @@ UINT64 OS_GetThreadElapsedTime()
 	// First get the current task which is running...
 	OS_PeriodicTask * task = (OS_PeriodicTask *)OS_GetCurrentTask();
 		
-	if(task && IS_PERIODIC_TASK(task)) 
+	if(task && IS_PERIODIC_TASK(task->attributes)) 
 	{
 		do
 		{

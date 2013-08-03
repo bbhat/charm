@@ -43,7 +43,7 @@ OS_Error OS_SemWait(OS_Sem *sem)
 		if(sem->count == 0)
 		{
 			//block the thread			
-			if(IS_PERIODIC_TASK(cur_task))
+			if(IS_PERIODIC_TASK(cur_task->attributes))
 			{
 				_OS_QueueDelete(&g_ready_q, (void*)cur_task); //delete the current task from ready tasks queue
 				_OS_QueueInsert(&sem->periodic_task_queue, (void*)cur_task, cur_task->alarm_time); //add the current task to the semaphore's blocked queue for periodic tasks

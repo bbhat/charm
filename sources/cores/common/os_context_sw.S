@@ -74,7 +74,7 @@ INTMASK     = 0xc0
 // Build Initial stack for the thread
 // ----------------------------------------------------------------------------
 _OS_BuildTaskStack:		// _OS_BuildTaskStack(UINT32 * stack_ptr (R0), 
-							// void (*task_function)(void *) (R1), void * arg(R2), bool system_task(r3));
+						// void (*task_function)(void *) (R1), void * arg(R2), bool system_task(r3));
 	
 	// TODO: Do you really need LR register as part of context? Note: This may be to help GDB show right callstack.
 	
@@ -84,7 +84,7 @@ _OS_BuildTaskStack:		// _OS_BuildTaskStack(UINT32 * stack_ptr (R0),
 	stmfd	r0!, {r2}		// Store the argument as r0 value
 	cmp		r3,	#0
 	moveq	r1, #SVCMODE	// If system_task is true
-	movne	r1, #SYSMODE	// if system_task is false	// TODO: We should create in USERMODE after we have that ability
+	movne	r1, #USERMODE	// if system_task is false	// TODO: We should create in USERMODE after we have that ability
 		
 	stmfd	r0!, {r1}		// Create space for CPSR
 	mov		r1, #ZERO_CONTEXT_STACK_TYPE
