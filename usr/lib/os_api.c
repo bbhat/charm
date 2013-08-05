@@ -106,3 +106,20 @@ OS_Error PFM_SetUserLED(LED_Number led, LED_Options options)
 	
 	return _OS_Syscall(&param_info, &arg, NULL);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Function to yield
+// Can be used with both Periodic / Aperiodic Tasks
+///////////////////////////////////////////////////////////////////////////////
+void OS_TaskYield()
+{
+	_OS_Syscall_Args param_info;
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_TASK_YIELD;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = 0;
+	param_info.ret_bytes = 0;
+	
+	_OS_Syscall(&param_info, NULL, NULL);	
+}

@@ -28,7 +28,7 @@ volatile UINT64 g_next_wakeup_time; 	// This variable holds the next scheduled w
 static UINT64 g_next_sync_time;	// This is the next scheduled time when the SYNC should happen	
 static BOOL g_sync_expected;
 #endif
-volatile void * g_current_task;
+volatile OS_GenericTask * g_current_task;
 static UINT32	g_current_timeout;	// The time for which the timer is currently setup
 
 static OS_AperiodicTask * g_idle_task;	// A TCB for the idle task
@@ -39,9 +39,12 @@ static char os_name_string [] = { OS_NAME_STRING };
 extern void _OS_InitInterrupts();
 extern void _OS_ContextRestore(void *new_task);
 extern void _OS_ContextSw(void * new_task);
-extern UINT32 *_OS_BuildTaskStack(UINT32 * stack_ptr, 
+extern UINT32 *_OS_BuildKernelTaskStack(UINT32 * stack_ptr, 
 							void (*task_function)(void *), 
-							void * arg, BOOL system_task);
+							void * arg);
+extern UINT32 *_OS_BuildUserTaskStack(UINT32 * stack_ptr, 
+							void (*task_function)(void *), 
+							void * arg);
 
 void _OS_Timer0ISRHandler(void *arg);
 void _OS_Timer1ISRHandler(void *arg);

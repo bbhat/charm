@@ -51,7 +51,7 @@ INCLUDES		:=	$(addprefix -I , $(INCLUDES))
 OBJS			:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
 
 ## Build flags
-AFLAGS		:=	-mcpu=$(CORE) -g
+AFLAGS		:=	-mcpu=$(CORE) -g -mlittle-endian
 CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian
 ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)

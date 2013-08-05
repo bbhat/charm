@@ -54,7 +54,7 @@ INCLUDES		:=	$(addprefix -I , $(INCLUDES))
 OBJS			:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
 
 ## Build flags
-AFLAGS		:=	-mcpu=arm920t -EL -g
+AFLAGS		:=	-mcpu=arm920t -EL -g -mlittle-endian
 CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian
 LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_CRIPT) -Map $(MAP_FILE)
 ifeq ($(CONFIG),debug)

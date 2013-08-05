@@ -72,7 +72,7 @@ OBJS		:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
 BOOT_OBJS	:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(BOOT_SOURCES))))
 
 ## Build flags
-AFLAGS		:=	-mcpu=$(CORE) -g -mfpu=fpa
+AFLAGS		:=	-mcpu=$(CORE) -g -mfpu=fpa -mlittle-endian
 CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian -mfpu=fpa
 LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Map $(MAP_FILE) $(LIBPATH) -lgcc
 ifeq ($(CONFIG),debug)

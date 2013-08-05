@@ -27,6 +27,7 @@ static OS_Error syscall_MutexLock(const _OS_Syscall_Args * param_info, const voi
 static OS_Error syscall_MutexUnlock(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_MutexDestroy(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static OS_Error syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 //////////////////////////////////////////////////////////////////////////////
@@ -50,10 +51,15 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_MutexUnlock,
 		syscall_MutexDestroy,
 		syscall_GetCurTask,
+		syscall_TaskYield, 
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		syscall_SetUserLED,
 	};
 
-OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+///////////////////////////////////////////////////////////////////////////////
+// Kernel Side of the Syscall function
+///////////////////////////////////////////////////////////////////////////////
+OS_Error _OS_KernelSyscall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {		
 	if(param_info && (param_info->id < SYSCALL_MAX_COUNT))
 	{
@@ -63,7 +69,7 @@ OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, const void * arg, void
 		}
 	}
 	
-	KlogStr(KLOG_WARNING, "Error occurred in Kernel function %s", __FUNCDNAME__);
+	KlogStr(KLOG_WARNING, "Error occurred in Kernel function %s", __FUNCTION__);
 	return SYSCALL_ERROR;
 }
 
@@ -88,6 +94,12 @@ static OS_Error syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, 
 								(OS_PeriodicTask *)uint_ret[0],
 								(void *)uint_args[7],
 								(void *)uint_args[8]);
+}
+
+static OS_Error syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+	OS_TaskYield();
+	return SUCCESS;
 }
 
 static OS_Error syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)

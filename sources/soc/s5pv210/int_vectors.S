@@ -31,6 +31,7 @@ VIC3IRQSTATUS	=	(VIC3_BASE + 0x00)
 VIC3FIQSTATUS	=	(VIC3_BASE + 0x04)
 VIC3ADDR		=	(VIC3_BASE + 0xf00)
 
+	.global _SVC_STACK_TOP_
 	.global _reset_handler
 	.global _undefined_instr_handler
 	.global _software_interrupt_handler
@@ -62,16 +63,15 @@ _interrupt_vector_table:
 	.align 4 	/* re-align to the word boundary */	
 		
 	
-//-------------------------------------------------------------------------	
-// Function to jump to custom IRQ Handler
-// void _jump_to_custom_IRQ_Handler(old task)
-//-------------------------------------------------------------------------
-
 	.section .text       	// AREA ???, CODE, READONLY
 	.code 32             	// CODE32
 	
 	.global _SWIHandler_
 _SWIHandler_:
+
+    // The SWI is always taken in SVC mode. Lets make sure we start with a known good stack
+	ldr     r3, =_SVC_STACK_TOP_   // Note that r3 is reserved in syscall
+	ldr     sp, [r3]
 	
 	stmfd   sp!, {lr}  			   // Store registers
 	mrs     r3, spsr               // Get spsr into r3. Note that r3 is reserved in syscall
@@ -87,7 +87,12 @@ _SWIHandler_:
     ldmfd   sp!, {r3}          	   // Get spsr from stack
     msr     SPSR_cxsf, r3          // Restore spsr
     ldmfd   sp!, {pc}^ 			   // Restore registers and return	
+
 	
+//-------------------------------------------------------------------------	
+// Function to jump to custom IRQ Handler
+// void _jump_to_custom_IRQ_Handler(old task)
+//-------------------------------------------------------------------------
 	
 	.global _jump_to_custom_IRQ_Handler
 _jump_to_custom_IRQ_Handler:

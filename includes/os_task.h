@@ -61,6 +61,11 @@ struct OS_PeriodicTask
 	UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN ASSEMBLY
 	struct OS_ProcessCB *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
 
+	UINT32 *stack;
+	UINT32 stack_size;
+	void (*task_function)(void *pdata);
+	void *pdata;	
+
 	// Folliwing attributes are common in both type of tasks. They should be in the same order.
 	UINT16 attributes;
 	UINT16 id;
@@ -68,11 +73,6 @@ struct OS_PeriodicTask
 #if OS_WITH_VALIDATE_TASK==1
 	UINT32 signature;		// A unique identifier to validate the task structure
 #endif	// OS_WITH_VALIDATE_TASK
-
-	UINT32 *stack;
-	UINT32 stack_size;
-	void (*task_function)(void *pdata);
-	void *pdata;	
 	
 	// Following arguments are specific to Periodic task
 	UINT32 period;
@@ -105,17 +105,17 @@ struct OS_AperiodicTask
 	UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN Assembly
 	struct OS_ProcessCB *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
 
+	UINT32 *stack;
+	UINT32 stack_size;
+	void (*task_function)(void *pdata);
+	void *pdata;
+
 	UINT16 attributes;
 	UINT16 id;
 	INT8 name[OS_TASK_NAME_SIZE];
 #if OS_WITH_VALIDATE_TASK==1
 	UINT32 signature;		// A unique identifier to validate the task structure
 #endif	// OS_WITH_VALIDATE_TASK
-
-	UINT32 *stack;
-	UINT32 stack_size;
-	void (*task_function)(void *pdata);
-	void *pdata;
 	
 	// Following arguments are specific to Aperiodic task
 	// None at this point
@@ -137,17 +137,17 @@ typedef union OS_GenericTask
 		UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN Assembly
 		struct OS_ProcessCB *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
 
+		UINT32 *stack;
+		UINT32 stack_size;
+		void (*task_function)(void *pdata);
+		void *pdata;		
+
 		UINT16 attributes;
 		UINT16 id;
 		INT8 name[OS_TASK_NAME_SIZE];
 	#if OS_WITH_VALIDATE_TASK==1
 		UINT32 signature;		// A unique identifier to validate the task structure
 	#endif	// OS_WITH_VALIDATE_TASK
-
-		UINT32 *stack;
-		UINT32 stack_size;
-		void (*task_function)(void *pdata);
-		void *pdata;		
 	};
 	
 	OS_PeriodicTask 	periodic;

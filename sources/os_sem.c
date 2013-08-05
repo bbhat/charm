@@ -10,7 +10,7 @@
 #include "os_core.h"
 #include "os_sem.h"
 
-extern volatile void * g_current_task;
+extern volatile OS_GenericTask * g_current_task;
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_ap_wait_q;

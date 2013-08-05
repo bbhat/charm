@@ -10,6 +10,7 @@
 #include "os_core.h"
 #include "os_queue.h"
 #include "os_timer.h"
+#include "os_task.h"
 #include "util.h"
 
 // function prototype declaration
@@ -43,9 +44,13 @@ extern volatile UINT64 g_next_wakeup_time; // This variable holds the next sched
 extern void _OS_ReSchedule();
 extern void _OS_SetAlarm(OS_PeriodicTask *task, UINT64 abs_time_in_us, BOOL is_new_job, BOOL update_timer);
 
-UINT32 *_OS_BuildTaskStack(UINT32 * stack_ptr, void (*task_function)(void *), void * arg, UINT32 system_mode);
-static void TaskEntryMain(void *pdata);
-static void AperiodicTaskEntry(void *pdata);
+UINT32 *_OS_BuildKernelTaskStack(UINT32 * stack_ptr, void (*task_function)(void *), void * arg);
+UINT32 *_OS_BuildUserTaskStack(UINT32 * stack_ptr, void (*task_function)(void (*entry_function)(void *pdata), 
+	void *pdata), void * arg);
+void KernelTaskEntryMain(void *pdata);
+void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata);
+void AperiodicKernelTaskEntry(void *pdata);
+void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata);
 void _OS_ReSchedule();
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -135,7 +140,7 @@ OS_Error _OS_CreatePeriodicTask(
 	// Validate for minimum stack size for user stacks. Kernel stacks know what they want
 	if(IS_USER_TASK(options) && (stack_size_in_bytes < OS_MIN_USER_STACK_SIZE))	
 	{
-		FAULT("Stack size should be at least %d bytes", ONE_KB / 4);
+		FAULT("Stack size should be at least %d bytes", OS_MIN_USER_STACK_SIZE);
 		return INSUFFICIENT_STACK;
 	}
 
@@ -206,9 +211,17 @@ OS_Error _OS_CreatePeriodicTask(
 	OS_EXIT_CRITICAL(intsts); 	// Exit the critical section
 
 	// Build a Stack for the new thread
-	tcb->top_of_stack = _OS_BuildTaskStack(tcb->top_of_stack, 
-		TaskEntryMain, tcb, FALSE);
-
+	if(IS_SYSTEM_TASK(tcb->attributes))
+	{
+		tcb->top_of_stack = _OS_BuildKernelTaskStack(tcb->top_of_stack, 
+			KernelTaskEntryMain, tcb);
+	}
+	else	// User stack
+	{
+		tcb->top_of_stack = _OS_BuildUserTaskStack(tcb->top_of_stack, 
+			UserTaskEntryMain, tcb);	
+	}
+	
 	OS_ENTER_CRITICAL(intsts);	// Enter critical section
 
 	_OS_QueueInsert(&g_wait_q, tcb, phase_shift_in_us);		
@@ -238,12 +251,6 @@ OS_Error OS_CreateAperiodicTask(UINT16 priority,
 	{
 		FAULT("The priority value %d should be within 0 and %d", priority, MIN_PRIORITY);
 		return INVALID_PRIORITY;
-	}
-
-	if(stack_size_in_bytes < ONE_KB / 4) // Validate for minimum stack size 256 bytes
-	{
-		FAULT("Stack size should be at least %d bytes", ONE_KB / 4);
-		return INSUFFICIENT_STACK;
 	}
 
 	return _OS_CreateAperiodicTask(priority,
@@ -284,6 +291,13 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 		return INVALID_ARG;
 	}
 	
+	// Validate for minimum stack size for user stacks. Kernel stacks know what they want
+	if(IS_USER_TASK(options) && (stack_size_in_bytes < OS_MIN_USER_STACK_SIZE))	
+	{
+		FAULT("Stack size should be at least %d bytes", OS_MIN_USER_STACK_SIZE);
+		return INSUFFICIENT_STACK;
+	}	
+	
 	// Now get a free TCB resource from the pool
 	*task = (OS_Task) GetFreeResIndex(g_task_usage_mask, MAX_TASK_COUNT);
 	if(*task < 0) 
@@ -300,12 +314,24 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 
 	tcb->stack = stack;
 	tcb->stack_size = stack_size;
-	tcb->top_of_stack = stack + stack_size; // Stack grows bottom up
-	tcb->top_of_stack = _OS_BuildTaskStack(tcb->top_of_stack, AperiodicTaskEntry, tcb, FALSE);
 	tcb->task_function = task_entry_function;
 	tcb->pdata = pdata;
 	tcb->priority = priority;
 	tcb->attributes = (APERIODIC_TASK | options);
+	tcb->top_of_stack = stack + stack_size; // Stack grows bottom up
+	
+	// Build a Stack for the new thread
+	if(IS_SYSTEM_TASK(tcb->attributes))
+	{
+		tcb->top_of_stack = _OS_BuildKernelTaskStack(tcb->top_of_stack, 
+			AperiodicKernelTaskEntry, tcb);
+	}
+	else	// User stack
+	{
+		tcb->top_of_stack = _OS_BuildUserTaskStack(tcb->top_of_stack, 
+			AperiodicUserTaskEntry, tcb);	
+	}
+
 #if OS_WITH_VALIDATE_TASK==1
 	tcb->signature = TASK_SIGNATURE;
 #endif
@@ -350,12 +376,55 @@ static BOOL ValidateNewThread(UINT32 period, UINT32 budget)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// This is the main entry function for all periodic functions
+// Function to yield
+// Can be used with both Periodic / Aperiodic Tasks
 ///////////////////////////////////////////////////////////////////////////////
-static void TaskEntryMain(void *pdata)
+void OS_TaskYield()
+{
+	UINT32 intsts;
+	if(g_current_task)
+	{
+		if(IS_PERIODIC_TASK(g_current_task->attributes))
+		{
+			OS_PeriodicTask * task = (OS_PeriodicTask *)g_current_task;
+
+			OS_ENTER_CRITICAL(intsts);		
+			task->exec_count++;
+
+			// Suspend the current task. This task will be automatically 
+			// woken up by the alarm.
+			_OS_QueueDelete(&g_ready_q, task);
+			if(task->alarm_time == g_next_wakeup_time)
+			{
+				// If the next wakeup time is same as the alarm time for the 
+				// current task, just invalidate the next wakeup time so that
+				// it is set again below
+				g_next_wakeup_time = 0xFFFFFFFFFFFFFFFF;
+			}
+		
+			// The accumulated_budget and remaining_budget will be updated by these calls
+			if(task->deadline == task->period)
+			{
+				_OS_SetAlarm(task, task->alarm_time, FALSE, TRUE);
+			}
+			else
+			{
+				_OS_SetAlarm(task, task->alarm_time + task->period - task->deadline, FALSE, TRUE);
+			}
+			OS_EXIT_CRITICAL(intsts);
+		}
+
+		// Call reschedule
+		_OS_ReSchedule();
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// This is the main entry function for all in-kernel periodic functions
+///////////////////////////////////////////////////////////////////////////////
+void KernelTaskEntryMain(void *pdata)
 {
 	OS_PeriodicTask * task = (OS_PeriodicTask *) pdata;
-	UINT32 intsts;
 
 #if OS_WITH_VALIDATE_TASK==1
 	// Validate the task
@@ -368,38 +437,12 @@ static void TaskEntryMain(void *pdata)
 	{
 		// Call the thread handler function
 		task->task_function(task->pdata);
-
-		OS_ENTER_CRITICAL(intsts);		
-		task->exec_count++;
-
-		// Suspend the current task. This task will be automatically 
-		// woken up by the alarm.
-		_OS_QueueDelete(&g_ready_q, task);
-		if(task->alarm_time == g_next_wakeup_time)
-		{
-			// If the next wakeup time is same as the alarm time for the 
-			// current task, just invalidate the next wakeup time so that
-			// it is set again below
-			g_next_wakeup_time = 0xFFFFFFFFFFFFFFFF;
-		}
 		
-		// The accumulated_budget and remaining_budget will be updated by these calls
-		if(task->deadline == task->period)
-		{
-			_OS_SetAlarm(task, task->alarm_time, FALSE, TRUE);
-		}
-		else
-		{
-			_OS_SetAlarm(task, task->alarm_time + task->period - task->deadline, FALSE, TRUE);
-		}
-		OS_EXIT_CRITICAL(intsts);
-
-		// Now call reschedule function
-		_OS_ReSchedule();	
+		OS_TaskYield();
 	}
 }
 
-static void AperiodicTaskEntry(void *pdata)
+void AperiodicKernelTaskEntry(void *pdata)
 {
 	OS_AperiodicTask * task = (OS_AperiodicTask *) pdata;
 	UINT32 intsts;
@@ -414,6 +457,10 @@ static void AperiodicTaskEntry(void *pdata)
 
 	// Insert into block q
 	_OS_QueueInsert(&g_block_q, task, task->priority);
+	
+	// TODO: Free the TCB resource
+	// SetResourceStatus
+	
 	OS_EXIT_CRITICAL(intsts);
 
 	// Now call reschedule function
