@@ -31,6 +31,9 @@ VIC3IRQSTATUS	=	(VIC3_BASE + 0x00)
 VIC3FIQSTATUS	=	(VIC3_BASE + 0x04)
 VIC3ADDR		=	(VIC3_BASE + 0xf00)
 
+BASIC_SWI       = 0
+ADVANCED_SWI    = 1
+
 	.global _SVC_STACK_TOP_
 	.global _reset_handler
 	.global _undefined_instr_handler
@@ -40,6 +43,8 @@ VIC3ADDR		=	(VIC3_BASE + 0xf00)
 	.global _reserved_interrupt
 	.global _IRQHandler_
 	.global _FIQHandler_
+	.global _SWIHandler_
+
 //---------------------------------------------------------------------
 //  Interrupt Vectors
 //---------------------------------------------------------------------
@@ -62,32 +67,9 @@ _interrupt_vector_table:
 	.string "Copyright 2012-2013 Bala B. xxxxxxxx, xxxxxxxx"
 	.align 4 	/* re-align to the word boundary */	
 		
-	
+		
 	.section .text       	// AREA ???, CODE, READONLY
 	.code 32             	// CODE32
-	
-	.global _SWIHandler_
-_SWIHandler_:
-
-    // The SWI is always taken in SVC mode. Lets make sure we start with a known good stack
-	ldr     r3, =_SVC_STACK_TOP_   // Note that r3 is reserved in syscall
-	ldr     sp, [r3]
-	
-	stmfd   sp!, {lr}  			   // Store registers
-	mrs     r3, spsr               // Get spsr into r3. Note that r3 is reserved in syscall
-	stmfd   sp!, {r3}              // Store spsr onto stack
-								   // Only required for nested SVCs.
-    ldr		r3, [lr,#-4]           // Load the instruction word and...
-    bic   	r3, r3, #0xff000000    // ...extract comment field
-
-    // r0 - r2 now contains syscall parameters
-    // r3 now contains SVC number
-    
-    bl      _software_interrupt_handler		// Call main part of handler
-    ldmfd   sp!, {r3}          	   // Get spsr from stack
-    msr     SPSR_cxsf, r3          // Restore spsr
-    ldmfd   sp!, {pc}^ 			   // Restore registers and return	
-
 	
 //-------------------------------------------------------------------------	
 // Function to jump to custom IRQ Handler

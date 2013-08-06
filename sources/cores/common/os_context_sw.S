@@ -19,6 +19,9 @@ ZERO_CONTEXT_STACK_TYPE = 3
 NOINT                   = 0xc0
 I_Bit                   = 0x80     // IRQ bit
 
+BASIC_SWI       = 0
+ADVANCED_SWI    = 1
+
 // -------------------------------------------------------------------------------
 // SOLICITED STACK TYPE FRAME
 // SOLICITED_STACK_TYPE
@@ -132,7 +135,6 @@ _OS_BuildUserTaskStack:       // _OS_BuildUserTaskStack(UINT32 * stack_ptr (R0),
 // ISR(Interrupt Service Routine) IRQ
 // The IRQ can come from SVC / USR / SYSTEM modes only
 // ---------------------------------------------------------------------
-    .global        _IRQ_TABLE_
     .global        _IRQHandler_
 _IRQHandler_:
     
@@ -199,6 +201,87 @@ _IRQHandler_:
     // Register r0 has the old g_current_task that will be passed to the called function
     b       _jump_to_custom_IRQ_Handler
 
+
+// ----------------------------------------------------------------------------
+// Main SWI Handler
+// ----------------------------------------------------------------------------
+	.global _SWIHandler_
+_SWIHandler_:
+
+	// There are two types of SWI handlers. 
+	// 1. One that returns from SWI handler to the caller thread. This does not result in context switch
+	// 2. Ones that results in context switch. This does not return from SWI handler using the same path
+	// Both are handled separately. 
+	// The first method can be handled efficiently by using the SVC stack and storing only few registers
+	// The second method needs to be handled more comprehensively by storing context in the caller thread
+	// just like IRQ handler
+
+    ldr		r3, [lr,#-4]           // Load the instruction word and...
+    bic   	r3, r3, #0xff000000    // ...extract comment field
+	teq     r3, #ADVANCED_SWI
+	beq     _AdvancedSWIHandler_    
+	
+	// Fall to basic SWI handler
+
+// ----------------------------------------------------------------------------
+// Basic SWI Handler
+// ----------------------------------------------------------------------------
+    .global _BasicSWIHandler_
+_BasicSWIHandler_:
+
+	// Basic SWI Handling. Advanced handling is implemented in context switch file.
+    // The SWI is always taken in SVC mode. Lets make sure we start with a known good stack
+	ldr     r3, =_SVC_STACK_TOP_   // Note that r3 is free (reserved in syscall)
+	ldr     sp, [r3]
+	
+	stmfd   sp!, {lr}  			   // Store registers
+	mrs     r3, spsr               // Get spsr into r3. Note that r3 is reserved in syscall
+	stmfd   sp!, {r3}              // Store spsr onto stack. Only required for nested SVCs.
+	
+    // r0 - r2 now contains syscall parameters        
+    bl      _OS_KernelSyscall      // Call main part of handler
+    
+    // Returning from basic SWI handler
+    ldmfd   sp!, {r3}          	   // Get spsr from stack
+    msr     SPSR_cxsf, r3          // Restore spsr
+    ldmfd   sp!, {pc}^ 			   // Restore registers and return	
+
+// ----------------------------------------------------------------------------
+// Advanced SWI Handler
+// ----------------------------------------------------------------------------
+    .global _AdvancedSWIHandler_
+_AdvancedSWIHandler_:
+
+	// The SWI is always taken in SVC mode. SWI is called only from SYS or USER mode.
+	// Lets make sure we start with a known good stack
+	ldr     r3, =_SVC_STACK_TOP_   // Note that r3 is free (reserved in syscall)
+	
+	stm     r3, {sp}^              // Get the user mode SP
+	ldm     r3, {sp}               // Set as the new SP in SVC mode
+	
+    stmfd   sp!, {lr}              // Save PC value to be used for return
+    
+    add     r3, sp, #4             // We need to store the SP to use when we restore the stack
+    stmfd   sp!, {r3}              // Store SP as the bottom of solicited STACK
+    
+    stmfd   sp!, {r4-r12}          // save register file 
+    
+    mrs     r3, spsr
+    stmfd   sp!, {r3}              // save current SPSR
+    
+    // Store the stack type
+    mov     r3, #SOLICITED_STACK_TYPE
+    stmfd   sp!, {r1}        
+    
+    // Update the latest stack pointer in current task`s TCB or update _SVC_STACK_TOP_
+    ldr     r3,=g_current_task
+    ldr     r3,[r3]
+    str     sp,[r3, #SP_OFFSET_IN_TCB]
+    
+                                    // r0 - r2 contains syscall parameters    
+    bl      _OS_KernelSyscall		// Call main part of handler
+    b       .                       // We should never reach here
+    
 
 // ----------------------------------------------------------------------------
 // Context Restore

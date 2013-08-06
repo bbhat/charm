@@ -58,6 +58,11 @@ typedef struct
 
 
 // Main User mode to kernel mode entry syscall function
+
+// The _OS_Syscall makes a simple system call.
 OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+
+// The _OS_SyscallX makes advanced system call such as those that result in switching context
+OS_Error _OS_SyscallX(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 #endif // OS_SYSCALL_H

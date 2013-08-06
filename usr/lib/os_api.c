@@ -121,5 +121,6 @@ void OS_TaskYield()
 	param_info.arg_bytes = 0;
 	param_info.ret_bytes = 0;
 	
-	_OS_Syscall(&param_info, NULL, NULL);	
+	// This system call will result in context switch, so call advanced version
+	_OS_SyscallX(&param_info, NULL, NULL);	
 }
