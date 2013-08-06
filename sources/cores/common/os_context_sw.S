@@ -238,6 +238,9 @@ _BasicSWIHandler_:
 	mrs     r3, spsr               // Get spsr into r3. Note that r3 is reserved in syscall
 	stmfd   sp!, {r3}              // Store spsr onto stack. Only required for nested SVCs.
 	
+	ldr     r3, =_SVC_STACK_TOP_   // Set SP to SVC mode stack again
+	ldr     sp, [r3]
+	
     // r0 - r2 now contains syscall parameters        
     bl      _OS_KernelSyscall      // Call main part of handler
     
@@ -277,6 +280,9 @@ _AdvancedSWIHandler_:
     ldr     r3,=g_current_task
     ldr     r3,[r3]
     str     sp,[r3, #SP_OFFSET_IN_TCB]
+
+	ldr     r3, =_SVC_STACK_TOP_    // Set SP to SVC mode stack again
+	ldr     sp, [r3]
     
                                     // r0 - r2 contains syscall parameters    
     bl      _OS_KernelSyscall		// Call main part of handler
