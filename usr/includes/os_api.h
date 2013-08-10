@@ -195,5 +195,4 @@ typedef enum
 // the options provided
 OS_Error PFM_SetUserLED(LED_Number led, LED_Options options);
 
-
 #endif // _OS_API_H

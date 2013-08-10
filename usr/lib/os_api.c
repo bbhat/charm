@@ -43,7 +43,7 @@ OS_Error OS_CreatePeriodicTask(
 	arg[7] = (UINT32)periodic_entry_function;
 	arg[8] = (UINT32)pdata;
 	
-	result = _OS_Syscall(&param_info, &arg, &ret);
+	result = _OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	// Store the return value
 	*task = (OS_Task) ret[0];
@@ -104,7 +104,7 @@ OS_Error PFM_SetUserLED(LED_Number led, LED_Options options)
 	arg[0] = led;
 	arg[1] = options;
 	
-	return _OS_Syscall(&param_info, &arg, NULL);
+	return _OS_Syscall(&param_info, &arg, NULL, SYSCALL_BASIC);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -122,5 +122,5 @@ void OS_TaskYield()
 	param_info.ret_bytes = 0;
 	
 	// This system call will result in context switch, so call advanced version
-	_OS_SyscallX(&param_info, NULL, NULL);	
+	_OS_Syscall(&param_info, NULL, NULL, SYSCALL_SWITCHING);	
 }

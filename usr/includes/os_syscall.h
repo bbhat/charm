@@ -46,6 +46,16 @@ enum
 	SYSCALL_VER_1_4,
 };
 
+typedef enum 
+{
+	// Use SYSCALL_BASIC for basic system call. If the call does not result 
+	// in context switch, then use basic call
+	// Use SYSCALL_SWITCHING for Advanced system call such as those that result 
+	// in switching context
+	SYSCALL_BASIC = 0,
+	SYSCALL_SWITCHING = 1	
+} Syscall_type;
+
 typedef struct
 {
 	UINT16	id;
@@ -56,13 +66,7 @@ typedef struct
 	
 } _OS_Syscall_Args;
 
-
 // Main User mode to kernel mode entry syscall function
-
-// The _OS_Syscall makes a simple system call.
-OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
-
-// The _OS_SyscallX makes advanced system call such as those that result in switching context
-OS_Error _OS_SyscallX(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, const void * arg, void * ret, Syscall_type type);
 
 #endif // OS_SYSCALL_H

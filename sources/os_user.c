@@ -29,7 +29,7 @@ void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata)
 		// Call the thread handler function
 		entry_function(pdata);
 		
-		_OS_Syscall(&param_info, NULL, NULL);	
+		_OS_Syscall(&param_info, NULL, NULL, SYSCALL_SWITCHING);	
 	}
 }
 
@@ -48,7 +48,7 @@ void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata)
 		param_info.arg_bytes = 0;
 		param_info.ret_bytes = 0;
 		
-		_OS_Syscall(&param_info, NULL, NULL);	
+		_OS_Syscall(&param_info, NULL, NULL, SYSCALL_SWITCHING);	
 	}
 	
 }
