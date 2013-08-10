@@ -88,9 +88,8 @@ _OS_BuildKernelTaskStack:     // _OS_BuildKernelTaskStack(UINT32 * stack_ptr (R0
     stmfd    r0!, {r1}        // Create space for Link Register (LR). Finished task should fall to CompletedTaskTrap
     add      r1, r0, #8
     stmfd    r0!, {r1}        // Store SP value
-    stmfd    r0!, {r2}        // Store the argument as r0 value
-    sub      r0, r0, #4       // Create a dummy slots (this is used for user task stack)
-    
+    stmfd    r0!, {r2}        // Create a dummy slot for r1 (this is used for user task stack)
+    stmfd    r0!, {r2}        // Store the argument as r0 value    
     mov      r1, #SVCMODE     // System task
     stmfd    r0!, {r1}        // Create space for CPSR
     mov      r1, #ZERO_CONTEXT_STACK_TYPE
@@ -115,11 +114,10 @@ _OS_BuildUserTaskStack:       // _OS_BuildUserTaskStack(UINT32 * stack_ptr (R0),
     stmfd    r0!, {r1}        // Create space for Link Register (LR). Finished task should fall to CompletedTaskTrap
     add      r1, r0, #8
     stmfd    r0!, {r1}        // Store SP value
-    ldr      r1, [r2, #FUNCTION_OFFSET_IN_TCB] // Get the FUNCTION offset in the TCB
-    stmfd    r0!, {r1}        // Store the argument as r0 value
     ldr      r1, [r2, #PDATA_OFFSET_IN_TCB]    // Get the PDATA offset in the TCB
     stmfd    r0!, {r1}        // Store the argument as r1 value
-    
+    ldr      r1, [r2, #FUNCTION_OFFSET_IN_TCB] // Get the FUNCTION offset in the TCB
+    stmfd    r0!, {r1}        // Store the argument as r0 value    
     mov      r1, #USERMODE    // User task
     stmfd    r0!, {r1}        // Create space for CPSR
     mov      r1, #ZERO_CONTEXT_STACK_TYPE
@@ -258,6 +256,7 @@ _AdvancedSWIHandler_:
 	// The SWI is always taken in SVC mode. SWI is called only from SYS or USER mode.
 	// Lets make sure we start with a known good stack
 	ldr     r3, =_SVC_STACK_TOP_   // Note that r3 is free (reserved in syscall)
+	ldr     r3, [r3]
 	
 	stm     r3, {sp}^              // Get the user mode SP
 	ldm     r3, {sp}               // Set as the new SP in SVC mode
@@ -274,7 +273,7 @@ _AdvancedSWIHandler_:
     
     // Store the stack type
     mov     r3, #SOLICITED_STACK_TYPE
-    stmfd   sp!, {r1}        
+    stmfd   sp!, {r3}        
     
     // Update the latest stack pointer in current task`s TCB or update _SVC_STACK_TOP_
     ldr     r3,=g_current_task
@@ -386,8 +385,8 @@ _OS_ZeroContextRestore:
     
     // If we are going to USER/SYS mode, then we have special method to restore user registers
     // Read section B6.1.3 of DDI0406B Arm Architecture Reference Manual
-    ldmfd   sp, {r0, sp, lr}^             // You cant use base register writeback
-    add     sp, sp, #4*3                  // Discard above values from stack
+    ldmfd   sp, {r0-r1, sp, lr}^          // You cant use base register writeback
+    add     sp, sp, #4*4                  // Discard above values from stack
     ldmfd   sp, {pc}^                     // Return with CPSR update
 1:
     // Method to return to SVC mode is different than USER/SYS Mode

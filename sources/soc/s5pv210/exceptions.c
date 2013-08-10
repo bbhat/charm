@@ -24,21 +24,15 @@ void _undefined_instr_handler(void)
 	// For now, just change to previous mode so that we will get into right stack
 	// in order to help examine. More sophisticated handlers will be needed some time
 	// in the future
-	asm("mrs	r3, spsr");
-	asm("msr	cpsr_c, r3");
-
-	panic("Unandled undefined instruction exception");
+	panic("Unhandled undefined instruction exception");
 }
 
 void _prefetch_abort_handler(void)
 {
 	// For now, just change to previous mode so that we will get into right stack
 	// in order to help examine. More sophisticated handlers will be needed some time
-	// in the future
-	asm("mrs	r3, spsr");
-	asm("msr	cpsr_c, r3");
-
-	panic("Unandled prefetch abort");
+	// in the future	
+	panic("Unhandled prefetch abort");
 }
 
 void _data_abort_handler(void)
@@ -46,20 +40,17 @@ void _data_abort_handler(void)
 	// For now, just change to previous mode so that we will get into right stack
 	// in order to help examine. More sophisticated handlers will be needed some time
 	// in the future
-	asm("mrs	r3, spsr");
-	asm("msr	cpsr_c, r3");
-		
-	panic("Unandled data abort");
+	panic("Unhandled data abort");
 }
 
 void _reserved_interrupt(void)
 {
-	panic("Unandled reserved interrupt");
+	panic("Unhandled reserved interrupt");
 }
 
 void _FIQHandler_(void)
 {
-	panic("Unandled FIQ");
+	panic("Unhandled FIQ");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
