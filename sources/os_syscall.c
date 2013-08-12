@@ -98,7 +98,7 @@ static OS_Error syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, 
 
 static OS_Error syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	OS_TaskYield();
+	_OS_TaskYield();
 	return SUCCESS;
 }
 

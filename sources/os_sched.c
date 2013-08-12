@@ -207,7 +207,7 @@ void _OS_ReSchedule()
 		
 	OS_EXIT_CRITICAL(intsts);	// Exit critical section
 	
-	_OS_ContextSw(task);	// This has the affect of g_current_task = task;
+	_OS_ContextRestore(task);	// This has the affect of g_current_task = task;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -479,6 +479,50 @@ void _OS_Timer1ISRHandler(void *arg)
 	
 }
 #endif	// ENABLE_SYNC_TIMER
+
+///////////////////////////////////////////////////////////////////////////////
+// Function to yield from a task
+// Can be used with both Periodic / Aperiodic Tasks
+///////////////////////////////////////////////////////////////////////////////
+void _OS_TaskYield()
+{
+	UINT32 intsts;
+	if(g_current_task)
+	{
+		if(IS_PERIODIC_TASK(g_current_task->attributes))
+		{
+			OS_PeriodicTask * task = (OS_PeriodicTask *)g_current_task;
+
+			OS_ENTER_CRITICAL(intsts);		
+			task->exec_count++;
+
+			// Suspend the current task. This task will be automatically 
+			// woken up by the alarm.
+			_OS_QueueDelete(&g_ready_q, task);
+			if(task->alarm_time == g_next_wakeup_time)
+			{
+				// If the next wakeup time is same as the alarm time for the 
+				// current task, just invalidate the next wakeup time so that
+				// it is set again below
+				g_next_wakeup_time = 0xFFFFFFFFFFFFFFFF;
+			}
+		
+			// The accumulated_budget and remaining_budget will be updated by these calls
+			if(task->deadline == task->period)
+			{
+				_OS_SetAlarm(task, task->alarm_time, FALSE, TRUE);
+			}
+			else
+			{
+				_OS_SetAlarm(task, task->alarm_time + task->period - task->deadline, FALSE, TRUE);
+			}
+			OS_EXIT_CRITICAL(intsts);
+		}
+
+		// Call reschedule
+		_OS_ReSchedule();
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // The below function, gets the total elapsed time since the beginning

@@ -23,21 +23,6 @@ BASIC_SWI       = 0
 ADVANCED_SWI    = 1
 
 // -------------------------------------------------------------------------------
-// SOLICITED STACK TYPE FRAME
-// SOLICITED_STACK_TYPE
-// -------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------
-// INTERRUPT STACK TYPE FRAME
-// INTERRUPT_STACK_TYPE
-// -------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------
-// ZERO_CONTEXT STACK TYPE FRAME
-// SOLICITED_STACK_TYPE
-// -------------------------------------------------------------------------------
-
-// -------------------------------------------------------------------------------
 // INTERRUPT
 // -------------------------------------------------------------------------------
 SRCPND       =  0x4a000000    // Interrupt rest status
@@ -64,7 +49,6 @@ MODEMASK    = 0x1f
 .global     _OS_BuildKernelTaskStack
 .global     _OS_BuildUserTaskStack
 .global     _OS_ContextRestore
-.global     _OS_ContextSw
 .global     _OS_ReSchedule
 .global     panic
 
@@ -227,7 +211,7 @@ _SWIHandler_:
     .global _BasicSWIHandler_
 _BasicSWIHandler_:
 
-	// Basic SWI Handling. Advanced handling is implemented in context switch file.
+	// Basic SWI Handling. Called for only those system services that do not involve context switch
     // The SWI is always taken in SVC mode. Lets make sure we start with a known good stack
 	ldr     r3, =_SVC_STACK_TOP_   // Note that r3 is free (reserved in syscall)
 	ldr     sp, [r3]
@@ -252,10 +236,16 @@ _BasicSWIHandler_:
 // ----------------------------------------------------------------------------
     .global _AdvancedSWIHandler_
 _AdvancedSWIHandler_:
-
+    
+    mrs     r3, spsr
+    and     r3, #MODEMASK
+    teq     r3, #SVCMODE
+    beq     _KernelSWIHandler_     // Note that r3 is free (reserved in syscall)
+    
+    // If the syscall is from Userland, fall through
 	// The SWI is always taken in SVC mode. SWI is called only from SYS or USER mode.
 	// Lets make sure we start with a known good stack
-	ldr     r3, =_SVC_STACK_TOP_   // Note that r3 is free (reserved in syscall)
+	ldr     r3, =_SVC_STACK_TOP_   
 	ldr     r3, [r3]
 	
 	stm     r3, {sp}^              // Get the user mode SP
@@ -287,7 +277,39 @@ _AdvancedSWIHandler_:
     bl      _OS_KernelSyscall		// Call main part of handler
     b       .                       // We should never reach here
     
+// -------------------------------------------------------------------------------
+// Stores the context of the current task. After storing the context, it switches 
+// to the SVC stack. 
+// -------------------------------------------------------------------------------
 
+_KernelSWIHandler_:
+
+    // Save current thread context
+    stmfd   sp!, {lr}        // save pc 
+    
+    add     r3, sp, #4       // We need to store the SP to use when we restore the stack
+    stmfd   sp!, {r3}        // Store SP as the bottom of solicited STACK
+    
+    stmfd   sp!, {r4-r12}    // save register file 
+    stmfd   sp!, {r1}        // save current CPSR 
+    
+    // Store the stack type
+    mov     r3, #SOLICITED_STACK_TYPE
+    stmfd   sp!, {r3}
+    
+    // Update the latest stack pointer in current task`s TCB or update _SVC_STACK_TOP_
+    ldr     r3,=g_current_task
+    ldr     r3,[r3]
+    cmp     r3, #0
+    strne   sp,[r3, #SP_OFFSET_IN_TCB]
+    
+    ldr     r3, =_SVC_STACK_TOP_    // Set SP to base of SVC mode stack
+	ldr     sp, [r3]
+
+                                    // r0 - r2 contains syscall parameters    
+    bl      _OS_KernelSyscall		// Call main part of handler
+    b       .                       // We should never reach here
+    
 // ----------------------------------------------------------------------------
 // Context Restore
 // ----------------------------------------------------------------------------
@@ -351,7 +373,6 @@ _OS_SolStackRestore:
     // Method to return to SVC mode is different than USER/SYS Mode
     ldmfd   sp, {r4-r12, sp, pc}^         // Return with CPSR update
 
-
 // ----------------------------------------------------------------------------
 // Interrupt Stack Restore
 // ----------------------------------------------------------------------------
@@ -392,43 +413,7 @@ _OS_ZeroContextRestore:
     // Method to return to SVC mode is different than USER/SYS Mode
     ldmfd   sp, {r0-r1, sp, lr, pc}^         
 
-// -------------------------------------------------------------------------------
-// Switches the context from one thread to another.
-// The g_current_task is updated as part of this function
-// to point to the new thread
-// -------------------------------------------------------------------------------
-
-_OS_ContextSw:    // void C6713_ContextSw(new_thread_pointer)
-
-    // Disable Interrupt
-    mrs     r1, CPSR        // Read CPSR into r1
-    orr     r2, r1, #NOINT 
-    msr     cpsr_c, r2
-
-    // Save current thread context
-    stmfd   sp!, {lr}        // save pc 
-    
-    add     r2, sp, #4       // We need to store the SP to use when we restore the stack
-    stmfd   sp!, {r2}        // Store SP as the bottom of solicited STACK
-    
-    stmfd   sp!, {r4-r12}    // save register file 
-    stmfd   sp!, {r1}        // save current CPSR 
-    
-    // Store the stack type
-    mov     r1, #SOLICITED_STACK_TYPE
-    stmfd   sp!, {r1}        
-    
-    // Update the latest stack pointer in current task`s TCB or update _SVC_STACK_TOP_
-    ldr     r1,=g_current_task
-    ldr     r1,[r1]
-    cmp     r1, #0
-    strne   sp,[r1, #SP_OFFSET_IN_TCB]
-    ldr     r2,=_SVC_STACK_TOP_
-    streq   sp,[r2]        // Update the SVC Stack Top Pointer if task is NULL
-    
-    // Restore the new task
-    b       _OS_ContextRestore_safe
-
+	
 // -------------------------------------------------------------------------------
 // A placeholder for tasks that have finished. 
 // -------------------------------------------------------------------------------
