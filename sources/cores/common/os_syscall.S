@@ -36,19 +36,6 @@ _OS_Syscall:
 	stmfd   sp!, {lr}  			    // Store the return address	
 	
 	teq     r3, #SYSCALL_SWITCHING  // Check if we need switching syscall
-	beq	    1f						// Call SVC 0x1 with parameter value in R0
+	svceq	0x1						// Call SVC 0x1 with parameter value in R0
 	svcne	0x0						// Call SVC 0x0 with parameter value in R0
-0:                                  // SYSCALL_BASIC
-	mrs     r3, cpsr                // Check the current mode
-	and     r3, #MODEMASK
-	teq     r3, #SVCMODE            // Are we already in SVC mode?
-	bleq    _BasicSWIHandler_       // If we are already in SVC, then make a simple function call
-	svcne	0x0						// Call SVC 0x0 with parameter value in R0
-	ldmfd   sp!, {pc}  			    // Restore registers and return
-1:                                  // SYSCALL_SWITCHING
-	mrs     r3, cpsr                // Check the current mode
-	and     r3, #MODEMASK
-	teq     r3, #SVCMODE            // Are we already in SVC mode?
-	bleq    _AdvancedSWIHandler_    // If we are already in SVC, then make a simple function call
-	svcne	0x1						// Call SVC 0x1 with parameter value in R0
 	ldmfd   sp!, {pc}  			    // Restore registers and return

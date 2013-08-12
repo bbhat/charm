@@ -291,7 +291,8 @@ _KernelSWIHandler_:
     stmfd   sp!, {r3}        // Store SP as the bottom of solicited STACK
     
     stmfd   sp!, {r4-r12}    // save register file 
-    stmfd   sp!, {r1}        // save current CPSR 
+    mrs     r3, spsr
+    stmfd   sp!, {r3}        // save current SPSR
     
     // Store the stack type
     mov     r3, #SOLICITED_STACK_TYPE
