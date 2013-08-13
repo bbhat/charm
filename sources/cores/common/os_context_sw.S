@@ -211,24 +211,26 @@ _SWIHandler_:
     .global _BasicSWIHandler_
 _BasicSWIHandler_:
 
+    mrs     r3, spsr               // Note that r3 is free (reserved in syscall)
+    and     r3, #MODEMASK
+    teq     r3, #SVCMODE
+    beq     1f     
+
 	// Basic SWI Handling. Called for only those system services that do not involve context switch
     // The SWI is always taken in SVC mode. Lets make sure we start with a known good stack
 	ldr     r3, =_SVC_STACK_TOP_   // Note that r3 is free (reserved in syscall)
 	ldr     sp, [r3]
-	
+1:	
 	stmfd   sp!, {lr}  			   // Store registers
 	mrs     r3, spsr               // Get spsr into r3. Note that r3 is reserved in syscall
 	stmfd   sp!, {r3}              // Store spsr onto stack. Only required for nested SVCs.
-	
-	ldr     r3, =_SVC_STACK_TOP_   // Set SP to SVC mode stack again
-	ldr     sp, [r3]
 	
     // r0 - r2 now contains syscall parameters        
     bl      _OS_KernelSyscall      // Call main part of handler
     
     // Returning from basic SWI handler
     ldmfd   sp!, {r3}          	   // Get spsr from stack
-    msr     SPSR_cxsf, r3          // Restore spsr
+    msr     spsr, r3               // Restore spsr
     ldmfd   sp!, {pc}^ 			   // Restore registers and return	
 
 // ----------------------------------------------------------------------------
