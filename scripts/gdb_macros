@@ -1,0 +1,59 @@
+###################################################################################
+##	
+##						Copyright 2009-2013 xxxxxxx, xxxxxxx
+##	File:	Makefile
+##	Author:	Bala B. (bhat.balasubramanya@gmail.com)
+##	Description: GDB Helper Macros
+##
+###################################################################################
+
+
+define showsolicitedstack
+
+end
+
+define showallstacks
+  
+  set $id = 0
+  set $max_tasks = 8 * sizeof(g_task_usage_mask)
+  while($id < $max_tasks)
+    if((g_task_usage_mask[$id >> 5] >> ($id & 0x1f)) & 1)
+	  printf "\nTask %3d: %8s", $id, g_task_pool[$id].name
+      if(g_current_task != &g_task_pool[$id])
+        if(g_task_pool[$id].top_of_stack[0] == 1)
+          printf "\tSOLS Stack\n"          
+          x/i g_task_pool[$id].top_of_stack[12]
+          showfunctioncallstack g_task_pool[$id].top_of_stack[11]
+        else
+        if(g_task_pool[$id].top_of_stack[0] == 2)
+          printf "\tINTR Stack"        
+        else
+        if(g_task_pool[$id].top_of_stack[0] == 3)
+          printf "\t NEW Stack\n"
+          x/i g_task_pool[$id].top_of_stack[6]
+          showfunctioncallstack g_task_pool[$id].top_of_stack[5]
+        else
+          printf "\tINVALID Stack"
+        end      
+        end
+        end
+      else
+        printf "\t[Current]\n"
+        backtrace
+      end      
+    end    
+    set $id ++
+  end
+end
+
+document showallstacks
+  Prints backtrace of all tasks in the system
+end
+
+define showfunctioncallstack 
+  set $next_frame = $arg0
+  while $next_frame
+    x/i ($next_frame - 4)
+    set $next_frame = *(unsigned long *)$next_frame
+  end
+end

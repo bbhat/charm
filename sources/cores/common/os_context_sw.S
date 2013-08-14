@@ -66,7 +66,8 @@ _OS_BuildKernelTaskStack:     // _OS_BuildKernelTaskStack(UINT32 * stack_ptr (R0
                               // void (*task_function)(void *) (R1), void * arg(R2));
     
     // TODO: Do you really need LR register as part of context? Note: This may be to help GDB show right callstack.
-    
+    mov      r3, #0
+    stmfd    r0!, {r3}        // Store at the stack base so that backtrace looks clean
     stmfd    r0!, {r1}        // First store the task_function as the return address (PC)
     ldr      r1, =CompletedTaskTrap
     stmfd    r0!, {r1}        // Create space for Link Register (LR). Finished task should fall to CompletedTaskTrap
@@ -93,6 +94,8 @@ _OS_BuildUserTaskStack:       // _OS_BuildUserTaskStack(UINT32 * stack_ptr (R0),
     
     // TODO: Do you really need LR register as part of context? Note: This may be to help GDB show right callstack.
     
+    mov      r3, #0
+    stmfd    r0!, {r3}        // Store at the stack base so that backtrace looks clean
     stmfd    r0!, {r1}        // First store the task_function as the return address (PC)
     ldr      r1, =CompletedTaskTrap
     stmfd    r0!, {r1}        // Create space for Link Register (LR). Finished task should fall to CompletedTaskTrap
