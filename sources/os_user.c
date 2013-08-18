@@ -54,3 +54,24 @@ void OS_TaskYield()
 	// This system call will result in context switch, so call advanced version
 	_OS_Syscall(&task_yield_params, NULL, NULL, SYSCALL_SWITCHING);	
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Function: _OS_Syscall
+// 
+///////////////////////////////////////////////////////////////////////////////
+/*
+OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, 
+						const void * arg, void * ret, Syscall_type type)
+{
+	if(type == SYSCALL_SWITCHING)
+	{
+		asm("svc    0x01");
+	}
+	else
+	{
+		asm("svc    0x00");
+	}
+	
+	return SUCCESS;
+}						
+*/

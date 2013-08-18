@@ -20,14 +20,26 @@ define showallstacks
     if((g_task_usage_mask[$id >> 5] >> ($id & 0x1f)) & 1)
 	  printf "\nTask %3d: %8s", $id, g_task_pool[$id].name
       if(g_current_task != &g_task_pool[$id])
+        
+        ## SOLS stack
         if(g_task_pool[$id].top_of_stack[0] == 1)
-          printf "\tSOLS Stack\n"          
-          x/i g_task_pool[$id].top_of_stack[12]
-          showfunctioncallstack g_task_pool[$id].top_of_stack[11]
+          printf "\n0x%08x\tSOLS Stack frame\n", g_task_pool[$id].top_of_stack
+          printf "0x%08x\t", g_task_pool[$id].top_of_stack[12]
+          output /a (g_task_pool[$id].top_of_stack[12] - 4)
+          printf "\n"
+          showfunctioncallstack g_task_pool[$id].top_of_stack[9]
         else
+        
+        ## INT Stack
         if(g_task_pool[$id].top_of_stack[0] == 2)
-          printf "\tINTR Stack"        
+          printf "\n0x%08x\tINTR Stack frame\n", g_task_pool[$id].top_of_stack
+          printf "0x%08x\t", g_task_pool[$id].top_of_stack[16]
+          output /a (g_task_pool[$id].top_of_stack[16] - 4)
+          printf "\n"
+          showfunctioncallstack g_task_pool[$id].top_of_stack[13]
         else
+        
+        ## NEW Stack
         if(g_task_pool[$id].top_of_stack[0] == 3)
           printf "\t NEW Stack\n"
           x/i g_task_pool[$id].top_of_stack[6]
@@ -36,14 +48,21 @@ define showallstacks
           printf "\tINVALID Stack"
         end      
         end
-        end
+        end    
       else
+       
+        ## Current stack
         printf "\t[Current]\n"
-        backtrace
+        printf "0x%08x\t", $fp
+        output /a ($lr - 4)
+        printf "\n"
+        showfunctioncallstack $fp
       end      
     end    
     set $id ++
   end
+  
+  printf "\n"
 end
 
 document showallstacks
@@ -51,9 +70,12 @@ document showallstacks
 end
 
 define showfunctioncallstack 
-  set $next_frame = $arg0
-  while $next_frame
-    x/i ($next_frame - 4)
-    set $next_frame = *(unsigned long *)$next_frame
+  set $prev_frame = 0
+  set $next_frame = *(unsigned long *)$arg0
+  while ($next_frame && ($next_frame != $prev_frame))
+    printf "0x%08x\t", $next_frame
+    output /a *(unsigned long *)($next_frame)
+    printf "\n"
+    set $next_frame = *(unsigned long *)($next_frame - 4)
   end
 end

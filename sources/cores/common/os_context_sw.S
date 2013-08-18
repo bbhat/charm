@@ -66,13 +66,13 @@ _OS_BuildKernelTaskStack:     // _OS_BuildKernelTaskStack(UINT32 * stack_ptr (R0
                               // void (*task_function)(void *) (R1), void * arg(R2));
     
     // TODO: Do you really need LR register as part of context? Note: This may be to help GDB show right callstack.
-    mov      r3, #0
-    stmfd    r0!, {r3}        // Store at the stack base so that backtrace looks clean
     stmfd    r0!, {r1}        // First store the task_function as the return address (PC)
     ldr      r1, =CompletedTaskTrap
     stmfd    r0!, {r1}        // Create space for Link Register (LR). Finished task should fall to CompletedTaskTrap
     add      r1, r0, #8
     stmfd    r0!, {r1}        // Store SP value
+    mov      r3, #0
+    stmfd    r0!, {r3}        // Store FP value with 0 so that backtrace looks clean
     stmfd    r0!, {r2}        // Create a dummy slot for r1 (this is used for user task stack)
     stmfd    r0!, {r2}        // Store the argument as r0 value    
     mov      r1, #SVCMODE     // System task
@@ -94,13 +94,13 @@ _OS_BuildUserTaskStack:       // _OS_BuildUserTaskStack(UINT32 * stack_ptr (R0),
     
     // TODO: Do you really need LR register as part of context? Note: This may be to help GDB show right callstack.
     
-    mov      r3, #0
-    stmfd    r0!, {r3}        // Store at the stack base so that backtrace looks clean
     stmfd    r0!, {r1}        // First store the task_function as the return address (PC)
     ldr      r1, =CompletedTaskTrap
     stmfd    r0!, {r1}        // Create space for Link Register (LR). Finished task should fall to CompletedTaskTrap
     add      r1, r0, #8
     stmfd    r0!, {r1}        // Store SP value
+    mov      r3, #0
+    stmfd    r0!, {r3}        // Store FP value with 0 so that backtrace looks clean
     ldr      r1, [r2, #PDATA_OFFSET_IN_TCB]    // Get the PDATA offset in the TCB
     stmfd    r0!, {r1}        // Store the argument as r1 value
     ldr      r1, [r2, #FUNCTION_OFFSET_IN_TCB] // Get the FUNCTION offset in the TCB
@@ -412,12 +412,12 @@ _OS_ZeroContextRestore:
     
     // If we are going to USER/SYS mode, then we have special method to restore user registers
     // Read section B6.1.3 of DDI0406B Arm Architecture Reference Manual
-    ldmfd   sp, {r0-r1, sp, lr}^          // You cant use base register writeback
+    ldmfd   sp, {r0-r1, r11, sp, lr}^          // You cant use base register writeback
     add     sp, sp, #4*4                  // Discard above values from stack
     ldmfd   sp, {pc}^                     // Return with CPSR update
 1:
     // Method to return to SVC mode is different than USER/SYS Mode
-    ldmfd   sp, {r0-r1, sp, lr, pc}^         
+    ldmfd   sp, {r0-r1, r11, sp, lr, pc}^         
 
 	
 // -------------------------------------------------------------------------------

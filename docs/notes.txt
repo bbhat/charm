@@ -1,3 +1,8 @@
+References:
+--------------------------------------------------------------------------
+http://blog.wbkang.net/2012/12/10/debugging-arm-without-a-debugger-3-printing-stack-trace/
+
+
 Things to do
 --------------------------------------------------------------------------
 1. DONE: At context store and restore, interrupts should be disabled
