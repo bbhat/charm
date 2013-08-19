@@ -372,8 +372,8 @@ _OS_SolStackRestore:
 	
     // If we are going to USER/SYS mode, then we have special method to restore user registers
     // Read section B6.1.3 of DDI0406B Arm Architecture Reference Manual
-    ldmfd   sp, {r4-r12, sp, lr}^         // You cant use base register writeback
-    add     sp, sp, #4*11                 // Discard above values from stack
+    ldmfd   sp, {r4-r12, sp}^             // You cant use base register writeback
+    add     sp, sp, #4*10                 // Discard above values from stack
     ldmfd   sp, {pc}^                     // Return with CPSR update
 1:
     // Method to return to SVC mode is different than USER/SYS Mode
@@ -412,8 +412,8 @@ _OS_ZeroContextRestore:
     
     // If we are going to USER/SYS mode, then we have special method to restore user registers
     // Read section B6.1.3 of DDI0406B Arm Architecture Reference Manual
-    ldmfd   sp, {r0-r1, r11, sp, lr}^          // You cant use base register writeback
-    add     sp, sp, #4*4                  // Discard above values from stack
+    ldmfd   sp, {r0-r1, r11, sp, lr}^     // You cant use base register writeback
+    add     sp, sp, #4*5                  // Discard above values from stack
     ldmfd   sp, {pc}^                     // Return with CPSR update
 1:
     // Method to return to SVC mode is different than USER/SYS Mode

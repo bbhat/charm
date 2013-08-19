@@ -54,7 +54,7 @@ define showallstacks
         ## Current stack
         printf "\t[Current]\n"
         printf "0x%08x\t", $fp
-        output /a ($lr - 4)
+        output /a $pc
         printf "\n"
         showfunctioncallstack $fp
       end      
@@ -71,7 +71,7 @@ end
 
 define showfunctioncallstack 
   set $prev_frame = 0
-  set $next_frame = *(unsigned long *)$arg0
+  set $next_frame = $arg0
   while ($next_frame && ($next_frame != $prev_frame))
     printf "0x%08x\t", $next_frame
     output /a *(unsigned long *)($next_frame)

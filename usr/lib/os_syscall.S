@@ -21,11 +21,11 @@ SYSCALL_SWITCHING = 0x1
 	.global _OS_Syscall
 _OS_Syscall:
 
-    stmfd   sp!, {fp, lr}
-    add     fp, fp, #4
+    push    {fp, lr}
+    add     fp, sp, #4
 
 	teq     r3, #SYSCALL_SWITCHING      // Check what type of system call this is
 	svceq	0x1							// Call SVC 0x1 with parameter value in R0
 	svcne	0x0							// Call SVC 0x0 with parameter value in R0
 
-    ldmfd   sp!, {fp, pc}
+    pop     {fp, pc}
