@@ -7,17 +7,32 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "os_core.h"
-#include "target.h"
+#include "os_api.h"
 
 #define WORSTCASE 1
 #define FALSE 0
 #define TRUE 1
-#define NUMELEMS 200
+#define NUMELEMS 500
 #define MAXDIM   (NUMELEMS+1)
 
-int g_array[NUMELEMS];
+typedef struct
+{
+	int array[NUMELEMS];
+	int led;
+} Argument;
 
+
+OS_Task task1;
+OS_Task task2;
+OS_Task task3;
+OS_Task task4;
+
+UINT32 stack1[0x200];
+UINT32 stack2[0x200];
+UINT32 stack3[0x200];
+UINT32 stack4[0x200];
+
+Argument arg1, arg2, arg3, arg4;
 
 /* BUBBLESORT BENCHMARK PROGRAM:
  * This program tests the basic loop constructs, integer comparisons,
@@ -45,8 +60,6 @@ void Initialize(Array)
 	for (Index = 0; Index < NUMELEMS; Index ++)
 		Array[Index] = Index*factor;
 }
-
-
 
 void BubbleSort(Array)
 	int Array[];
@@ -98,19 +111,18 @@ int TestResults(Array)
 	return result;
 }
 
-void srt_main(Array)
-	int Array[];
+void srt_main(Argument *arg)
 {
 	int ret = 1;
-	Initialize(Array);
-	BubbleSort(Array);
+	Initialize(arg->array);
+	BubbleSort(arg->array);
 
-	ret = TestResults(Array);
+	ret = TestResults(arg->array);
 
 	if(ret)
 	{	
 		// Correct Value
-		user_led_toggle(3);
+		PFM_SetUserLED(arg->led, LED_TOGGLE);
 	}
 	else
 	{
@@ -119,21 +131,13 @@ void srt_main(Array)
 	}
 }
 
-
-/*
-   int ttime()*/
-/*
- * This function returns in milliseconds the amount of compiler time
- * used prior to it being called.
- */
-/*
-   {
-   struct tms buffer;
-   int utime;
-
-   times(&buffer);
-   utime = (buffer.tms_utime / 60.0) * 1000.0;
-   return(utime);
-   }
-
- */
+int main(int argc, char *argv[]) { arg1.led = 0; arg2.led = 1; arg3.led
+= 2; arg4.led = 3;
+	
+// 	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, srt_main, &arg1);
+//  OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, srt_main, &arg2);
+  	OS_CreatePeriodicTask( 500000, 500000, 30000, 15000, stack3, sizeof(stack3), "LED3", &task3, srt_main, &arg3);
+  	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, srt_main, &arg4);
+		
+	return 0;
+}

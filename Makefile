@@ -105,11 +105,11 @@ endif
 all:
 	make boot
 	make kernel
-	make application
+	make application APP=test_os
+	make application APP=srt
 	make usrlib
 	make ramdisk
 	
-
 kernel:
 	@echo --------------------------------------------------------------------------------
 	@echo Building kernel with following parameters:
@@ -141,6 +141,9 @@ boot:
 	@echo
 	make $(BOOT_TARGET)
 
+# Target to force rebuild
+FORCE:
+
 usrlib:
 	make -C usr/lib	
 	
@@ -148,9 +151,9 @@ rootfs: $(KERNEL_TARGET)
 #	@test -d $(dir $(ROOTFS_PATH)/kernel/bin/) || mkdir -pm 775 $(dir $(ROOTFS_PATH)/kernel/bin/)
 #	cp $(KERNEL_TARGET) $(ROOTFS_PATH)/kernel/bin/
 	
-ramdisk: 
+ramdisk:
 	make $(RAMDISK_TARGET)
-	
+
 application:
 	make -C applications/$(APP)
 
@@ -172,11 +175,12 @@ $(KERNEL_TARGET): $(OBJS) $(OS_TARGET)
 $(BOOT_TARGET): $(BOOT_OBJS)
 	$(LINK) -nostartfiles -nostdlib -T$(BOOT_LSCRIPT) -Map $(BOOT_MAP_FILE) $(BOOT_OBJS) -o $@
 
-$(RAMDISK_TARGET):
+$(RAMDISK_TARGET): FORCE
 	make rootfs
 	make ramdiskmk
-	tools/ramdiskmk/build/ramdiskmk $(BUILD_DIR)/ramdisk.img $(ROOTFS_PATH)
-	@echo Finished creating ramdisk file $(BUILD_DIR)/ramdisk.img
+	rm -rf $(RAMDISK_TARGET)	
+	tools/ramdiskmk/build/ramdiskmk $(RAMDISK_TARGET) $(ROOTFS_PATH)
+	@echo Finished creating ramdisk file $(RAMDISK_TARGET)
 
 tools: 
 	@echo --------------------------------------------------------------------------------

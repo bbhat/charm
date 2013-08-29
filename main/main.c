@@ -11,11 +11,13 @@
 #include "target.h"
 #include "sysctl.h"
 
-#define TEST_KERNEL		0
+//#define TEST_KERNEL
+#define TEST_OS
+#define TEST_SRT
 
 OS_Process test_proc;
-
-#if TEST_KERNEL==1
+OS_Process test_proc1;
+OS_Process test_proc2;
 
 OS_Task task1, task2, task3, task4;
 
@@ -87,8 +89,6 @@ void process_entry(void * pdata)
 	test_kernel();
 }
 
-#endif // TEST_KERNEL==1
-
 ///////////////////////////////////////////////////////////////////////////////
 // main function for the Kernel
 // Note: This is the place where we should create all the required processes
@@ -116,15 +116,22 @@ int main(int argc, char *argv[])
 	Klog32(KLOG_GENERAL_INFO, "l2 cache ways - ", _l2_cache_ways_count);
 #endif
 
-#if TEST_KERNEL==1
+#if defined(TEST_KERNEL)
 	OS_CreateProcess(&test_proc, "test_os", process_entry, NULL);
 #else
 	// Ensure that ramdisk is enabled
 	#if ENABLE_RAMDISK==0
 		#error "In order to load external processes (non-kernel), please set ENABLE_RAMDISK in OS Configuration file"
 	#endif
-	
-	OS_CreateProcessFromFile(&test_proc, "test_os", "applications/bin/test_os.elf", NULL);
+
+#if defined(TEST_OS)	
+	OS_CreateProcessFromFile(&test_proc1, "test_os", "applications/bin/test_os.elf", NULL);
+#endif
+
+#if defined(TEST_SRT)
+	OS_CreateProcessFromFile(&test_proc2, "srt", "applications/bin/srt.elf", NULL);
+#endif
+
 #endif
 	return 0;
 }

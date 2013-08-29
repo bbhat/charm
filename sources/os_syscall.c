@@ -76,7 +76,6 @@ OS_Error _OS_KernelSyscall(const _OS_Syscall_Args * param_info, const void * arg
 static OS_Error syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	UINT32 * uint_ret = (UINT32 *)ret;
 	
 	if(((param_info->arg_bytes >> 2) < 9) || ((param_info->ret_bytes >> 2) < 1))
 	{
@@ -91,7 +90,7 @@ static OS_Error syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, 
 								(UINT32)uint_args[5],
 								(INT8 *)uint_args[6],
 								USER_TASK,
-								(OS_PeriodicTask *)uint_ret[0],
+								(OS_PeriodicTask *)ret,
 								(void *)uint_args[7],
 								(void *)uint_args[8]);
 }
