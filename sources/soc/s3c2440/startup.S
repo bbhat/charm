@@ -280,7 +280,8 @@ _disable_interrupt:
 _enable_interrupt:
 	mrs 	r1,cpsr
 	bic 	r1,r1,#INTMASK
-	orr		r1,r1,r0		// Mask 
+	orr		r1,r1,r0			// Mask 
+	and     r0, r0,#INTMASK 	// Extract only the interrupt bits
 	msr 	cpsr_c,r1
 	mov   	pc, lr
 	

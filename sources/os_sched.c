@@ -196,18 +196,25 @@ void _OS_ReSchedule()
 
 	OS_ENTER_CRITICAL(intsts);	// Enter critical section
 
+	// Find out which task to schedule next (just peek, don't dequeue)
 	if(_OS_QueuePeek(&g_ready_q, (void**) &task, 0) != SUCCESS)
 	{
 		_OS_QueuePeek(&g_ap_ready_q, (void**) &task, 0);
 	}
+	
+	// Check if we need a context switch
+	if(task != (OS_GenericTask *) g_current_task)
+	{
+		// Set the next timeout
+		_OS_SetNextTimeout();
+	
+		KlogStr(KLOG_CONTEXT_SWITCH, "ContextSW To - ", ((OS_AperiodicTask *)task)->name);
 
-	_OS_SetNextTimeout();
-	
-	KlogStr(KLOG_CONTEXT_SWITCH, "ContextSW To - ", ((OS_AperiodicTask *)task)->name);
-		
-	OS_EXIT_CRITICAL(intsts);	// Exit critical section
-	
-	_OS_ContextRestore(task);	// This has the affect of g_current_task = task;
+		// It is OK to context switch to another task with interrupts disabled			
+		_OS_ContextRestore(task);	// This has the affect of g_current_task = task;
+	}
+
+	OS_EXIT_CRITICAL(intsts);	// Exit critical section	
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -392,9 +399,9 @@ void _OS_SetNextTimeout(void)
 	
 	UINT32 budget_spent = 0;
 	
+#if ENABLE_SYNC_TIMER==1	
 	// If the requested timeout is crossing g_next_sync_time, then we need to adjust the
 	// requested timeout in order to guarantee that we schedule an interrupt at the SYNC time
-#if ENABLE_SYNC_TIMER==1	
 	if((timeout_in_us >= g_next_sync_time) && (g_next_sync_time > g_global_time))
 	{
 		if(!g_sync_expected)	// If we haven't already setup for SYNC interrupt
@@ -428,7 +435,7 @@ void _OS_SetNextTimeout(void)
 #endif // ENABLE_SYNC_TIMER
 	}
 	
-	// Check if we need to adjust the budget spent for the old task
+	// Check if we need to adjust the budget spent for the currently running task
 	if(budget_spent > 0)
 	{
 		OS_PeriodicTask * cur_task = (OS_PeriodicTask *)g_current_task;

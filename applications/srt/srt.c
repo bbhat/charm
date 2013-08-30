@@ -121,7 +121,6 @@ void srt_main(Argument *arg)
 
 	if(ret)
 	{	
-		// Correct Value
 		PFM_SetUserLED(arg->led, LED_TOGGLE);
 	}
 	else

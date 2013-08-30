@@ -7,28 +7,19 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "os_core.h"
-#include "target.h"
+#include "os_api.h"
 
 UINT32 stack1 [0x400];
 UINT32 stack2 [0x400];
-UINT32 stack3 [0x400];
-UINT32 stack4 [0x400];
 
 int a = 0;
 int b = 1;
 int c = 2;
 int d = 3;
 
-OS_PeriodicTask task1, task2;
-OS_AperiodicTask task3, task4;
+OS_Task task1, task2;
 OS_Sem sem1;
 OS_Sem sem2;
-
-void task_fn(void * ptr)
-{
-	user_led_toggle(*(int *)ptr);
-}
 
 void task_fn3(void * ptr)
 {
@@ -39,7 +30,7 @@ void task_fn3(void * ptr)
 		if(i++ % 1000000 == 0)
 		{
 			i = 1;
-			user_led_toggle(led);
+			PFM_SetUserLED(led, LED_TOGGLE);
 			OS_SemWait(&sem1);			
 		}
 	}

@@ -10,14 +10,17 @@
 #ifndef _OS_SEM_H
 #define _OS_SEM_H
 
+#include "os_types.h"
 #include "os_queue.h"
+#include "os_process.h"
 
-typedef struct OS_Sem
+typedef struct 
 {
-	INT32 count;
-	_OS_Queue periodic_task_queue;    
-	_OS_Queue aperiodic_task_queue;  
+	INT32 count;						
+	OS_ProcessCB * owner;					// Owner process
+	_OS_Queue periodic_task_queue;    		// Wait queue for periodic tasks
+	_OS_Queue aperiodic_task_queue;  		// Wait queue for aperiodic tasks
     
-} OS_Sem;
+} OS_SemaphoreCB;
 
 #endif //_OS_SEM_H

@@ -60,7 +60,30 @@ OS_Error OS_CreateAperiodicTask(
 	void (*task_entry_function)(void *pdata),
 	void *pdata)
 {
-	return SUCCESS;
+	_OS_Syscall_Args param_info;
+	UINT32 arg[6];
+	UINT32 ret[1];
+	OS_Error result;
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_APERIODIC_TASK_CREATE;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = priority;
+	arg[1] = (UINT32)stack;
+	arg[2] = stack_size_in_bytes;
+	arg[3] = (UINT32)task_name;
+	arg[4] = (UINT32)task_entry_function;
+	arg[5] = (UINT32)pdata;
+	
+	result = _OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	
+	// Store the return value
+	*task = (OS_Task) ret[0];
+	
+	return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

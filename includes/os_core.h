@@ -43,7 +43,10 @@ typedef enum
 	FILE_ERROR = 29,
 	SYSCALL_ERROR = 30,
 	INVALID_SWI_ERROR = 30,
-	RESOURCE_OVER = 31,
+	RESOURCE_EXHAUSTED = 31,
+	PROCESS_INVALID = 32,			// Certain functions can only be called from a valid process
+	RESOURCE_NOT_OPEN = 33,
+	RESOURCE_NOT_OWNED = 34,
 	
 	UNKNOWN = 99	
 
@@ -52,7 +55,6 @@ typedef enum
 #include "os_process.h"
 #include "os_task.h"
 #include "os_sem.h"
-#include "os_mutex.h"
 
 UINT32 _disable_interrupt();
 void _enable_interrupt(UINT32);
@@ -191,19 +193,11 @@ OS_Error OS_GetAlarm(OS_DateAndTime *date_and_time);
 ///////////////////////////////////////////////////////////////////////////////
 // Semaphore functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error OS_SemInit(OS_Sem *sem, INT16 pshared, UINT32 value);
-OS_Error OS_SemWait(OS_Sem *sem);
-OS_Error OS_SemPost(OS_Sem *sem);
-OS_Error OS_SemDestroy(OS_Sem *sem);
-OS_Error OS_SemGetvalue(OS_Sem *sem, INT32 *val);
-
-///////////////////////////////////////////////////////////////////////////////
-// Mutex functions
-///////////////////////////////////////////////////////////////////////////////
-OS_Error OS_MutexInit(OS_Mutex *mutex);
-OS_Error OS_MutexLock(OS_Mutex *mutex);
-OS_Error OS_MutexUnlock(OS_Mutex *mutex);
-OS_Error OS_MutexDestroy(OS_Mutex *mutex);
+OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value);
+OS_Error OS_SemWait(OS_Sem sem);
+OS_Error OS_SemPost(OS_Sem sem);
+OS_Error OS_SemFree(OS_Sem sem);
+OS_Error OS_SemGetvalue(OS_Sem sem, INT32 *val);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Function to get the currently running thread. It returns a void pointer 

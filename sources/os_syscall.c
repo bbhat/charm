@@ -22,10 +22,6 @@ static OS_Error syscall_SemWait(const _OS_Syscall_Args * param_info, const void 
 static OS_Error syscall_SemPost(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_SemDestroy(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
-static OS_Error syscall_MutexCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
-static OS_Error syscall_MutexLock(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
-static OS_Error syscall_MutexUnlock(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
-static OS_Error syscall_MutexDestroy(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
@@ -46,10 +42,6 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_SemPost,
 		syscall_SemDestroy,
 		syscall_SemGetValue,
-		syscall_MutexCreate,
-		syscall_MutexLock,
-		syscall_MutexUnlock,
-		syscall_MutexDestroy,
 		syscall_GetCurTask,
 		syscall_TaskYield, 
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -103,7 +95,21 @@ static OS_Error syscall_TaskYield(const _OS_Syscall_Args * param_info, const voi
 
 static OS_Error syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	return SYSCALL_ERROR;
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	
+	if(((param_info->arg_bytes >> 2) < 6) || ((param_info->ret_bytes >> 2) < 1))
+	{
+		return SYSCALL_ERROR;
+	}
+	
+	return _OS_CreateAperiodicTask((UINT32)uint_args[0],
+								(UINT32 *)uint_args[1],
+								(UINT32)uint_args[2],
+								(INT8 *)uint_args[3],
+								USER_TASK,
+								(OS_PeriodicTask *)ret,
+								(void *)uint_args[4],
+								(void *)uint_args[5]);
 }
 
 static OS_Error syscall_ProcessCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
@@ -137,26 +143,6 @@ static OS_Error syscall_SemDestroy(const _OS_Syscall_Args * param_info, const vo
 }
 
 static OS_Error syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
-{
-	return SYSCALL_ERROR;
-}
-
-static OS_Error syscall_MutexCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
-{
-	return SYSCALL_ERROR;
-}
-
-static OS_Error syscall_MutexLock(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
-{
-	return SYSCALL_ERROR;
-}
-
-static OS_Error syscall_MutexUnlock(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
-{
-	return SYSCALL_ERROR;
-}
-
-static OS_Error syscall_MutexDestroy(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	return SYSCALL_ERROR;
 }

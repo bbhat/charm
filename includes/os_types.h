@@ -46,7 +46,7 @@ typedef INT32 _OS_KernelObj_Handle;
 
 typedef _OS_KernelObj_Handle 	OS_Task;
 typedef _OS_KernelObj_Handle 	OS_Process;
-//typedef _OS_KernelObj_Handle	OS_Sem;
-//typedef _OS_KernelObj_Handle	OS_Mutex;
+typedef _OS_KernelObj_Handle	OS_Sem;
+typedef _OS_KernelObj_Handle	OS_Mutex;
 
 #endif // _OS_TYPES_H

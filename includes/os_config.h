@@ -83,6 +83,8 @@
 #define MAX_PROCESS_COUNT                 16          // This number is used to preallocate PCB
 #define MAX_TASK_COUNT                    64          // This number is used to preallocate TCB
 #define MAX_OPEN_FILES                    16          // This number is used to preallocate FILE strctures
+#define MAX_SEMAPHORE_COUNT               64          // This number is used to preallocate Semaphore structures
+#define MAX_MUTEX_COUNT                   64          // This number is used to preallocate Mutex structures
 
 // Debug & Info related
 

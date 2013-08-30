@@ -62,7 +62,7 @@ OS_Error OS_CreateProcess(
 	if(*process < 0) 
 	{
 		FAULT("OS_CreateProcess failed for '%s': Exhausted all resources\n", g_current_process->name);
-		return RESOURCE_OVER;	
+		return RESOURCE_EXHAUSTED;	
 	}
 
 	// Get a pointer to actual PCB

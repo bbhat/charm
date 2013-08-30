@@ -9,6 +9,11 @@
 
 #include "os_core.h"
 #include "os_sem.h"
+#include "util.h"
+
+// Placeholders for all the semaphore objects
+OS_Sem g_semaphore_pool[MAX_SEMAPHORE_COUNT];
+UINT32 g_semaphore_usage_mask[(MAX_SEMAPHORE_COUNT + 31) >> 5];
 
 extern volatile OS_GenericTask * g_current_task;
 extern _OS_Queue g_ready_q;
@@ -16,114 +21,270 @@ extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_ap_wait_q;
 extern void _OS_ReSchedule();
 
-OS_Error OS_SemInit(OS_Sem *sem, INT16 pshared, UINT32 value)
-{
-	if(!sem)
-		return ARGUMENT_ERROR;
+static BOOL assert_open(OS_Sem sem);
 
-	sem->count = value;
-	_OS_QueueInit(&sem->periodic_task_queue);
-	_OS_QueueInit(&sem->aperiodic_task_queue);
-	return SUCCESS;
+OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value)
+{
+	UINT32 intsts;
+	OS_Error status;
+	
+	if(!sem) {
+		status = ARGUMENT_ERROR;
+		goto exit;
+	}
+		
+	if(!g_current_process) {
+		status = PROCESS_INVALID;
+		goto exit;
+	}
+		
+	OS_ENTER_CRITICAL(intsts);
+
+	// Get a free Semaphore resource from the pool
+	*sem = (OS_Sem) GetFreeResIndex(g_semaphore_usage_mask, MAX_SEMAPHORE_COUNT);
+		
+	if(*sem < 0) 
+	{
+		OS_EXIT_CRITICAL(intsts);
+		status = RESOURCE_EXHAUSTED;
+		goto exit;
+	}
+	
+	OS_SemaphoreCB *semobj = (OS_SemaphoreCB *)g_semaphore_pool[*sem];
+
+	semobj->count = value;
+	semobj->owner = (OS_ProcessCB *) g_current_process;
+	_OS_QueueInit(&semobj->periodic_task_queue);
+	_OS_QueueInit(&semobj->aperiodic_task_queue);
+	
+	OS_EXIT_CRITICAL(intsts);
+	status = SUCCESS;
+	
+exit:
+	return status;
 }
 
-OS_Error OS_SemWait(OS_Sem *sem)
+OS_Error OS_SemWait(OS_Sem sem)
 {
-	OS_PeriodicTask * cur_task = (OS_PeriodicTask *) g_current_task;
 	UINT32 intsts;
-	
-	if(!sem)
-		return ARGUMENT_ERROR;
+	OS_Error status;
+	OS_GenericTask * cur_task = (OS_GenericTask *) g_current_task;
 
+	OS_ENTER_CRITICAL(intsts);
+
+	// Keep trying till we get the Semaphore	
 	while(1)
 	{
-		//disable interrupts
-		OS_ENTER_CRITICAL(intsts);
-			
-		if(sem->count == 0)
+		if((status = assert_open(sem)) != SUCCESS) {
+			goto exit;
+		}
+	
+		// Get the Semaphore object
+		OS_SemaphoreCB * semobj = (OS_SemaphoreCB *) g_semaphore_pool[sem];
+	
+		// Make sure that the current process owns the Semaphore.
+		if(semobj->owner != (OS_ProcessCB *) g_current_process)
 		{
-			//block the thread			
+			status = RESOURCE_NOT_OWNED;
+			goto exit;
+		}	
+	
+		// If the semaphore count is 0, then block the thread
+		if(semobj->count == 0)
+		{
+			// Block the thread			
 			if(IS_PERIODIC_TASK(cur_task->attributes))
 			{
-				_OS_QueueDelete(&g_ready_q, (void*)cur_task); //delete the current task from ready tasks queue
-				_OS_QueueInsert(&sem->periodic_task_queue, (void*)cur_task, cur_task->alarm_time); //add the current task to the semaphore's blocked queue for periodic tasks
+				// Delete the current task from ready tasks queue
+				_OS_QueueDelete(&g_ready_q, (void*)cur_task); 
+				
+				// Add the current task to the semaphore's blocked queue for periodic tasks
+				_OS_QueueInsert(&semobj->periodic_task_queue, (void*)cur_task, 
+					((OS_PeriodicTask *)cur_task)->alarm_time); 
 			}
 			else
 			{
-				_OS_QueueDelete(&g_ap_ready_q, (void*)cur_task); //delete the current task from ready tasks queue
-				_OS_QueueInsert(&sem->aperiodic_task_queue, (void*)cur_task, cur_task->alarm_time); //add the current task to the semaphore's blocked queue for aperiodic tasks
-			}
-			OS_EXIT_CRITICAL(intsts);
-			_OS_ReSchedule();			
+				// Delete the current task from ready tasks queue
+				_OS_QueueDelete(&g_ap_ready_q, (void*)cur_task); 
 				
+				// Add the current task to the semaphore's blocked queue for aperiodic tasks
+				_OS_QueueInsert(&semobj->aperiodic_task_queue, (void*)cur_task, 
+					((OS_AperiodicTask *)cur_task)->priority);
+			}
+			
+			// It is OK to keep the interrupts disabled before switching. This saves us entering critical
+			// section again upon re-entering this task.
+			_OS_ReSchedule();
 		}	
 		else
 		{
-			sem->count--;	
-			OS_EXIT_CRITICAL(intsts);
+			semobj->count--;	
+			status = SUCCESS;
 			break;
 		}
-		
-	}	
-
-	return SUCCESS;
+	}
+exit:
+	OS_EXIT_CRITICAL(intsts);
+	return status;
 }
 
-OS_Error OS_SemPost(OS_Sem *sem)
+OS_Error OS_SemPost(OS_Sem sem)
 {
+	OS_GenericTask* task = NULL;
 	UINT32 intsts;
-	OS_PeriodicTask* task = NULL;
+	OS_Error status;
 	UINT64 key = 0;
-	if(!sem)
-		return ARGUMENT_ERROR;
 
-	//disable interrupts
 	OS_ENTER_CRITICAL(intsts);
-	//sem->count++;
-	if(sem->count == 0)
+
+	if((status = assert_open(sem)) != SUCCESS) {
+		goto exit;
+	}
+	
+	// Get the Semaphore object
+	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *) g_semaphore_pool[sem];
+	
+	// Make sure that the current process owns the Semaphore.
+	if(semobj->owner != (OS_ProcessCB *) g_current_process)
 	{
-		//unblock a task and remove from blocked queues		
-		_OS_QueueGet(&sem->periodic_task_queue, (void**)&task, &key);//remove from the semaphore's blocked queue for periodic tasks
-		if(task)//periodic task queue is not empty
+		status = RESOURCE_NOT_OWNED;
+		goto exit;
+	}	
+
+	if(semobj->count == 0)
+	{
+		// Unblock a waiting task. First check the periodic queue
+		_OS_QueueGet(&semobj->periodic_task_queue, (void**)&task, &key);
+		if(task)
 		{
-			_OS_QueueInsert(&g_ready_q,(void*)task,key);//place in the periodic task queue					
+			// Place this task in the periodic task ready queue
+			_OS_QueueInsert(&g_ready_q,(void*)task, key);
 		}
-		else//unblock an aperiodic job
+		
+		else 
 		{
-			_OS_QueueGet(&sem->aperiodic_task_queue, (void**)&task, &key);//remove from the semaphore's blocked queue for aperiodic tasks
-			if(task)//aperiodic task queue is not empty
+			// Now check the Aperiodic queue
+			_OS_QueueGet(&semobj->aperiodic_task_queue, (void**)&task, &key);
+			if(task)
 			{
-				_OS_QueueInsert(&g_ap_ready_q,(void*)task,key);//place in the periodic task queue					
+				// Insert this task into Aperiodic task queue
+				_OS_QueueInsert(&g_ap_ready_q,(void*)task,key);
 			}
 		}
 	}
-	sem->count++;
-	OS_EXIT_CRITICAL(intsts);
-	if(task)
+
+	// Increase the resource count
+	semobj->count++;
+		
+	// If there is a task getting ready, we need to call reschedule to give it 
+	// an opportunity to run (if that had higher priority)
+	if(task) 
 	{
+		// It is OK to keep the interrupts disabled before switching.	
 		_OS_ReSchedule();
 	}
-
-	return SUCCESS;
+	
+	status = SUCCESS;
+exit:
+	OS_EXIT_CRITICAL(intsts);
+	return status;
 }
 
-OS_Error OS_SemDestroy(OS_Sem *sem)
+OS_Error OS_SemFree(OS_Sem sem)
 {
-	if(!sem)
-		return ARGUMENT_ERROR;
+	OS_Error status;
+	UINT32 intsts;
+	OS_GenericTask* task = NULL;
+	UINT64 key = 0;
+	
+	OS_ENTER_CRITICAL(intsts);
+	
+	if((status = assert_open(sem)) != SUCCESS) {
+		goto exit;
+	}
+	
+	// Get the Semaphore object
+	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *) g_semaphore_pool[sem];
+	
+	// Make sure that the current process owns the Semaphore.
+	if(semobj->owner != (OS_ProcessCB *) g_current_process)
+	{
+		status = RESOURCE_NOT_OWNED;
+		goto exit;
+	}	
 
-	sem->count = 0;
-	_OS_QueueInit(&sem->periodic_task_queue);//set pointers to NULL
-	_OS_QueueInit(&sem->aperiodic_task_queue);//set pointers to NULL
-	return SUCCESS;
+	// We need to unblock all waiting threads in its wait queues and make them ready
+	while(TRUE)
+	{
+		// First check the periodic queue
+		_OS_QueueGet(&semobj->periodic_task_queue, (void**)&task, &key);
+
+		if(!task) break;
+		
+		// Place this task in the periodic task ready queue
+		_OS_QueueInsert(&g_ready_q,(void*)task, key);
+	}	
+
+	// Then check the Aperiodic queue
+	while(TRUE)
+	{
+		_OS_QueueGet(&semobj->aperiodic_task_queue, (void**)&task, &key);
+
+		if(!task) break;
+		
+		// Insert this task into Aperiodic ready queue
+		_OS_QueueInsert(&g_ap_ready_q,(void*)task, key);
+	}	
+
+	semobj->count = 0;
+	semobj->owner = NULL;
+	status = SUCCESS;
+	
+exit:
+	OS_EXIT_CRITICAL(intsts);
+	return status;
 }
 
-OS_Error OS_SemGetvalue(OS_Sem *sem, INT32* val)
+OS_Error OS_SemGetvalue(OS_Sem sem, INT32* val)
 {
-	if(!sem)
-		return ARGUMENT_ERROR;
-	if(val)
-		*val = sem->count;	
+	OS_Error status;
+	UINT32 intsts;
+	
+	OS_ENTER_CRITICAL(intsts);
+	
+	if((status = assert_open(sem)) != SUCCESS) {
+		goto exit;
+	}
+	
+	// Get the Semaphore object
+	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *) g_semaphore_pool[sem];
+	
+	// Make sure that the current process owns the Semaphore.
+	if(semobj->owner != (OS_ProcessCB *) g_current_process)
+	{
+		status = RESOURCE_NOT_OWNED;
+		goto exit;
+	}	
 
+	if(val) *val = semobj->count;	
+	status = SUCCESS;
+	
+exit:
+	OS_EXIT_CRITICAL(intsts);
+	return status;
+}
+
+static OS_Error assert_open(OS_Sem sem)
+{
+	if(sem < 0 || sem >= MAX_SEMAPHORE_COUNT)
+	{
+		return ARGUMENT_ERROR;
+	}
+	
+	if(!IsResourceBusy(g_semaphore_usage_mask, sem))
+	{
+		return RESOURCE_NOT_OPEN;	
+	}
+	
 	return SUCCESS;
 }

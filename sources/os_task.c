@@ -149,7 +149,7 @@ OS_Error _OS_CreatePeriodicTask(
 	if(*task < 0) 
 	{
 		FAULT("_OS_CreateAperiodicTask failed for process %s: Exhausted all resources\n", g_current_process->name);
-		return RESOURCE_OVER;	
+		return RESOURCE_EXHAUSTED;	
 	}
 
 	// Get a pointer to the actual TCB	
@@ -303,7 +303,7 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 	if(*task < 0) 
 	{
 		FAULT("_OS_CreatePeriodicTask failed for process %s: Exhausted all resources\n", g_current_process->name);
-		return RESOURCE_OVER;	
+		return RESOURCE_EXHAUSTED;	
 	}
 	
 	// Get a pointer to the TCB
