@@ -8,6 +8,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_core.h"
+#include "os_sem.h"
 #include "usr/includes/os_syscall.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -17,14 +18,19 @@ static OS_Error syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, 
 static OS_Error syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_ProcessCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_ProcessCreateFromFile(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
-static OS_Error syscall_SemCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static OS_Error syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_SemWait(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_SemPost(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
-static OS_Error syscall_SemDestroy(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static OS_Error syscall_SemFree(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static OS_Error syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+
+//////////////////////////////////////////////////////////////////////////////
+// Other function prototypes
+//////////////////////////////////////////////////////////////////////////////
+void _OS_TaskYield(void);
 
 //////////////////////////////////////////////////////////////////////////////
 // Vector containing all syscall handlers
@@ -37,10 +43,10 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_AperiodicTaskCreate,
 		syscall_ProcessCreate,
 		syscall_ProcessCreateFromFile,
-		syscall_SemCreate,
+		syscall_SemAlloc,
 		syscall_SemWait,
 		syscall_SemPost,
-		syscall_SemDestroy,
+		syscall_SemFree,
 		syscall_SemGetValue,
 		syscall_GetCurTask,
 		syscall_TaskYield, 
@@ -82,9 +88,10 @@ static OS_Error syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, 
 								(UINT32)uint_args[5],
 								(INT8 *)uint_args[6],
 								USER_TASK,
-								(OS_PeriodicTask *)ret,
+								(OS_Task *)ret,
 								(void *)uint_args[7],
 								(void *)uint_args[8]);
+
 }
 
 static OS_Error syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
@@ -107,7 +114,7 @@ static OS_Error syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info,
 								(UINT32)uint_args[2],
 								(INT8 *)uint_args[3],
 								USER_TASK,
-								(OS_PeriodicTask *)ret,
+								(OS_Task *)ret,
 								(void *)uint_args[4],
 								(void *)uint_args[5]);
 }
@@ -122,29 +129,61 @@ static OS_Error syscall_ProcessCreateFromFile(const _OS_Syscall_Args * param_inf
 	return SYSCALL_ERROR;
 }
 
-static OS_Error syscall_SemCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+static OS_Error syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	return SYSCALL_ERROR;
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	
+	if(((param_info->arg_bytes >> 2) < 1) || ((param_info->ret_bytes >> 2) < 1))
+	{
+		return SYSCALL_ERROR;
+	}
+	
+	return _OS_SemAlloc((OS_Sem *)ret, uint_args[0]);
 }
 
 static OS_Error syscall_SemWait(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	return SYSCALL_ERROR;
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	if((param_info->arg_bytes >> 2) < 1)
+	{
+		return SYSCALL_ERROR;
+	}
+	
+	return _OS_SemWait(uint_args[0]);
 }
 
 static OS_Error syscall_SemPost(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	return SYSCALL_ERROR;
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	if((param_info->arg_bytes >> 2) < 1)
+	{
+		return SYSCALL_ERROR;
+	}
+	
+	return _OS_SemPost(uint_args[0]);
 }
 
-static OS_Error syscall_SemDestroy(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+static OS_Error syscall_SemFree(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	return SYSCALL_ERROR;
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	if((param_info->arg_bytes >> 2) < 1)
+	{
+		return SYSCALL_ERROR;
+	}
+	
+	return _OS_SemFree(uint_args[0]);
 }
 
 static OS_Error syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	return SYSCALL_ERROR;
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	
+	if(((param_info->arg_bytes >> 2) < 1) || ((param_info->ret_bytes >> 2) < 1))
+	{
+		return SYSCALL_ERROR;
+	}
+	
+	return _OS_SemGetValue(uint_args[0], (INT32 *)ret);
 }
 
 static OS_Error syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)

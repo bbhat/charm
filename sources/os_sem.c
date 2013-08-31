@@ -12,7 +12,7 @@
 #include "util.h"
 
 // Placeholders for all the semaphore objects
-OS_Sem g_semaphore_pool[MAX_SEMAPHORE_COUNT];
+OS_SemaphoreCB g_semaphore_pool[MAX_SEMAPHORE_COUNT];
 UINT32 g_semaphore_usage_mask[(MAX_SEMAPHORE_COUNT + 31) >> 5];
 
 extern volatile OS_GenericTask * g_current_task;
@@ -23,7 +23,7 @@ extern void _OS_ReSchedule();
 
 static BOOL assert_open(OS_Sem sem);
 
-OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value)
+OS_Error _OS_SemAlloc(OS_Sem *sem, UINT32 value)
 {
 	UINT32 intsts;
 	OS_Error status;
@@ -50,7 +50,7 @@ OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value)
 		goto exit;
 	}
 	
-	OS_SemaphoreCB *semobj = (OS_SemaphoreCB *)g_semaphore_pool[*sem];
+	OS_SemaphoreCB *semobj = (OS_SemaphoreCB *)&g_semaphore_pool[*sem];
 
 	semobj->count = value;
 	semobj->owner = (OS_ProcessCB *) g_current_process;
@@ -64,7 +64,7 @@ exit:
 	return status;
 }
 
-OS_Error OS_SemWait(OS_Sem sem)
+OS_Error _OS_SemWait(OS_Sem sem)
 {
 	UINT32 intsts;
 	OS_Error status;
@@ -80,7 +80,7 @@ OS_Error OS_SemWait(OS_Sem sem)
 		}
 	
 		// Get the Semaphore object
-		OS_SemaphoreCB * semobj = (OS_SemaphoreCB *) g_semaphore_pool[sem];
+		OS_SemaphoreCB * semobj = (OS_SemaphoreCB *)&g_semaphore_pool[sem];
 	
 		// Make sure that the current process owns the Semaphore.
 		if(semobj->owner != (OS_ProcessCB *) g_current_process)
@@ -128,7 +128,7 @@ exit:
 	return status;
 }
 
-OS_Error OS_SemPost(OS_Sem sem)
+OS_Error _OS_SemPost(OS_Sem sem)
 {
 	OS_GenericTask* task = NULL;
 	UINT32 intsts;
@@ -142,7 +142,7 @@ OS_Error OS_SemPost(OS_Sem sem)
 	}
 	
 	// Get the Semaphore object
-	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *) g_semaphore_pool[sem];
+	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *)&g_semaphore_pool[sem];
 	
 	// Make sure that the current process owns the Semaphore.
 	if(semobj->owner != (OS_ProcessCB *) g_current_process)
@@ -190,7 +190,7 @@ exit:
 	return status;
 }
 
-OS_Error OS_SemFree(OS_Sem sem)
+OS_Error _OS_SemFree(OS_Sem sem)
 {
 	OS_Error status;
 	UINT32 intsts;
@@ -204,7 +204,7 @@ OS_Error OS_SemFree(OS_Sem sem)
 	}
 	
 	// Get the Semaphore object
-	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *) g_semaphore_pool[sem];
+	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *)&g_semaphore_pool[sem];
 	
 	// Make sure that the current process owns the Semaphore.
 	if(semobj->owner != (OS_ProcessCB *) g_current_process)
@@ -245,7 +245,7 @@ exit:
 	return status;
 }
 
-OS_Error OS_SemGetvalue(OS_Sem sem, INT32* val)
+OS_Error _OS_SemGetValue(OS_Sem sem, INT32* val)
 {
 	OS_Error status;
 	UINT32 intsts;
@@ -257,7 +257,7 @@ OS_Error OS_SemGetvalue(OS_Sem sem, INT32* val)
 	}
 	
 	// Get the Semaphore object
-	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *) g_semaphore_pool[sem];
+	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *)&g_semaphore_pool[sem];
 	
 	// Make sure that the current process owns the Semaphore.
 	if(semobj->owner != (OS_ProcessCB *) g_current_process)

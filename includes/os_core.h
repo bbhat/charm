@@ -197,7 +197,7 @@ OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value);
 OS_Error OS_SemWait(OS_Sem sem);
 OS_Error OS_SemPost(OS_Sem sem);
 OS_Error OS_SemFree(OS_Sem sem);
-OS_Error OS_SemGetvalue(OS_Sem sem, INT32 *val);
+OS_Error OS_SemGetValue(OS_Sem sem, INT32 *val);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Function to get the currently running thread. It returns a void pointer 

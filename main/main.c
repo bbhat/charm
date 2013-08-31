@@ -12,8 +12,9 @@
 #include "sysctl.h"
 
 //#define TEST_KERNEL
-#define TEST_OS
+//#define TEST_OS
 #define TEST_SRT
+#define TEST_APERIODIC
 
 OS_Process test_proc;
 OS_Process test_proc1;
@@ -130,6 +131,10 @@ int main(int argc, char *argv[])
 
 #if defined(TEST_SRT)
 	OS_CreateProcessFromFile(&test_proc2, "srt", "applications/bin/srt.elf", NULL);
+#endif
+
+#if defined(TEST_APERIODIC)
+	OS_CreateProcessFromFile(&test_proc2, "test_aperiodic", "applications/bin/test_aperiodic.elf", NULL);
 #endif
 
 #endif

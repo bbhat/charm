@@ -202,17 +202,13 @@ void _OS_ReSchedule()
 		_OS_QueuePeek(&g_ap_ready_q, (void**) &task, 0);
 	}
 	
-	// Check if we need a context switch
-	if(task != (OS_GenericTask *) g_current_task)
-	{
-		// Set the next timeout
-		_OS_SetNextTimeout();
-	
-		KlogStr(KLOG_CONTEXT_SWITCH, "ContextSW To - ", ((OS_AperiodicTask *)task)->name);
+	// Set the next timeout
+	_OS_SetNextTimeout();
 
-		// It is OK to context switch to another task with interrupts disabled			
-		_OS_ContextRestore(task);	// This has the affect of g_current_task = task;
-	}
+	KlogStr(KLOG_CONTEXT_SWITCH, "ContextSW To - ", ((OS_AperiodicTask *)task)->name);
+
+	// It is OK to context switch to another task with interrupts disabled			
+	_OS_ContextRestore(task);	// This has the affect of g_current_task = task;
 
 	OS_EXIT_CRITICAL(intsts);	// Exit critical section	
 }
@@ -511,7 +507,7 @@ void _OS_TaskYield()
 				// If the next wakeup time is same as the alarm time for the 
 				// current task, just invalidate the next wakeup time so that
 				// it is set again below
-				g_next_wakeup_time = 0xFFFFFFFFFFFFFFFF;
+				g_next_wakeup_time = (UINT64)-1;
 			}
 		
 			// The accumulated_budget and remaining_budget will be updated by these calls

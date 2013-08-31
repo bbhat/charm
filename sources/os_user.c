@@ -56,22 +56,95 @@ void OS_TaskYield()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Function: _OS_Syscall
-// 
+// Semaphore Functions
 ///////////////////////////////////////////////////////////////////////////////
-/*
-OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, 
-						const void * arg, void * ret, Syscall_type type)
+OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value)
 {
-	if(type == SYSCALL_SWITCHING)
-	{
-		asm("svc    0x01");
-	}
-	else
-	{
-		asm("svc    0x00");
-	}
+	_OS_Syscall_Args param_info;
+	UINT32 arg[1];
+	UINT32 ret[1];
+	OS_Error result;
 	
-	return SUCCESS;
-}						
-*/
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_SEM_ALLOC;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = value;	
+	result = _OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	
+	// Store the return value
+	*sem = (OS_Sem) ret[0];
+		
+	return result;	
+}
+
+OS_Error OS_SemWait(OS_Sem sem)
+{
+	_OS_Syscall_Args param_info;
+	UINT32 arg[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_SEM_WAIT;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = 0;
+	
+	arg[0] = sem;	
+	return _OS_Syscall(&param_info, &arg, NULL, SYSCALL_SWITCHING);
+}
+
+OS_Error OS_SemPost(OS_Sem sem)
+{
+	_OS_Syscall_Args param_info;
+	UINT32 arg[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_SEM_POST;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = 0;
+	
+	arg[0] = sem;	
+	return _OS_Syscall(&param_info, &arg, NULL, SYSCALL_SWITCHING);
+}
+
+OS_Error OS_SemFree(OS_Sem sem)
+{
+	_OS_Syscall_Args param_info;
+	UINT32 arg[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_SEM_FREE;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = 0;
+	
+	arg[0] = sem;	
+	return _OS_Syscall(&param_info, &arg, NULL, SYSCALL_SWITCHING);
+}
+
+OS_Error OS_SemGetValue(OS_Sem sem, INT32 *val)
+{
+	_OS_Syscall_Args param_info;
+	UINT32 arg[1];
+	UINT32 ret[1];
+	OS_Error result;
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_SEM_GET_VALUE;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = sem;	
+	result = _OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	
+	// Store the return value
+	if(val) {
+		*val = ret[0];
+	}
+		
+	return result;	
+}
