@@ -41,7 +41,7 @@ extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_block_q;
 extern volatile UINT64 g_global_time;	// This variable gets updated everytime the Timer ISR is called.
 extern volatile UINT64 g_next_wakeup_time; // This variable holds the next scheduled wakeup time in uSecs
-extern void _OS_ReSchedule();
+extern void _OS_Schedule();
 extern void _OS_SetAlarm(OS_PeriodicTask *task, UINT64 abs_time_in_us, BOOL is_new_job, BOOL update_timer);
 
 UINT32 *_OS_BuildKernelTaskStack(UINT32 * stack_ptr, void (*task_function)(void *), void * arg);
@@ -51,7 +51,7 @@ void KernelTaskEntryMain(void *pdata);
 void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata);
 void AperiodicKernelTaskEntry(void *pdata);
 void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata);
-void _OS_ReSchedule();
+void _OS_Schedule();
 
 ///////////////////////////////////////////////////////////////////////////////
 // OS_CreatePeriodicTask - API to create periodic tasks
@@ -178,11 +178,9 @@ OS_Error _OS_CreatePeriodicTask(
 	tcb->pdata = pdata;
 	tcb->remaining_budget = 0;
 	tcb->accumulated_budget = 0;
-	tcb->stored_release_time = 0;
 	tcb->exec_count = 0;
 	tcb->TBE_count = 0;
 	tcb->dline_miss_count = 0;
-	//task->next_release_time = phase_shift_in_us;
 	tcb->alarm_time = 0;
 	
 	// Note down the owner process
@@ -230,7 +228,7 @@ OS_Error _OS_CreatePeriodicTask(
 
 	if(_OS_IsRunning)
 	{
-		_OS_ReSchedule();
+		_OS_Schedule();
 	}
 
   	return SUCCESS; 
@@ -351,7 +349,7 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 	
 	if(_OS_IsRunning)
 	{
-		_OS_ReSchedule();
+		_OS_Schedule();
 	}
 
 	return SUCCESS;
@@ -420,7 +418,7 @@ void AperiodicKernelTaskEntry(void *pdata)
 	OS_EXIT_CRITICAL(intsts);
 
 	// Now call reschedule function
-	_OS_ReSchedule();
+	_OS_Schedule();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

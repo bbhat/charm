@@ -49,7 +49,7 @@ MODEMASK    = 0x1f
 .global     _OS_BuildKernelTaskStack
 .global     _OS_BuildUserTaskStack
 .global     _OS_ContextRestore
-.global     _OS_ReSchedule
+.global     _OS_Schedule
 .global     panic
 
 .global     g_current_task
@@ -428,7 +428,7 @@ CompletedTaskTrap:
     // TODO: Add support for thrashing finished tasks and its stack.
     // Currently it simply yields to other tasks
 
-    bl      _OS_ReSchedule   
+    bl      _OS_Schedule   
     b       CompletedTaskTrap
     
 

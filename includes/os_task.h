@@ -83,11 +83,9 @@ struct OS_PeriodicTask
 	// Following members are used by the scheduling algorithm
 	UINT32 remaining_budget;
 	UINT64 accumulated_budget;
-	UINT64 stored_release_time;
 	UINT32 exec_count;
 	UINT32 TBE_count;
 	UINT32 dline_miss_count;
-	// UINT64 next_release_time;
 };
 
 typedef struct OS_AperiodicTask OS_AperiodicTask;

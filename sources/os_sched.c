@@ -53,13 +53,15 @@ void _OS_SetAlarm(OS_PeriodicTask *task,
                     BOOL is_new_job,
                     BOOL update_timer);
 static void _OS_SetNextTimeout(void);
-void _OS_ReSchedule(void);
+void _OS_Schedule(void);
 void _OS_Exit(void);
 void kernel_process_entry(void * pdata);
 void main(int argc, char **argv);
 
 // Static methods
 static void _OS_idle_task(void * ptr);
+
+#define MIN(a, b)   (((a) > (b)) ? (b) : (a))
 
 ///////////////////////////////////////////////////////////////////////////////
 // The following funcstion starts the OS scheduling
@@ -111,7 +113,7 @@ void OS_Start()
         _OS_InitInterrupts();
         
         // Call reschedule. 
-        _OS_ReSchedule();
+        _OS_Schedule();
         
         // We would never return from the above call. 
         // The current stack continues as SVC stack handling all interrupts
@@ -189,7 +191,7 @@ static void _OS_idle_task(void * ptr)
 ///////////////////////////////////////////////////////////////////////////////
 // The following function schedules the first task from the ready queue 
 ///////////////////////////////////////////////////////////////////////////////
-void _OS_ReSchedule()
+void _OS_Schedule()
 {
     void * task;
     UINT32 intsts;
@@ -486,6 +488,7 @@ void _OS_Timer1ISRHandler(void *arg)
 ///////////////////////////////////////////////////////////////////////////////
 // Function to yield from a task
 // Can be used with both Periodic / Aperiodic Tasks
+// For periodic tasks, this means that we are done for the current period
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_TaskYield()
 {
@@ -499,9 +502,9 @@ void _OS_TaskYield()
             OS_ENTER_CRITICAL(intsts);        
             task->exec_count++;
 
-            // Suspend the current task. This task will be automatically 
-            // woken up by the alarm.
-            _OS_QueueDelete(&g_ready_q, task);
+            // Suspend the current task.
+            _OS_QueueGet(&g_ready_q, NULL, 0);
+            
             if(task->alarm_time == g_next_wakeup_time)
             {
                 // If the next wakeup time is same as the alarm time for the 
@@ -523,7 +526,7 @@ void _OS_TaskYield()
         }
 
         // Call reschedule
-        _OS_ReSchedule();
+        _OS_Schedule();
     }
 }
 

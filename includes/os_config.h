@@ -94,15 +94,17 @@ typedef enum
     KLOG_CONTEXT_SWITCH       = (1 << 0),
     KLOG_OS_TIMER_ISR         = (1 << 1),
     KLOG_TBE_EXCEPTION        = (1 << 2),
-    KLOG_OS_TIMER_SET         = (1 << 3),
-    KLOG_SYNC_TIMER_ISR       = (1 << 4),
-    KLOG_WARNING              = (1 << 5),
-    KLOG_GENERAL_INFO         = (1 << 6),
+    KLOG_DEADLINE_MISS        = (1 << 3),
+    KLOG_OS_TIMER_SET         = (1 << 4),
+    KLOG_SYNC_TIMER_ISR       = (1 << 5),
+    KLOG_WARNING              = (1 << 6),
+    KLOG_GENERAL_INFO         = (1 << 7),
     
     KLOG_MISC                 = (1 << 31)
     
 } Klog_MaskType;
 
+#define ENABLE_ASSERTS               1        // Enable ASSERT macros or not
 #define OS_ENABLE_CPU_STATS          1        // Enable OS & CPU Stats
 #define OS_WITH_VALIDATE_TASK        1
 

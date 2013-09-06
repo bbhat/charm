@@ -51,11 +51,11 @@
 	#define	TIMER0_TICK_FREQ	(2084375)	// (PCLK/(TIMER_PRESCALAR_0+1)/4) - Resolution 0.47976 uSec per tick
 	#define	TIMER1_TICK_FREQ	(2084375)	// (PCLK/(TIMER_PRESCALAR_0+1)/4) - Resolution 0.47976 uSec per tick
 
-	// (0xffffffff * 1000000) / TIMER0_TICK_FREQ = 2060.554 Seconds. Lets use 2060 seconds for this.
-	#define	MAX_TIMER0_INTERVAL_uS		2060000000		
+	// (0xffffffff * 1000000) / TIMER0_TICK_FREQ = 2060.554 Seconds. Lets use 1 second for this.
+	#define	MAX_TIMER0_INTERVAL_uS		1000000
 
-	// (0xffffffff * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 120ms for this.
-	#define	MAX_TIMER1_INTERVAL_uS		2060000000
+	// (0xffffffff * 1000000) / TIMER1_TICK_FREQ = 2060.554 Seconds. Lets use 1 second for this.
+	#define	MAX_TIMER1_INTERVAL_uS		1000000
 
 #endif
 

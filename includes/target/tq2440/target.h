@@ -31,8 +31,8 @@
 	// This way there will be at least one interrupt every 100ms
 	#define	MAX_TIMER0_INTERVAL_uS		100000		
 
-	// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 120ms for this.
-	#define	MAX_TIMER1_INTERVAL_uS		120000
+	// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
+	#define	MAX_TIMER1_INTERVAL_uS		100000
 
 #endif
 

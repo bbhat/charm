@@ -17,9 +17,10 @@ UINT32 g_semaphore_usage_mask[(MAX_SEMAPHORE_COUNT + 31) >> 5];
 
 extern volatile OS_GenericTask * g_current_task;
 extern _OS_Queue g_ready_q;
+extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_ap_wait_q;
-extern void _OS_ReSchedule();
+extern void _OS_Schedule();
 
 static BOOL assert_open(OS_Sem sem);
 
@@ -114,7 +115,7 @@ OS_Error _OS_SemWait(OS_Sem sem)
 			
 			// It is OK to keep the interrupts disabled before switching. This saves us entering critical
 			// section again upon re-entering this task.
-			_OS_ReSchedule();
+			_OS_Schedule();
 		}	
 		else
 		{
@@ -181,7 +182,7 @@ OS_Error _OS_SemPost(OS_Sem sem)
 	if(task) 
 	{
 		// It is OK to keep the interrupts disabled before switching.	
-		_OS_ReSchedule();
+		_OS_Schedule();
 	}
 	
 	status = SUCCESS;

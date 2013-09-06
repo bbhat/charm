@@ -62,13 +62,13 @@ void _enable_interrupt(UINT32);
 #define  OS_ENTER_CRITICAL(x)	x = _disable_interrupt()
 #define  OS_EXIT_CRITICAL(x)	_enable_interrupt(x)
 
-#ifdef DEBUG
+#if ENABLE_ASSERTS==1
 #define ASSERT(x)		if(!(x)) panic("ASSSERT Failed %s\n", #x);
 #else
 #define ASSERT(x)
 #endif
 
-#ifdef DEBUG
+#if ENABLE_ASSERTS==1
 #define ASSERT_ALWAYS(x)		panic("ASSSERT_ALWAYS: %s\n", x);
 #else
 #define ASSERT_ALWAYS(x)
