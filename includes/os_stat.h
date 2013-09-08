@@ -16,12 +16,8 @@
 
 // Some statistics counters to keep track.
 extern UINT32 max_scheduler_elapsed_time;
-extern UINT32 scheduler_miss_counter;
-extern UINT32 sched_intr_counter;
-#if ENABLE_SYNC_TIMER==1
-extern UINT32 sync_timer_miss_counter;
-extern UINT32 sync_intr_counter;
-#endif
+extern volatile UINT32 periodic_timer_intr_counter;
+extern volatile UINT32 budget_timer_intr_counter;
 
 // Variables to keep track of the idle task execution
 extern volatile UINT32 g_idle_max_count;

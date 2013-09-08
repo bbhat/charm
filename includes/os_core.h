@@ -47,6 +47,7 @@ typedef enum
 	PROCESS_INVALID = 32,			// Certain functions can only be called from a valid process
 	RESOURCE_NOT_OPEN = 33,
 	RESOURCE_NOT_OWNED = 34,
+	INVALID_PHASE = 35,
 	
 	UNKNOWN = 99	
 
@@ -87,6 +88,8 @@ extern volatile OS_GenericTask * g_current_task;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Task creation APIs
+// The period and phase parameters should be multiple of SMALLEST_TASK_PERIOD
+// Deadline and Budget can be anything valid (in microseconds)
 ///////////////////////////////////////////////////////////////////////////////
 OS_Error OS_CreatePeriodicTask(
 	UINT32 period_in_us,

@@ -53,6 +53,8 @@ typedef _OS_KernelObj_Handle	OS_Mutex;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Task creation APIs
+// The period and phase parameters should be multiple of SMALLEST_TASK_PERIOD
+// Deadline and Budget can be anything valid (in microseconds)
 ///////////////////////////////////////////////////////////////////////////////
 OS_Error OS_CreatePeriodicTask(
 	UINT32 period_in_us,

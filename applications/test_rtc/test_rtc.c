@@ -215,7 +215,7 @@ void task_rtc(void * ptr)
 			
 			Syslog("\n");
 			
-#if OS_ENABLE_CPU_STATS==1 && ENABLE_SYNC_TIMER==1
+#if OS_ENABLE_CPU_STATS==1
 			Syslog32("Current SYNC Counter Value - ", sync_intr_counter);
 #endif 			
 			Syslog32("Current Counter Value - ", test_counter);

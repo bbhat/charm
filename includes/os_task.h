@@ -82,6 +82,10 @@ struct OS_PeriodicTask
 	
 	// Following members are used by the scheduling algorithm
 	UINT32 remaining_budget;
+    
+    // When the task is in the wait_queue, it will have its job_release_time as the next release time
+    // When it is in the ready queue, it is the task period beginning value for the current period
+    UINT64 job_release_time;
 	UINT64 accumulated_budget;
 	UINT32 exec_count;
 	UINT32 TBE_count;

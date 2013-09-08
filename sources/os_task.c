@@ -39,8 +39,8 @@ extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_block_q;
-extern volatile UINT64 g_global_time;	// This variable gets updated everytime the Timer ISR is called.
-extern volatile UINT64 g_next_wakeup_time; // This variable holds the next scheduled wakeup time in uSecs
+extern volatile UINT32 g_current_period_us;
+
 extern void _OS_Schedule();
 extern void _OS_SetAlarm(OS_PeriodicTask *task, UINT64 abs_time_in_us, BOOL is_new_job, BOOL update_timer);
 
@@ -110,30 +110,37 @@ OS_Error _OS_CreatePeriodicTask(
 		return INVALID_TASK;
 	}
 
-    if(!periodic_entry_function || !stack)
+    if(!periodic_entry_function || !stack || !task_name)
 	{
-	    FAULT("One or more invalid %s arguments", "task");
+	    FAULT("One or more invalid task arguments");
 		return INVALID_ARG;
 	}
 
-	if(period_in_us < TASK_MIN_PERIOD)
+	if((period_in_us < MIN_TASK_PERIOD) || (period_in_us % MIN_TASK_PERIOD))
 	{
-		FAULT("The period should be greater than %d uSec\n", TASK_MIN_PERIOD);
+		FAULT("Task %s: Period should be multiple of %d\n", task_name, TASK_MIN_PERIOD);
 		return INVALID_PERIOD;
 	}
+	
+	if(phase_shift_in_us % MIN_TASK_PERIOD)
+	{
+		FAULT("Task %s: Phase should be multiple of %d\n", task_name, TASK_MIN_PERIOD);
+		return INVALID_PHASE;		
+	}
+	
 	if(deadline_in_us < budget_in_us)
 	{
-		FAULT("The deadline should be at least as much as its budget\n");
+		FAULT("Task %s: The deadline should be at least as much as its budget\n", task_name);
 		return INVALID_DEADLINE;
 	}
 	if(deadline_in_us > period_in_us)
 	{
-		FAULT("The deadline should be less than or equal to the period\n");
+		FAULT("Task %s: The deadline should be less than or equal to the period\n", task_name);
 		return INVALID_DEADLINE;
 	}
-	if(budget_in_us < TASK_MIN_BUDGET)
+	if(budget_in_us < MIN_TASK_BUDGET)
 	{
-		FAULT("The budget should be greater than %d uSec\n", TASK_MIN_BUDGET);
+		FAULT("Task %s: Budget should be greater than %d uSec\n", task_name, TASK_MIN_BUDGET);
 		return INVALID_BUDGET;
 	}
 	
@@ -177,6 +184,7 @@ OS_Error _OS_CreatePeriodicTask(
 	tcb->task_function = periodic_entry_function;
 	tcb->pdata = pdata;
 	tcb->remaining_budget = 0;
+    tcb->job_release_time = phase_shift_in_us;
 	tcb->accumulated_budget = 0;
 	tcb->exec_count = 0;
 	tcb->TBE_count = 0;
@@ -439,10 +447,10 @@ UINT64 OS_GetThreadElapsedTime()
 	{
 		do
 		{
-			old_global_time = g_global_time;
-			thread_elapsed_time = task->accumulated_budget + _OS_GetTimerValue_us();
+			old_global_time = g_current_period_us;
+			thread_elapsed_time = task->accumulated_budget + _OS_Timer_GetCurTime_us(BUDGET_TIMER);
 		} 
-		while(old_global_time != g_global_time); // To ensure that the timer has not expired since we have read both g_global_time and OSW_GetTime		
+		while(old_global_time != g_current_period_us);
 	}
 		
 	return thread_elapsed_time;
