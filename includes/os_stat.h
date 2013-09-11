@@ -15,7 +15,7 @@
 #if OS_ENABLE_CPU_STATS==1
 
 // Some statistics counters to keep track.
-extern UINT32 max_scheduler_elapsed_time;
+extern volatile UINT32 max_scheduler_elapsed_count;
 extern volatile UINT32 periodic_timer_intr_counter;
 extern volatile UINT32 budget_timer_intr_counter;
 

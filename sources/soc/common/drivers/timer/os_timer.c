@@ -20,12 +20,6 @@
 
 // Similarly S5PV210 has 5 32-bit timers. We use timers 0 and 1 for the OS
 
-// TODO: I need to make below calculations extremely efficient.
-// Use 64 bit calculation for accuracy and always round up
-#define CONVERT_us_TO_TICKS(us)		((((UINT64)TIMER1_TICK_FREQ * (us)) + (1000000-1)) / 1000000)
-#define CONVERT_TMR0_TICKS_TO_us(tick)	((((tick) * 1000000ull) + (TIMER0_TICK_FREQ - 1)) / TIMER0_TICK_FREQ)
-#define CONVERT_TMR1_TICKS_TO_us(tick)	((((tick) * 1000000ull) + (TIMER1_TICK_FREQ - 1)) / TIMER1_TICK_FREQ)
-
 #define TIMER0_START		0x001
 #define TIMER0_RUNNING		0x001
 #define TIMER0_UPDATE		0x002
@@ -117,7 +111,7 @@ void _OS_Timer_SetTimeout_us(UINT32 delay_in_us)
 
     Klog32(KLOG_OS_TIMER_SET, "Budget Timer Set (us) - ", delay_in_us);
     
-    rTCNTB0 = CONVERT_us_TO_TICKS(delay_in_us);
+    rTCNTB0 = CONVERT_TMR1_us_TO_TICKS(delay_in_us);
     
     // Inform that Timer 1 Buffer has changed by updating manual update bit
     // We are going to use Timer 1 as one shot timer.
@@ -139,4 +133,12 @@ UINT32 _OS_Timer_GetCurTime_us(UINT32 timer)
         return CONVERT_TMR0_TICKS_TO_us(rTCNTO0);
     else
         return CONVERT_TMR1_TICKS_TO_us(rTCNTO1);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Simply returns the timer counter value
+///////////////////////////////////////////////////////////////////////////////
+UINT32 _OS_Timer_GetTimer_Count(UINT32 timer)
+{
+	return (timer == PERIODIC_TIMER) ? rTCNTO0 : rTCNTO1;
 }

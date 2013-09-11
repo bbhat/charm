@@ -11,10 +11,10 @@
 #include "target.h"
 #include "sysctl.h"
 
-//#define TEST_KERNEL
+#define TEST_KERNEL
 //#define TEST_OS
-#define TEST_SRT
-#define TEST_APERIODIC
+//#define TEST_SRT
+//#define TEST_APERIODIC
 
 OS_Process test_proc;
 OS_Process test_proc1;
@@ -53,16 +53,16 @@ int test_kernel()
 	SyslogStr("Calling - ",  __func__);
 	
 	// Test Casual
-	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
-  	OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
-  	OS_CreatePeriodicTask( 500000, 500000, 30000, 15000, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
-  	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+// 	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
+//   	OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
+//   	OS_CreatePeriodicTask( 500000, 500000, 30000, 15000, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
+//   	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 
 	// test_short_intervals
-// 	OS_CreatePeriodicTask( 100, 100, 50, 50, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
-//  	OS_CreatePeriodicTask( 1200, 1200, 100, 400, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
-//  	OS_CreatePeriodicTask( 5000, 5000, 500, 2500, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
-//  	OS_CreatePeriodicTask(20000, 20000, 1000, 3500, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+	OS_CreatePeriodicTask( 1000, 1000, 400, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
+ 	OS_CreatePeriodicTask( 2000, 2000, 500, 1000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
+ 	OS_CreatePeriodicTask( 5000, 5000, 1000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
+ 	OS_CreatePeriodicTask(100000, 100000, 10000, 3000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 	
 	// Test Long Budget
 // 	OS_CreatePeriodicTask( 1000000, 1000000, 300000, 0, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);

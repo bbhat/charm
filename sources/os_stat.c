@@ -8,6 +8,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_stat.h"
+#include "os_timer.h"
 
 #if OS_ENABLE_CPU_STATS==1
 
@@ -15,7 +16,7 @@ OS_PeriodicTask * g_stat_task;		// A TCB for the idle task
 UINT32 g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];
 
 // Some statistics counters to keep track.
-UINT32 max_scheduler_elapsed_time;
+volatile UINT32 max_scheduler_elapsed_count;
 static UINT32 stat_task_count;
 
 // Variables to keep track of the idle task execution
@@ -28,7 +29,7 @@ volatile FP32 _OS_CPUUsage;
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_StatInit(void)
 {
-	max_scheduler_elapsed_time = 0;
+	max_scheduler_elapsed_count = 0;
 	periodic_timer_intr_counter = 0;
 	budget_timer_intr_counter = 0;
 	g_idle_max_count = 0;
@@ -50,7 +51,8 @@ void _OS_StatisticsFn(void * ptr)
 		return;
 	}
 
- 	Syslog32("STAT: max_scheduler_elapsed_time = ", max_scheduler_elapsed_time);	
+ 	Syslog32("STAT: Max scheduler time in us = ", 
+ 		CONVERT_TMR0_TICKS_TO_us(max_scheduler_elapsed_count));
 // 	Syslog32("STAT: periodic_timer_intr_counter = ", periodic_timer_intr_counter);
 //	Syslog32("STAT: budget_timer_intr_counter = ", budget_timer_intr_counter);
 	

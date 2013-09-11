@@ -44,6 +44,12 @@ volatile OS_GenericTask * g_current_task;
 volatile UINT32 periodic_timer_intr_counter;
 volatile UINT32 budget_timer_intr_counter;
 
+#if OS_ENABLE_CPU_STATS==1
+static UINT32 g_sched_starting_counter_value;
+static UINT32 g_sched_ending_counter_value;
+static UINT32 g_max_periodic_timer_count;
+#endif
+
 static OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
 static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
 static char os_name_string [] = { OS_NAME_STRING };
@@ -108,6 +114,12 @@ void OS_Start()
         
         // Start the Periodic timer
         _OS_Timer_PeriodicTimerStart(PERIODIC_TIMER_INTERVAL);
+        
+#if OS_ENABLE_CPU_STATS==1
+        g_max_periodic_timer_count = CONVERT_TMR0_us_TO_TICKS(PERIODIC_TIMER_INTERVAL);
+        Syslog32("g_max_periodic_timer_count in us = ", 
+        	CONVERT_TMR0_TICKS_TO_us(g_max_periodic_timer_count));
+#endif
 
         _OS_IsRunning = TRUE;
 
@@ -208,9 +220,10 @@ void _OS_PeriodicTimerISR(void *arg)
     // Update timer variables
     g_current_period_us = g_next_period_us;
     g_next_period_us += PERIODIC_TIMER_INTERVAL;
-    g_current_period_offset_us = 0;
+    g_current_period_offset_us = 0;    
     
 #if OS_ENABLE_CPU_STATS==1
+    g_sched_starting_counter_value = g_max_periodic_timer_count;
     periodic_timer_intr_counter++;
 #endif
     
@@ -245,17 +258,18 @@ void _OS_BudgetTimerISR(void *arg)
     OS_PeriodicTask * task = (OS_PeriodicTask *)arg;
     
     KlogStr(KLOG_BUDGET_TIMER_ISR, "Budget/Dline ISR - ", task->name);
-    
+
     // Acknowledge the timer interrupt
     _OS_Timer_AckInterrupt(BUDGET_TIMER);
 
 #if OS_ENABLE_CPU_STATS==1
+    g_sched_starting_counter_value = _OS_Timer_GetTimer_Count(PERIODIC_TIMER);
     budget_timer_intr_counter++;
 #endif
     
     // Get the time elapsed since the beginning of the period
     g_current_period_offset_us = _OS_Timer_GetCurTime_us(PERIODIC_TIMER);
-    
+        
     // Some ready task must have exceeded its budget or deadline
     // Do the necessary handling
     _OS_Sched_CheckTaskBudgetDline(task);
@@ -392,6 +406,20 @@ void _OS_Schedule()
         _OS_Timer_Disable(BUDGET_TIMER);
     }
     
+#if OS_ENABLE_CPU_STATS==1
+	g_sched_ending_counter_value = _OS_Timer_GetTimer_Count(PERIODIC_TIMER);
+	
+	// Since timer is downcounting, the end value will be smaller than starting value
+	if(g_sched_ending_counter_value < g_sched_starting_counter_value)
+	{
+		UINT32 diff_count = (g_sched_starting_counter_value - g_sched_ending_counter_value);
+		if(max_scheduler_elapsed_count < diff_count) 
+		{
+			max_scheduler_elapsed_count = diff_count;
+		}
+	}
+#endif
+
     // It is OK to context switch to another task with interrupts disabled
     _OS_ContextRestore(task);    // This has the affect of g_current_task = task;
 }
@@ -408,6 +436,10 @@ void _OS_TaskYield()
     {
         if(IS_PERIODIC_TASK(g_current_task->attributes))
         {
+#if OS_ENABLE_CPU_STATS==1
+	    	g_sched_starting_counter_value = _OS_Timer_GetTimer_Count(PERIODIC_TIMER);
+#endif
+
             OS_PeriodicTask * task = (OS_PeriodicTask *)g_current_task;
 
             task->exec_count++;
