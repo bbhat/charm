@@ -45,9 +45,9 @@ volatile UINT32 periodic_timer_intr_counter;
 volatile UINT32 budget_timer_intr_counter;
 
 #if OS_ENABLE_CPU_STATS==1
-static UINT32 g_sched_starting_counter_value;
-static UINT32 g_sched_ending_counter_value;
-static UINT32 g_max_periodic_timer_count;
+static volatile UINT32 g_sched_starting_counter_value;
+static volatile UINT32 g_sched_ending_counter_value;
+static volatile  UINT32 g_max_periodic_timer_count;
 #endif
 
 static OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
@@ -116,9 +116,8 @@ void OS_Start()
         _OS_Timer_PeriodicTimerStart(PERIODIC_TIMER_INTERVAL);
         
 #if OS_ENABLE_CPU_STATS==1
-        g_max_periodic_timer_count = CONVERT_TMR0_us_TO_TICKS(PERIODIC_TIMER_INTERVAL);
-        Syslog32("g_max_periodic_timer_count in us = ", 
-        	CONVERT_TMR0_TICKS_TO_us(g_max_periodic_timer_count));
+		g_max_periodic_timer_count = _OS_Timer_GetMaxCount(PERIODIC_TIMER);
+        Syslog32("Max periodic timer count = ", g_max_periodic_timer_count);
 #endif
 
         _OS_IsRunning = TRUE;
@@ -223,7 +222,7 @@ void _OS_PeriodicTimerISR(void *arg)
     g_current_period_offset_us = 0;    
     
 #if OS_ENABLE_CPU_STATS==1
-    g_sched_starting_counter_value = g_max_periodic_timer_count;
+    g_sched_starting_counter_value = _OS_Timer_GetMaxCount(PERIODIC_TIMER);
     periodic_timer_intr_counter++;
 #endif
     
@@ -263,7 +262,7 @@ void _OS_BudgetTimerISR(void *arg)
     _OS_Timer_AckInterrupt(BUDGET_TIMER);
 
 #if OS_ENABLE_CPU_STATS==1
-    g_sched_starting_counter_value = _OS_Timer_GetTimer_Count(PERIODIC_TIMER);
+    g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
     budget_timer_intr_counter++;
 #endif
     
@@ -407,7 +406,7 @@ void _OS_Schedule()
     }
     
 #if OS_ENABLE_CPU_STATS==1
-	g_sched_ending_counter_value = _OS_Timer_GetTimer_Count(PERIODIC_TIMER);
+	g_sched_ending_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
 	
 	// Since timer is downcounting, the end value will be smaller than starting value
 	if(g_sched_ending_counter_value < g_sched_starting_counter_value)
@@ -437,7 +436,7 @@ void _OS_TaskYield()
         if(IS_PERIODIC_TASK(g_current_task->attributes))
         {
 #if OS_ENABLE_CPU_STATS==1
-	    	g_sched_starting_counter_value = _OS_Timer_GetTimer_Count(PERIODIC_TIMER);
+	    	g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
 #endif
 
             OS_PeriodicTask * task = (OS_PeriodicTask *)g_current_task;

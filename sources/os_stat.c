@@ -53,6 +53,7 @@ void _OS_StatisticsFn(void * ptr)
 
  	Syslog32("STAT: Max scheduler time in us = ", 
  		CONVERT_TMR0_TICKS_TO_us(max_scheduler_elapsed_count));
+ 	max_scheduler_elapsed_count = 0;
 // 	Syslog32("STAT: periodic_timer_intr_counter = ", periodic_timer_intr_counter);
 //	Syslog32("STAT: budget_timer_intr_counter = ", budget_timer_intr_counter);
 	

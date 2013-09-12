@@ -59,8 +59,8 @@ void _OS_StartSyncTimer();
 
 // TODO: I need to make below calculations extremely efficient.
 // Use 64 bit calculation for accuracy and always round up
-#define CONVERT_TMR0_us_TO_TICKS(us)		((((UINT64)TIMER0_TICK_FREQ * (us)) + (1000000-1)) / 1000000)
-#define CONVERT_TMR1_us_TO_TICKS(us)		((((UINT64)TIMER1_TICK_FREQ * (us)) + (1000000-1)) / 1000000)
+#define CONVERT_TMR0_us_TO_TICKS(us)		((((UINT64)TIMER0_TICK_FREQ * (us))) / 1000000)
+#define CONVERT_TMR1_us_TO_TICKS(us)		((((UINT64)TIMER1_TICK_FREQ * (us))) / 1000000)
 #define CONVERT_TMR0_TICKS_TO_us(tick)	((((tick) * 1000000ull) + (TIMER0_TICK_FREQ - 1)) / TIMER0_TICK_FREQ)
 #define CONVERT_TMR1_TICKS_TO_us(tick)	((((tick) * 1000000ull) + (TIMER1_TICK_FREQ - 1)) / TIMER1_TICK_FREQ)
 
@@ -70,7 +70,8 @@ void _OS_Timer_PeriodicTimerStart(UINT32 interval_us);
 void _OS_Timer_SetTimeout_us(UINT32 timer);
 void _OS_Timer_Disable(UINT32 timer);
 UINT32 _OS_Timer_GetCurTime_us(UINT32 timer);
-UINT32 _OS_Timer_GetTimer_Count(UINT32 timer);
+UINT32 _OS_Timer_GetCount(UINT32 timer);
+UINT32 _OS_Timer_GetMaxCount(UINT32 timer);
 
 // Timer ISR
 void _OS_PeriodicTimerISR(void *arg);
