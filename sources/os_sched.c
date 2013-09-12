@@ -222,7 +222,7 @@ void _OS_PeriodicTimerISR(void *arg)
     g_current_period_offset_us = 0;    
     
 #if OS_ENABLE_CPU_STATS==1
-    g_sched_starting_counter_value = _OS_Timer_GetMaxCount(PERIODIC_TIMER);
+    g_sched_starting_counter_value = g_max_periodic_timer_count;
     periodic_timer_intr_counter++;
 #endif
     
@@ -364,20 +364,6 @@ void _OS_Schedule()
 {
     OS_PeriodicTask * task;
     
-#if OS_ENABLE_CPU_STATS==1
-	g_sched_ending_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
-	
-	// Since timer is downcounting, the end value will be smaller than starting value
-	if(g_sched_ending_counter_value < g_sched_starting_counter_value)
-	{
-		UINT32 diff_count = (g_sched_starting_counter_value - g_sched_ending_counter_value);
-		if(max_scheduler_elapsed_count < diff_count) 
-		{
-			max_scheduler_elapsed_count = diff_count;
-		}
-	}
-#endif
-
     // Check if there is any ready task in the periodic ready queue
     // Or else check the Aperiodic ready queue
     if(_OS_QueuePeek(&g_ready_q, (void**) &task, 0) != SUCCESS)
@@ -419,6 +405,20 @@ void _OS_Schedule()
         _OS_Timer_Disable(BUDGET_TIMER);
     }
     
+#if OS_ENABLE_CPU_STATS==1
+	g_sched_ending_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
+	
+	// Since timer is downcounting, the end value will be smaller than starting value
+	if(g_sched_ending_counter_value < g_sched_starting_counter_value)
+	{
+		UINT32 diff_count = (g_sched_starting_counter_value - g_sched_ending_counter_value);
+		if(max_scheduler_elapsed_count < diff_count) 
+		{
+			max_scheduler_elapsed_count = diff_count;
+		}
+	}
+#endif
+
     // It is OK to context switch to another task with interrupts disabled
     _OS_ContextRestore(task);    // This has the affect of g_current_task = task;
 }
