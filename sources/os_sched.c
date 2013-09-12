@@ -47,7 +47,7 @@ volatile UINT32 budget_timer_intr_counter;
 #if OS_ENABLE_CPU_STATS==1
 static volatile UINT32 g_sched_starting_counter_value;
 static volatile UINT32 g_sched_ending_counter_value;
-static volatile  UINT32 g_max_periodic_timer_count;
+extern volatile UINT32 g_max_scheduler_elapsed_count;
 #endif
 
 static OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
@@ -116,8 +116,7 @@ void OS_Start()
         _OS_Timer_PeriodicTimerStart(PERIODIC_TIMER_INTERVAL);
         
 #if OS_ENABLE_CPU_STATS==1
-		g_max_periodic_timer_count = _OS_Timer_GetMaxCount(PERIODIC_TIMER);
-        Syslog32("Max periodic timer count = ", g_max_periodic_timer_count);
+        Syslog32("Max periodic timer count = ", _OS_Timer_GetMaxCount(PERIODIC_TIMER));
 #endif
 
         _OS_IsRunning = TRUE;
@@ -222,7 +221,7 @@ void _OS_PeriodicTimerISR(void *arg)
     g_current_period_offset_us = 0;    
     
 #if OS_ENABLE_CPU_STATS==1
-    g_sched_starting_counter_value = g_max_periodic_timer_count;
+    g_sched_starting_counter_value = _OS_Timer_GetMaxCount(PERIODIC_TIMER);
     periodic_timer_intr_counter++;
 #endif
     
@@ -412,9 +411,9 @@ void _OS_Schedule()
 	if(g_sched_ending_counter_value < g_sched_starting_counter_value)
 	{
 		UINT32 diff_count = (g_sched_starting_counter_value - g_sched_ending_counter_value);
-		if(max_scheduler_elapsed_count < diff_count) 
+		if(g_max_scheduler_elapsed_count < diff_count) 
 		{
-			max_scheduler_elapsed_count = diff_count;
+			g_max_scheduler_elapsed_count = diff_count;
 		}
 	}
 #endif
