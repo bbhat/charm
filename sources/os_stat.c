@@ -9,6 +9,7 @@
 
 #include "os_stat.h"
 #include "os_timer.h"
+#include "target.h"
 
 #if OS_ENABLE_CPU_STATS==1
 

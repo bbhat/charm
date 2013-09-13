@@ -40,21 +40,24 @@ typedef struct
 } _OS_Queue;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Queue manipulaion function
+// Queue manipulation function
+// Some of these functions intentionally don't return error values to keep them
+// extremely efficient
 ///////////////////////////////////////////////////////////////////////////////
 
 // Function to initialize the queue. 					 
-OS_Error _OS_QueueInit(_OS_Queue * q);
+void _OS_QueueInit(_OS_Queue * q);
 
 // Function to insert an element into the queue. The key value determines the 
 // location at which it will be inserted. This is a sorted queue on key value.
-OS_Error _OS_QueueInsert(_OS_Queue * q, void * item, UINT64 key);
+void _OS_QueueInsert(_OS_Queue * q, void * item, UINT64 key);
+void _OS_QueueInsertTail(_OS_Queue * q, void * item);
 
 // Function to delete an item from the queue.
-OS_Error _OS_QueueDelete(_OS_Queue * q, void * item);
+void _OS_QueueDelete(_OS_Queue * q, void * item);
 
 // Function to get the first element from the Queue. 
-OS_Error _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key);
+void _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key);
 
 // Function to peek the first element from the Queue. 
 OS_Error _OS_QueuePeek(_OS_Queue * q, void ** item, UINT64 * key);

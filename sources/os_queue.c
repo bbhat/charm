@@ -13,23 +13,21 @@
 typedef _OS_QueueNode Node;  
 
 // Function to initialize the queue 								 
-OS_Error _OS_QueueInit(_OS_Queue * q)
+void _OS_QueueInit(_OS_Queue * q)
 {
-	if(!q) return ARGUMENT_ERROR;
+	ASSERT(q);
+	
 	q->head = q->tail = NULL;
 	q->count = 0;
-	 
-	return SUCCESS;
 }
 
 // Function to insert an element into the queue. The key value determines the 
 // location at which it will be inserted. This is a sorted queue on key value.
-OS_Error _OS_QueueInsert(_OS_Queue * q, void * item, UINT64 key)
+void _OS_QueueInsert(_OS_Queue * q, void * item, UINT64 key)
 {
 	Node *node, *new_node, *prev = 0;
-    if(!q) return ARGUMENT_ERROR;
-	if(!item) return ARGUMENT_ERROR;
-
+	ASSERT(q && item);
+	
 	node = q->head;
 	while(node)
 	{
@@ -51,15 +49,13 @@ OS_Error _OS_QueueInsert(_OS_Queue * q, void * item, UINT64 key)
 		q->head = new_node;		
 	}	  
 	q->count++;
-	return SUCCESS;
 }
 
 // Function to insert an element into the tail end of the queue.
-OS_Error _OS_QueueInsertTail(_OS_Queue * q, void * item)
+void _OS_QueueInsertTail(_OS_Queue * q, void * item)
 {
 	Node *new_node;
-    if(!q) return ARGUMENT_ERROR;
-	if(!item) return ARGUMENT_ERROR;
+	ASSERT(q && item);
 
 	new_node = (Node*)item;
 	new_node->next = NULL;
@@ -73,15 +69,14 @@ OS_Error _OS_QueueInsertTail(_OS_Queue * q, void * item)
 		q->head = new_node; //first node
 	}
 	q->tail = new_node;
-
-	return SUCCESS;
 }
+
 // Function to delete an item from the queue.
-OS_Error _OS_QueueDelete(_OS_Queue * q, void * item)
+void _OS_QueueDelete(_OS_Queue * q, void * item)
 {
     Node * node, * prev = 0;
 	Node * item_node = (Node*)item;
-    if(!q) return ARGUMENT_ERROR;
+    ASSERT(q);
 	
 	node = q->head;
 	while(node) 
@@ -103,17 +98,13 @@ OS_Error _OS_QueueDelete(_OS_Queue * q, void * item)
 		q->count--;
 		node->next = 0;		
 	}
-	else
-		return NO_DATA;
-
-	return SUCCESS;
 }
 
 // Function to get the first element from the Queue. 
-OS_Error _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key)
+void _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key)
 {
     Node * node;
-    if(!q) return ARGUMENT_ERROR;
+    ASSERT(q);
 	
 	node = q->head;
 	if(item) *item = (void *)node;
@@ -125,16 +116,12 @@ OS_Error _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key)
 		node->next = 0;
 		q->count--;
 	}
-	else
-	{
-		return NO_DATA;
-	}
-	return SUCCESS;
 }
 
 OS_Error _OS_QueuePeek(_OS_Queue * q, void ** item, UINT64 * key)
 {
-	if(!q) return ARGUMENT_ERROR;	
+	ASSERT(q);
+	
 	if(item) *item = (void*) q->head;
 	if(q->head)
 	{

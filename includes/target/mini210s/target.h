@@ -45,16 +45,16 @@
 	#define HCLK_PSYS			(MPLL / (DIVHCLKP+1))							// 133.4 MHz
 	#define PCLK_PSYS 			(HCLK_PSYS / (DIVPCLKP+1))					// 66.7 MHz
 
-	#define	TIMER_PRESCALAR_0	(0x07)		// PCLK/8
-	#define	TIMER0_DIVIDER		(0x02)		// PCLK/PRESCALAR0/4
-	#define	TIMER1_DIVIDER		(0x02)		// PCLK/PRESCALAR0/4
-	#define	TIMER0_TICK_FREQ	(2084375)	// (PCLK/(TIMER_PRESCALAR_0+1)/4) - Resolution 0.47976 uSec per tick
-	#define	TIMER1_TICK_FREQ	(2084375)	// (PCLK/(TIMER_PRESCALAR_0+1)/4) - Resolution 0.47976 uSec per tick
+	#define	TIMER_PRESCALAR_0	(0x01)		// PCLK/2
+	#define	TIMER0_DIVIDER		(0x01)		// PCLK/PRESCALAR0/2
+	#define	TIMER1_DIVIDER		(0x01)		// PCLK/PRESCALAR0/2
+	#define	TIMER0_TICK_FREQ	(16675000)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 0.05997 uSec per tick
+	#define	TIMER1_TICK_FREQ	(16675000)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 0.05997 uSec per tick
 
-	// (0xffffffff * 1000000) / TIMER0_TICK_FREQ = 2060.554 Seconds. Lets use 1 second for this.
+	// (0xffffffff * 1000000) / TIMER0_TICK_FREQ. Lets use 1 second for this.
 	#define	MAX_TIMER0_INTERVAL_uS		1000000
 
-	// (0xffffffff * 1000000) / TIMER1_TICK_FREQ = 2060.554 Seconds. Lets use 1 second for this.
+	// (0xffffffff * 1000000) / TIMER1_TICK_FREQ. Lets use 1 second for this.
 	#define	MAX_TIMER1_INTERVAL_uS		1000000
 
 #endif

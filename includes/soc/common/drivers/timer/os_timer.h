@@ -12,7 +12,6 @@
 
 #include "os_core.h"
 #include "os_types.h"
-#include "target.h"
 
 #if defined(SOC_S5PV210)
 	#include "vic.h"
