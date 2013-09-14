@@ -11,6 +11,7 @@
 extern int __bss_start__;
 extern int __bss_end__;
 
+int _start(int argc, char *argv[]) __attribute__ ((section (".text.startup")));
 extern int main(int argc, char *argv[]);
 
 int _start(int argc, char *argv[])

@@ -32,34 +32,6 @@ UINT32 OS_GetTBECount()
 	return IS_PERIODIC_TASK(task->attributes) ? task->TBE_count : 0;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// PFM_SetUserLED
-// The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
-// the options provided
-///////////////////////////////////////////////////////////////////////////////
-OS_Error PFM_SetUserLED(LED_Number led, LED_Options options)
-{
-	OS_Error status = SUCCESS;
-	
-	switch(options)
-	{
-	case LED_ON:
-		user_led_on(led);
-		break;
-	case LED_OFF:
-		user_led_off(led);
-		break;
-	case LED_TOGGLE:
-		user_led_toggle(led);
-		break;
-	default:
-		status = ARGUMENT_ERROR;
-		break;
-	}
-	
-	return status;
-}
-
 void panic(const INT8 * format, ...)
 {
 	// TODO: Need to print whole formatted string
@@ -122,4 +94,32 @@ void Syslog64(const INT8 * str, UINT64 value)
 	{
 		Uart_Print(DEBUG_UART_CHANNEL, "\n");
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// _PFM_SetUserLED
+// The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
+// the options provided
+///////////////////////////////////////////////////////////////////////////////
+OS_Error _PFM_SetUserLED(LED_Number led, LED_Options options)
+{
+	OS_Error status = SUCCESS;
+
+	switch(options)
+	{
+	case LED_ON:
+		user_led_on(led);
+		break;
+	case LED_OFF:
+		user_led_off(led);
+		break;
+	case LED_TOGGLE:
+		user_led_toggle(led);
+		break;
+	default:
+		status = ARGUMENT_ERROR;
+		break;
+	}
+
+	return status;
 }

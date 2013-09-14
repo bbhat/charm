@@ -109,7 +109,7 @@ void _OS_Timer_SetTimeout_us(UINT32 delay_in_us)
     // Validate the input
     ASSERT(delay_in_us <= MAX_TIMER1_INTERVAL_uS);
 
-    Klog32(KLOG_OS_TIMER_SET, "Budget Timer Set (us) - ", delay_in_us);
+    Klog32(KLOG_BUDGET_TIMER_SET, "Budget Timer Set (us) - ", delay_in_us);
     
     rTCNTB0 = CONVERT_TMR1_us_TO_TICKS(delay_in_us);
     

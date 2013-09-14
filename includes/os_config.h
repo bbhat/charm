@@ -78,7 +78,7 @@ typedef enum
 } Klog_MaskType;
 
 #define ENABLE_ASSERTS               0        // Enable ASSERT macros or not
-#define OS_ENABLE_CPU_STATS          1        // Enable OS & CPU Stats
+#define OS_ENABLE_CPU_STATS          0        // Enable OS & CPU Stats
 #define OS_WITH_VALIDATE_TASK        1
 
 #define OS_KERNEL_LOGGING            0

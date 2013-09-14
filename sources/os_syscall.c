@@ -31,6 +31,7 @@ static OS_Error syscall_SetUserLED(const _OS_Syscall_Args * param_info, const vo
 // Other function prototypes
 //////////////////////////////////////////////////////////////////////////////
 void _OS_TaskYield(void);
+OS_Error _PFM_SetUserLED(LED_Number led, LED_Options options);
 
 //////////////////////////////////////////////////////////////////////////////
 // Vector containing all syscall handlers
@@ -50,8 +51,11 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_SemGetValue,
 		syscall_GetCurTask,
 		syscall_TaskYield, 
-		0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-		syscall_SetUserLED,
+		0, 0, 0, 0, 0, 
+		0, 0, 0, 0, 0, 
+		0, 0, 0, 0, 0, 
+		0, 0, 0, 0, 0,
+		0, syscall_SetUserLED
 	};
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -205,5 +209,5 @@ static OS_Error syscall_SetUserLED(const _OS_Syscall_Args * param_info, const vo
 		return SYSCALL_ERROR;
 	}
 	
-	return PFM_SetUserLED((UINT32)uint_args[0], (UINT32)uint_args[1]);
+	return _PFM_SetUserLED((UINT32)uint_args[0], (UINT32)uint_args[1]);
 }

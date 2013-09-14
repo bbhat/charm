@@ -27,7 +27,6 @@ SECTIONS
 {
 	.text :
 	{
-		*(.text.vector)
 		*(.text.startup)
 		*(.text)
 		*(.text.*)	

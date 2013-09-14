@@ -130,8 +130,11 @@ void srt_main(Argument *arg)
 	}
 }
 
-int main(int argc, char *argv[]) { arg1.led = 0; arg2.led = 1; arg3.led
-= 2; arg4.led = 3;
+int main(int argc, char *argv[]) { 
+	arg1.led = 0; 
+	arg2.led = 1; 
+	arg3.led = 2; 
+	arg4.led = 3;
 	
 // 	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, srt_main, &arg1);
 //  OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, srt_main, &arg2);
