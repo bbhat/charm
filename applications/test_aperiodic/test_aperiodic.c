@@ -40,7 +40,6 @@ void task_p(void * ptr)
 	}
 }
 
-
 int main(int argc, char *argv[])
 {
 	OS_SemAlloc(&sem1, 0);

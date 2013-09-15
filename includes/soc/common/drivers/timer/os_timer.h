@@ -68,7 +68,7 @@ void _OS_Timer_AckInterrupt(UINT32 timer);
 void _OS_Timer_PeriodicTimerStart(UINT32 interval_us);
 void _OS_Timer_SetTimeout_us(UINT32 timer);
 void _OS_Timer_Disable(UINT32 timer);
-UINT32 _OS_Timer_GetCurTime_us(UINT32 timer);
+UINT32 _OS_Timer_GetTimeElapsed_us(UINT32 timer);
 UINT32 _OS_Timer_GetCount(UINT32 timer);
 UINT32 _OS_Timer_GetMaxCount(UINT32 timer);
 

@@ -32,15 +32,15 @@ void task_period(void * ptr)
 
 int main(int argc, char *argv[])
 {
-//     OS_CreatePeriodicTask( 10000, 10000, 3000, 0, stack1, sizeof(stack1), "LED1", &task1, task_period, &a);
-//   	OS_CreatePeriodicTask( 12000, 12000, 2000, 1000, stack2, sizeof(stack2), "LED2", &task2, task_period, &b);
-//     OS_CreatePeriodicTask( 50000, 50000, 3000, 2000, stack3, sizeof(stack3), "LED3", &task3, task_period, &c);
-//     OS_CreatePeriodicTask( 20000, 20000, 4000, 2000, stack4, sizeof(stack4), "LED4", &task4, task_period, &d);
+    OS_CreatePeriodicTask( 10000, 10000, 3000, 0, stack1, sizeof(stack1), "LED1", &task1, task_period, &a);
+  	OS_CreatePeriodicTask( 12000, 12000, 2000, 1000, stack2, sizeof(stack2), "LED2", &task2, task_period, &b);
+    OS_CreatePeriodicTask( 50000, 50000, 3000, 2000, stack3, sizeof(stack3), "LED3", &task3, task_period, &c);
+    OS_CreatePeriodicTask( 20000, 20000, 4000, 2000, stack4, sizeof(stack4), "LED4", &task4, task_period, &d);
 	
-	OS_CreatePeriodicTask( 1000, 1000, 400, 5000, stack1, sizeof(stack1), "LED1", &task1, task_period, &a);
- 	OS_CreatePeriodicTask( 2000, 2000, 500, 1000, stack2, sizeof(stack2), "LED2", &task2, task_period, &b);
- 	OS_CreatePeriodicTask( 5000, 5000, 1000, 0, stack3, sizeof(stack3), "LED3", &task3, task_period, &c);
- 	OS_CreatePeriodicTask(100000, 100000, 10000, 3000, stack4, sizeof(stack4), "LED4", &task4, task_period, &d);
+// 	OS_CreatePeriodicTask( 1000, 1000, 400, 5000, stack1, sizeof(stack1), "LED1", &task1, task_period, &a);
+//  	OS_CreatePeriodicTask( 2000, 2000, 500, 1000, stack2, sizeof(stack2), "LED2", &task2, task_period, &b);
+//  	OS_CreatePeriodicTask( 5000, 5000, 1000, 0, stack3, sizeof(stack3), "LED3", &task3, task_period, &c);
+//  	OS_CreatePeriodicTask(100000, 100000, 10000, 3000, stack4, sizeof(stack4), "LED4", &task4, task_period, &d);
 	
 	return 0;
 }

@@ -87,31 +87,29 @@ void _OS_Timer_PeriodicTimerStart(UINT32 interval_us)
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_Timer_AckInterrupt(UINT32 timer)
 {
-	// We should keep the running without it generating an interrupt. 
-	// Otherwise there will be a drift in the clock. 
-	// Hence comment following code
-	//rTCON &= ~(0x0f << (timer << 3));
-	
 	// Acknowledge the interrupt
 	ACK_TIMER_INTERRUPT(timer);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Function to update timer interval
-// The following function sets up the OS timer.
+// Function to update Budget timer interval
 // Input:
 // 		delay_in_us: Is the delay requested
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_Timer_SetTimeout_us(UINT32 delay_in_us)
 {
-    UINT32 req_count;
-    
     // Validate the input
     ASSERT(delay_in_us <= MAX_TIMER1_INTERVAL_uS);
 
     Klog32(KLOG_BUDGET_TIMER_SET, "Budget Timer Set (us) - ", delay_in_us);
     
-    rTCNTB0 = CONVERT_TMR1_us_TO_TICKS(delay_in_us);
+	// First stop the budget timer
+	rTCON &= ~0xf00;
+	
+	// Ack any outstanding interrupts
+	ACK_TIMER_INTERRUPT(TIMER1);
+
+    rTCNTB1 = CONVERT_TMR1_us_TO_TICKS(delay_in_us);
     
     // Inform that Timer 1 Buffer has changed by updating manual update bit
     // We are going to use Timer 1 as one shot timer.
@@ -121,18 +119,30 @@ void _OS_Timer_SetTimeout_us(UINT32 delay_in_us)
 
 void _OS_Timer_Disable(UINT32 timer)
 {
-    rTCON &= ~(0x0f << (timer << 3));
+	// Stop the timer
+	rTCON &= ~(0x0f << (timer << 3));
+	
+	// Ack any outstanding interrupt
+	ACK_TIMER_INTERRUPT(timer);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Converts the current timer count into micro seconds and returns.
 ///////////////////////////////////////////////////////////////////////////////
-UINT32 _OS_Timer_GetCurTime_us(UINT32 timer)
+UINT32 _OS_Timer_GetTimeElapsed_us(UINT32 timer)
 {
+	UINT32 diff_count;
+	
     if(timer == PERIODIC_TIMER)
-        return CONVERT_TMR0_TICKS_TO_us(rTCNTO0);
+    {
+    	diff_count = (rTCNTB0 - rTCNTO0);
+    	return CONVERT_TMR0_TICKS_TO_us(diff_count);
+    }
     else
-        return CONVERT_TMR1_TICKS_TO_us(rTCNTO1);
+    {
+    	diff_count = (rTCNTB1 - rTCNTO1);
+		return CONVERT_TMR1_TICKS_TO_us(diff_count);    	
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

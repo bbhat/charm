@@ -448,7 +448,7 @@ UINT64 OS_GetThreadElapsedTime()
 		do
 		{
 			old_global_time = g_current_period_us;
-			thread_elapsed_time = task->accumulated_budget + _OS_Timer_GetCurTime_us(BUDGET_TIMER);
+			thread_elapsed_time = task->accumulated_budget + _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
 		} 
 		while(old_global_time != g_current_period_us);
 	}

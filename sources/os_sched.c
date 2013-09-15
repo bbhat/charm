@@ -36,9 +36,6 @@ volatile UINT64 g_next_period_us;
 // a budget timer interrupt happens or when the task yields
 volatile UINT32 g_current_period_offset_us;
 
-// The current timeout set in the budget timer.
-volatile UINT32 g_current_timeout_us;
-
 volatile OS_GenericTask * g_current_task;
 
 volatile UINT32 periodic_timer_intr_counter;
@@ -92,7 +89,6 @@ void OS_Start()
         // Reset the global timer variables
         g_current_period_us = 0;
         g_next_period_us = 0;
-        g_current_timeout_us = 0;
         g_current_period_offset_us = 0;
 
         // Reset the current task
@@ -266,7 +262,7 @@ void _OS_BudgetTimerISR(void *arg)
 #endif
     
     // Get the time elapsed since the beginning of the period
-    g_current_period_offset_us = _OS_Timer_GetCurTime_us(PERIODIC_TIMER);
+    g_current_period_offset_us = _OS_Timer_GetTimeElapsed_us(PERIODIC_TIMER);
         
     // Some ready task must have exceeded its budget or deadline
     // Do the necessary handling
@@ -285,7 +281,7 @@ static void _OS_Sched_CheckTaskBudgetDline(OS_PeriodicTask * task)
     
     if(IS_PERIODIC_TASK(task->attributes))
     {
-        UINT32 budget_spent = g_current_timeout_us;
+        UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
         
         // Adjust the remaining & accumulated budgets
         ASSERT(budget_spent <= task->remaining_budget);
@@ -369,9 +365,9 @@ void _OS_Schedule()
     {
         _OS_QueuePeek(&g_ap_ready_q, (void**) &task, 0);
     }
-    
+
     KlogStr(KLOG_CONTEXT_SWITCH, "ContextSW To - ", ((OS_AperiodicTask *)task)->name);
-    
+
     // For periodic task, set the next budget timeout we should use.
     if(IS_PERIODIC_TASK(task->attributes))
     {
@@ -381,26 +377,16 @@ void _OS_Schedule()
         UINT64 abs_budget_us = (now + task->remaining_budget);
         UINT64 abs_timeout_us = MIN(abs_deadline_us, abs_budget_us);
         
-        if(abs_timeout_us < g_next_period_us)
-        {
-            ASSERT(abs_timeout_us > now);
+		ASSERT(abs_timeout_us > now);
             
-            // We are requesting a timeout before the next periodic timer interrupt
-            g_current_timeout_us = abs_timeout_us - now;
-            _OS_Timer_SetTimeout_us(g_current_timeout_us);
-        }
-        else
-        {
-            // Since we will get the periodic timer interrupt before the required timeout, there is
-            // no need to set the budget timer
-            g_current_timeout_us = (g_next_period_us - now);
-            _OS_Timer_Disable(BUDGET_TIMER);
-        }
+		// Set the budget timeout. Even though there may be a periodic interrupt before
+		// the next budget timeout, it is helpful to keep the timer running so that
+		// we can accurately measure the budget spent
+		_OS_Timer_SetTimeout_us(abs_timeout_us - now);
     }
     else
     {
         // If this is a Aperiodic task, disable the Budget timer
-        g_current_timeout_us = 0;
         _OS_Timer_Disable(BUDGET_TIMER);
     }
     
@@ -443,7 +429,7 @@ void _OS_TaskYield()
             task->exec_count++;
             
             // Get the task execution time
-            UINT32 budget_spent = _OS_Timer_GetCurTime_us(BUDGET_TIMER);
+            UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
             
             // Adjust the remaining & accumulated budgets
             ASSERT(budget_spent <= task->remaining_budget);
@@ -462,7 +448,7 @@ void _OS_TaskYield()
         }
 
         // Before calling _OS_Schedule, update g_current_period_offset_us
-        g_current_period_offset_us = _OS_Timer_GetCurTime_us(PERIODIC_TIMER);
+        g_current_period_offset_us = _OS_Timer_GetTimeElapsed_us(PERIODIC_TIMER);
 
         // Call reschedule
         _OS_Schedule();
@@ -480,7 +466,7 @@ UINT64 OS_GetElapsedTime()
     // NOTE: The below loop for GetElapsedTime is very important. The design 
     // for this function is due to:
     // 1. We want to ensure that there is no interruption b/w reading
-    // g_current_period_us and _OS_Timer_GetCurTime_us. Otherwise we will have old g_current_period_us
+    // g_current_period_us and _OS_Timer_GetTimeElapsed_us. Otherwise we will have old g_current_period_us
     // and latest timer count, which is not correct. 
     // 2. We cannot use disable/enable interrupts to avoid looping. This is because
     // the timer is designed to keep running in the background even if we have
@@ -491,9 +477,9 @@ UINT64 OS_GetElapsedTime()
     do
     {
         old_global_time = g_current_period_us;
-        elapsed_time = g_current_period_us + _OS_Timer_GetCurTime_us(PERIODIC_TIMER);
+        elapsed_time = g_current_period_us + _OS_Timer_GetTimeElapsed_us(PERIODIC_TIMER);
     }
-    // To ensure that the timer has not expired since we have read both g_current_period_us and _OS_Timer_GetCurTime_us
+    // To ensure that the timer has not expired since we have read both g_current_period_us and _OS_Timer_GetTimeElapsed_us
     while(old_global_time != g_current_period_us);
     
     return elapsed_time;
