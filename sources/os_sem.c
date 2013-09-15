@@ -26,7 +26,6 @@ static BOOL assert_open(OS_Sem sem);
 
 OS_Error _OS_SemAlloc(OS_Sem *sem, UINT32 value)
 {
-	UINT32 intsts;
 	OS_Error status;
 	
 	if(!sem) {
@@ -39,26 +38,25 @@ OS_Error _OS_SemAlloc(OS_Sem *sem, UINT32 value)
 		goto exit;
 	}
 		
-	OS_ENTER_CRITICAL(intsts);
-
 	// Get a free Semaphore resource from the pool
 	*sem = (OS_Sem) GetFreeResIndex(g_semaphore_usage_mask, MAX_SEMAPHORE_COUNT);
 		
 	if(*sem < 0) 
 	{
-		OS_EXIT_CRITICAL(intsts);
 		status = RESOURCE_EXHAUSTED;
 		goto exit;
 	}
 	
 	OS_SemaphoreCB *semobj = (OS_SemaphoreCB *)&g_semaphore_pool[*sem];
+	
+	// Block the thread resource
+	SetResourceStatus(g_semaphore_usage_mask, *sem, FALSE);
 
 	semobj->count = value;
 	semobj->owner = (OS_ProcessCB *) g_current_process;
 	_OS_QueueInit(&semobj->periodic_task_queue);
 	_OS_QueueInit(&semobj->aperiodic_task_queue);
 	
-	OS_EXIT_CRITICAL(intsts);
 	status = SUCCESS;
 	
 exit:
@@ -67,11 +65,8 @@ exit:
 
 OS_Error _OS_SemWait(OS_Sem sem)
 {
-	UINT32 intsts;
 	OS_Error status;
 	OS_GenericTask * cur_task = (OS_GenericTask *) g_current_task;
-
-	OS_ENTER_CRITICAL(intsts);
 
 	// Keep trying till we get the Semaphore	
 	while(1)
@@ -125,18 +120,14 @@ OS_Error _OS_SemWait(OS_Sem sem)
 		}
 	}
 exit:
-	OS_EXIT_CRITICAL(intsts);
 	return status;
 }
 
 OS_Error _OS_SemPost(OS_Sem sem)
 {
 	OS_GenericTask* task = NULL;
-	UINT32 intsts;
 	OS_Error status;
 	UINT64 key = 0;
-
-	OS_ENTER_CRITICAL(intsts);
 
 	if((status = assert_open(sem)) != SUCCESS) {
 		goto exit;
@@ -187,18 +178,14 @@ OS_Error _OS_SemPost(OS_Sem sem)
 	
 	status = SUCCESS;
 exit:
-	OS_EXIT_CRITICAL(intsts);
 	return status;
 }
 
 OS_Error _OS_SemFree(OS_Sem sem)
 {
 	OS_Error status;
-	UINT32 intsts;
 	OS_GenericTask* task = NULL;
 	UINT64 key = 0;
-	
-	OS_ENTER_CRITICAL(intsts);
 	
 	if((status = assert_open(sem)) != SUCCESS) {
 		goto exit;
@@ -242,17 +229,13 @@ OS_Error _OS_SemFree(OS_Sem sem)
 	status = SUCCESS;
 	
 exit:
-	OS_EXIT_CRITICAL(intsts);
 	return status;
 }
 
 OS_Error _OS_SemGetValue(OS_Sem sem, INT32* val)
 {
 	OS_Error status;
-	UINT32 intsts;
-	
-	OS_ENTER_CRITICAL(intsts);
-	
+		
 	if((status = assert_open(sem)) != SUCCESS) {
 		goto exit;
 	}
@@ -271,7 +254,6 @@ OS_Error _OS_SemGetValue(OS_Sem sem, INT32* val)
 	status = SUCCESS;
 	
 exit:
-	OS_EXIT_CRITICAL(intsts);
 	return status;
 }
 

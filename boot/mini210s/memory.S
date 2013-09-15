@@ -11,22 +11,22 @@
 #define DMC0_MEMCONTROL			0x00202400
 
 // MemConfig0	256MB config, 8 banks,Mapping Method[12:15]0:linear, 1:linterleaved, 2:Mixed
-#define DMC0_MEMCONFIG_0		0x20F00313	
+#define DMC0_MEMCONFIG_0		0x20E01323
 
 // MemConfig1
-#define DMC0_MEMCONFIG_1		0x00F00313	
+#define DMC0_MEMCONFIG_1		0x30F01313
 
 // TimingAref   7.8us*133MHz=1038(0x40E), 100MHz=780(0x30C), 20MHz=156(0x9C), 10MHz=78(0x4E)
 #define DMC0_TIMINGA_REF        0x00000618
 
 // TimingRow    for 200MHz
-#define DMC0_TIMING_ROW         0x2B34438A
+#define DMC0_TIMING_ROW         0x1a233309
 
 // TimingData   CL=3
-#define DMC0_TIMING_DATA        0x24240000
+#define DMC0_TIMING_DATA        0x23240304
 
 // TimingPower
-#define DMC0_TIMING_PWR         0x0BDC0343      
+#define DMC0_TIMING_PWR         0x09c80232
 
 	.globl SDRAM_init
 SDRAM_init:
@@ -56,7 +56,7 @@ SDRAM_init:
 	ldr	r0, =APB_DMC_0_BASE
 
 	// step 3: PhyControl0 DLL parameter setting, manual 0x00101000
-	ldr	r1, =0x00101000					
+	ldr	r1, =0x00101000						// 0x7c10100b
 	str	r1, [r0, #DMC_PHYCONTROL0]
 
 	// PhyControl1 DLL parameter setting, LPDDR/LPDDR2 Case

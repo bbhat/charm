@@ -34,15 +34,15 @@
 
 	// MSYS Domain will use APLL
 	#define ARMCLK				(APLL / (DIVAPLL+1))						// 1GHz
-	#define HCLK_MSYS			((APLL / (DIVAPLL+1)) / (DIVHCLKM+1))		// 200 MHz
+	#define HCLK_MSYS			(ARMCLK / (DIVHCLKM+1))	                    // 200 MHz
 	#define PCLK_MSYS 			(HCLK_MSYS / (DIVPCLKM+1))					// 100 MHz
 
 	// DSYS Domain will use MPLL
-	#define HCLK_DSYS			(MPLL / (DIVHCLKD+1))							// 166.75 MHz
-	#define PCLK_DSYS 			(HCLK_DSYS / (DIVPCLKD+1))				// 83.375 MHz
+	#define HCLK_DSYS			(MPLL / (DIVHCLKD+1))						// 166.75 MHz
+	#define PCLK_DSYS 			(HCLK_DSYS / (DIVPCLKD+1))				    // 83.375 MHz
 
 	// PSYS Domain will use MPLL	
-	#define HCLK_PSYS			(MPLL / (DIVHCLKP+1))							// 133.4 MHz
+	#define HCLK_PSYS			(MPLL / (DIVHCLKP+1))						// 133.4 MHz
 	#define PCLK_PSYS 			(HCLK_PSYS / (DIVPCLKP+1))					// 66.7 MHz
 
 	#define	TIMER_PRESCALAR_0	(0x01)		// PCLK/2
