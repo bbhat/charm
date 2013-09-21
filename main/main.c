@@ -59,28 +59,28 @@ int test_kernel()
 //   	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 
 	// test_short_intervals
-// 	OS_CreatePeriodicTask( 1000, 1000, 400, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
-//  	OS_CreatePeriodicTask( 2000, 2000, 500, 1000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
-//  	OS_CreatePeriodicTask( 5000, 5000, 1000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
-//  	OS_CreatePeriodicTask(100000, 100000, 10000, 3000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+	// OS_CreatePeriodicTask( 1000, 1000, 400, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
+	//  	OS_CreatePeriodicTask( 2000, 2000, 500, 1000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
+	//  	OS_CreatePeriodicTask( 5000, 5000, 1000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
+	//  	OS_CreatePeriodicTask(100000, 100000, 10000, 3000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 	
 	// Test Long Budget
-	OS_CreatePeriodicTask( 1000000, 1000000, 300000, 0, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);
-  	OS_CreatePeriodicTask( 1200000, 1200000, 200000, 0, stack2, sizeof(stack2), "LED2", &task2, task_budget, &b);
-  	OS_CreatePeriodicTask( 5000000, 5000000, 300000, 0, stack3, sizeof(stack3), "LED3", &task3, task_budget, &c);
-  	OS_CreatePeriodicTask( 2000000, 2000000, 400000, 0, stack4, sizeof(stack4), "LED4", &task4, task_budget, &d);
+	// OS_CreatePeriodicTask( 100000, 100000, 10000, 0, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);
+	//   	OS_CreatePeriodicTask( 120000, 120000, 12000, 0, stack2, sizeof(stack2), "LED2", &task2, task_budget, &b);
+	//   	OS_CreatePeriodicTask( 500000, 500000, 15000, 0, stack3, sizeof(stack3), "LED3", &task3, task_budget, &c);
+	//   	OS_CreatePeriodicTask( 200000, 200000, 20000, 0, stack4, sizeof(stack4), "LED4", &task4, task_budget, &d);
 
 	// Test long intervals	
-// 	OS_CreatePeriodicTask( 1000000, 1000000, 50000, 0, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
-//  	OS_CreatePeriodicTask( 1200000, 1200000, 20000, 0, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
-//  	OS_CreatePeriodicTask( 5000000, 5000000, 30000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
-//  	OS_CreatePeriodicTask( 2000000, 2000000, 90000, 0, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+	// OS_CreatePeriodicTask( 1000000, 1000000, 50000, 0, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
+	//  	OS_CreatePeriodicTask( 1200000, 1200000, 20000, 0, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
+	//  	OS_CreatePeriodicTask( 5000000, 5000000, 30000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
+ 	// OS_CreatePeriodicTask( 2000000, 2000000, 90000, 0, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 
 	// Test TBE
-// 	OS_CreatePeriodicTask( 1000, 1000, 300, 1000, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);
-//  	OS_CreatePeriodicTask( 2000, 2000, 400, 2000, stack2, sizeof(stack2), "LED2", &task2, task_budget, &b);
-//  	OS_CreatePeriodicTask( 5000, 5000, 500, 3000, stack3, sizeof(stack3), "LED3", &task3, task_budget, &c);
-//  	OS_CreatePeriodicTask(400000, 400000, 40000, 10000, stack4, sizeof(stack4), "LED4", &task4, task_budget, &d);
+	OS_CreatePeriodicTask( 1000, 1000, 300, 1000, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);
+	OS_CreatePeriodicTask( 2000, 2000, 400, 2000, stack2, sizeof(stack2), "LED2", &task2, task_budget, &b);
+	OS_CreatePeriodicTask( 5000, 5000, 500, 3000, stack3, sizeof(stack3), "LED3", &task3, task_budget, &c);
+	OS_CreatePeriodicTask(400000, 400000, 40000, 10000, stack4, sizeof(stack4), "LED4", &task4, task_budget, &d);
 
 	return 0;
 }

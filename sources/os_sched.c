@@ -283,9 +283,13 @@ static void _OS_Sched_CheckTaskBudgetDline(OS_PeriodicTask * task)
     {
         UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
         
+		// The budget spent should always be < remaining_budget. However because of
+		// inaccuracies in the tick <-> us conversions, it is better to limit the budget_spent
+        if(budget_spent > task->remaining_budget)
+			budget_spent = task->remaining_budget;
+
         // Adjust the remaining & accumulated budgets
-        ASSERT(budget_spent <= task->remaining_budget);
-        task->remaining_budget -= budget_spent;
+		task->remaining_budget -= budget_spent;
         task->accumulated_budget += budget_spent;
         
         // If the remaining_budget == 0, there was a TBE exception.
