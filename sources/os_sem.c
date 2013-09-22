@@ -107,18 +107,21 @@ OS_Error _OS_SemWait(OS_Sem sem)
 				_OS_QueueInsert(&semobj->aperiodic_task_queue, (void*)cur_task, 
 					((OS_AperiodicTask *)cur_task)->priority);
 			}
-			
-			// It is OK to keep the interrupts disabled before switching. This saves us entering critical
-			// section again upon re-entering this task.
+
 			_OS_Schedule();
 		}	
 		else
 		{
-			semobj->count--;	
+			semobj->count--;
+			Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore - ", semobj->count);
+			
 			status = SUCCESS;
 			break;
 		}
 	}
+	
+	_OS_Schedule();
+	
 exit:
 	return status;
 }
@@ -166,15 +169,10 @@ OS_Error _OS_SemPost(OS_Sem sem)
 	}
 
 	// Increase the resource count
-	semobj->count++;
-		
-	// If there is a task getting ready, we need to call reschedule to give it 
-	// an opportunity to run (if that had higher priority)
-	if(task) 
-	{
-		// It is OK to keep the interrupts disabled before switching.	
-		_OS_Schedule();
-	}
+	semobj->count++;	
+	Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore + ", semobj->count);
+	
+	_OS_Schedule();
 	
 	status = SUCCESS;
 exit:

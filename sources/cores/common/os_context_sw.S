@@ -50,6 +50,7 @@ MODEMASK    = 0x1f
 .global     _OS_BuildUserTaskStack
 .global     _OS_ContextRestore
 .global     _OS_Schedule
+.global		_OS_KernelSyscall
 .global     panic
 
 .global     g_current_task
@@ -280,7 +281,8 @@ _AdvancedSWIHandler_:
     
                                     // r0 - r2 contains syscall parameters    
     bl      _OS_KernelSyscall		// Call main part of handler
-    b       .                       // We should never reach here
+	
+    b       _OS_Schedule            // Call reschedule (will reach here if there is a syscall error)
     
 // -------------------------------------------------------------------------------
 // Stores the context of the current task. After storing the context, it switches 
@@ -314,7 +316,8 @@ _KernelSWIHandler_:
 
                                     // r0 - r2 contains syscall parameters    
     bl      _OS_KernelSyscall		// Call main part of handler
-    b       .                       // We should never reach here
+	
+    b       _OS_Schedule            // Call reschedule (will reach here if there is a syscall error)
     
 // ----------------------------------------------------------------------------
 // Context Restore

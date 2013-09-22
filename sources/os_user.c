@@ -62,8 +62,7 @@ OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
-	UINT32 ret[1];
-	OS_Error result;
+	UINT32 ret[2];
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_ALLOC;
@@ -72,65 +71,73 @@ OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value)
 	param_info.ret_bytes = sizeof(ret);
 	
 	arg[0] = value;	
-	result = _OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	// Store the return value
-	*sem = (OS_Sem) ret[0];
+	*sem = (OS_Sem) ret[1];
 		
-	return result;	
+	return (OS_Error) ret[0];
 }
 
 OS_Error OS_SemWait(OS_Sem sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
+	UINT32 ret;
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_WAIT;
 	param_info.version = SYSCALL_VER_1_0;
 	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = 0;
+	param_info.ret_bytes = sizeof(ret);
 	
 	arg[0] = sem;	
-	return _OS_Syscall(&param_info, &arg, NULL, SYSCALL_SWITCHING);
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
+	
+	return (OS_Error) ret;
 }
 
 OS_Error OS_SemPost(OS_Sem sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
+	UINT32 ret;
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_POST;
 	param_info.version = SYSCALL_VER_1_0;
 	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = 0;
+	param_info.ret_bytes = sizeof(ret);
 	
 	arg[0] = sem;	
-	return _OS_Syscall(&param_info, &arg, NULL, SYSCALL_SWITCHING);
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
+	
+	return (OS_Error) ret;
 }
 
 OS_Error OS_SemFree(OS_Sem sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
+	UINT32 ret;
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_FREE;
 	param_info.version = SYSCALL_VER_1_0;
 	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = 0;
+	param_info.ret_bytes = sizeof(ret);
 	
 	arg[0] = sem;	
-	return _OS_Syscall(&param_info, &arg, NULL, SYSCALL_SWITCHING);
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
+	
+	return (OS_Error) ret;
 }
 
 OS_Error OS_SemGetValue(OS_Sem sem, INT32 *val)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
-	UINT32 ret[1];
-	OS_Error result;
+	UINT32 ret[2];
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_GET_VALUE;
@@ -139,17 +146,17 @@ OS_Error OS_SemGetValue(OS_Sem sem, INT32 *val)
 	param_info.ret_bytes = sizeof(ret);
 	
 	arg[0] = sem;	
-	result = _OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	// Store the return value
 	if(val) {
-		*val = ret[0];
+		*val = ret[1];
 	}
 		
-	return result;	
+	return (OS_Error) ret[0];
 }
 
-OS_Error PFM_SetUserLED(LED_Number led, LED_Options options)
+void PFM_SetUserLED(LED_Number led, LED_Options options)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[2];
@@ -163,5 +170,5 @@ OS_Error PFM_SetUserLED(LED_Number led, LED_Options options)
 	arg[0] = led;
 	arg[1] = options;
 	
-	return _OS_Syscall(&param_info, &arg, NULL, SYSCALL_BASIC);
+	_OS_Syscall(&param_info, &arg, NULL, SYSCALL_BASIC);
 }

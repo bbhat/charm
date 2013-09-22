@@ -136,8 +136,8 @@ int main(int argc, char *argv[]) {
 	arg3.led = 2; 
 	arg4.led = 3;
 	
-// 	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, srt_main, &arg1);
-//  OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, srt_main, &arg2);
+	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, srt_main, &arg1);
+	OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, srt_main, &arg2);
   	OS_CreatePeriodicTask( 500000, 500000, 30000, 15000, stack3, sizeof(stack3), "LED3", &task3, srt_main, &arg3);
   	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, srt_main, &arg4);
 		

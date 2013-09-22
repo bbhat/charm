@@ -187,6 +187,6 @@ typedef enum
 
 // The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
 // the options provided
-OS_Error PFM_SetUserLED(LED_Number led, LED_Options options);
+void PFM_SetUserLED(LED_Number led, LED_Options options);
 
 #endif // _OS_API_H

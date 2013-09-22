@@ -33,18 +33,15 @@ void task_ap(void * ptr)
 void task_p(void * ptr)
 {
 	int led = *(int *) ptr;
-	while(1)
-	{	
-		PFM_SetUserLED(led, LED_TOGGLE);
-		OS_SemPost(sem1);
-	}
+	PFM_SetUserLED(led, LED_TOGGLE);
+	OS_SemPost(sem1);
 }
 
 int main(int argc, char *argv[])
 {
 	OS_SemAlloc(&sem1, 0);
 
-	OS_CreatePeriodicTask(100000, 100000,5000, 0, stack1, sizeof(stack1), "LED1", &task1, task_p, &a);
+	OS_CreatePeriodicTask(100000, 100000,20000, 0, stack1, sizeof(stack1), "LED1", &task1, task_p, &a);
 	OS_CreateAperiodicTask(3, stack2, sizeof(stack2), "LED2", &task2, task_ap, &b);
 
 	return 0;

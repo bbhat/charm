@@ -63,6 +63,6 @@ typedef struct
 } _OS_Syscall_Args;
 
 // Main User mode to kernel mode entry syscall function
-OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, const void * arg, void * ret, Syscall_type type);
+void _OS_Syscall(const _OS_Syscall_Args * param_info, const void * arg, void * ret, Syscall_type type);
 
 #endif // OS_SYSCALL_H

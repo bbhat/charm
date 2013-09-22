@@ -72,7 +72,8 @@ typedef enum
     KLOG_BUDGET_TIMER_SET     = (1 << 6),
     KLOG_WARNING              = (1 << 7),
     KLOG_GENERAL_INFO         = (1 << 8),
-    
+    KLOG_SEMAPHORE_DEBUG	  = (1 << 9),
+	
     KLOG_MISC                 = (1 << 31)
     
 } Klog_MaskType;
@@ -81,8 +82,8 @@ typedef enum
 #define OS_ENABLE_CPU_STATS          1        // Enable OS & CPU Stats
 #define OS_WITH_VALIDATE_TASK        1
 
-#define OS_KERNEL_LOGGING            0
-#define OS_KLOG_MASK                 (KLOG_CONTEXT_SWITCH)
+#define OS_KERNEL_LOGGING            1
+#define OS_KLOG_MASK                 (KLOG_SEMAPHORE_DEBUG)
 #define DEBUG_UART_CHANNEL           0
 
 #endif // _OS_CONFIG_H
