@@ -72,7 +72,8 @@ void _OS_KernelSyscall(const _OS_Syscall_Args * param_info, const void * arg, vo
 		return;
 	}
 	
-	g_current_task->syscall_result = (UINT32 *)ret;		// Note down the result pointer which may be needed
+	// Note down the result pointer which may be needed
+	if(g_current_task) g_current_task->syscall_result = (UINT32 *)ret;
 	_syscall_handlers[param_info->id](param_info, arg, ret);
 }
 
@@ -156,7 +157,7 @@ static void syscall_SemWait(const _OS_Syscall_Args * param_info, const void * ar
 	OS_Error result = SYSCALL_ERROR;
 	
 	if((param_info->arg_bytes >> 2) >= 1)
-	{
+	{		
 		result = _OS_SemWait(uint_args[0]);
 	}
 	

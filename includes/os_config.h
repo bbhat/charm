@@ -82,7 +82,7 @@ typedef enum
 #define OS_ENABLE_CPU_STATS          1        // Enable OS & CPU Stats
 #define OS_WITH_VALIDATE_TASK        1
 
-#define OS_KERNEL_LOGGING            1
+#define OS_KERNEL_LOGGING            0
 #define OS_KLOG_MASK                 (KLOG_SEMAPHORE_DEBUG)
 #define DEBUG_UART_CHANNEL           0
 
