@@ -33,6 +33,8 @@ static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void *
 void _OS_TaskYield(void);
 OS_Error _PFM_SetUserLED(LED_Number led, LED_Options options);
 
+volatile OS_GenericTask * g_current_task;
+
 //////////////////////////////////////////////////////////////////////////////
 // Vector containing all syscall handlers
 //////////////////////////////////////////////////////////////////////////////
@@ -70,6 +72,7 @@ void _OS_KernelSyscall(const _OS_Syscall_Args * param_info, const void * arg, vo
 		return;
 	}
 	
+	g_current_task->syscall_result = (UINT32 *)ret;		// Note down the result pointer which may be needed
 	_syscall_handlers[param_info->id](param_info, arg, ret);
 }
 

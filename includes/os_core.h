@@ -47,7 +47,8 @@ typedef enum
 	PROCESS_INVALID = 32,			// Certain functions can only be called from a valid process
 	RESOURCE_NOT_OPEN = 33,
 	RESOURCE_NOT_OWNED = 34,
-	INVALID_PHASE = 35,
+	RESOURCE_DELETED = 35,
+	INVALID_PHASE = 36,
 	
 	UNKNOWN = 99	
 

@@ -66,60 +66,58 @@ exit:
 OS_Error _OS_SemWait(OS_Sem sem)
 {
 	OS_Error status;
-	OS_GenericTask * cur_task = (OS_GenericTask *) g_current_task;
 
-	// Keep trying till we get the Semaphore	
-	while(1)
+	if((status = assert_open(sem)) != SUCCESS) {
+		goto exit;
+	}
+
+	// Get the Semaphore object
+	OS_SemaphoreCB * semobj = (OS_SemaphoreCB *)&g_semaphore_pool[sem];
+
+	// Make sure that the current process owns the Semaphore.
+	if(semobj->owner != (OS_ProcessCB *) g_current_process)
 	{
-		if((status = assert_open(sem)) != SUCCESS) {
-			goto exit;
-		}
-	
-		// Get the Semaphore object
-		OS_SemaphoreCB * semobj = (OS_SemaphoreCB *)&g_semaphore_pool[sem];
-	
-		// Make sure that the current process owns the Semaphore.
-		if(semobj->owner != (OS_ProcessCB *) g_current_process)
-		{
-			status = RESOURCE_NOT_OWNED;
-			goto exit;
-		}	
-	
-		// If the semaphore count is 0, then block the thread
-		if(semobj->count == 0)
-		{
-			// Block the thread			
-			if(IS_PERIODIC_TASK(cur_task->attributes))
-			{
-				// Delete the current task from ready tasks queue
-				_OS_QueueDelete(&g_ready_q, (void*)cur_task); 
-				
-				// Add the current task to the semaphore's blocked queue for periodic tasks
-				_OS_QueueInsert(&semobj->periodic_task_queue, (void*)cur_task, 
-					((OS_PeriodicTask *)cur_task)->alarm_time); 
-			}
-			else
-			{
-				// Delete the current task from ready tasks queue
-				_OS_QueueDelete(&g_ap_ready_q, (void*)cur_task); 
-				
-				// Add the current task to the semaphore's blocked queue for aperiodic tasks
-				_OS_QueueInsert(&semobj->aperiodic_task_queue, (void*)cur_task, 
-					((OS_AperiodicTask *)cur_task)->priority);
-			}
+		status = RESOURCE_NOT_OWNED;
+		goto exit;
+	}	
 
-			_OS_Schedule();
-		}	
+	// If the semaphore count is 0, then block the thread
+	if(semobj->count == 0)
+	{
+		// Block the thread			
+		if(IS_PERIODIC_TASK(g_current_task->attributes))
+		{
+			// Delete the current task from ready tasks queue
+			_OS_QueueDelete(&g_ready_q, (void*)g_current_task); 
+			
+			// Add the current task to the semaphore's blocked queue for periodic tasks
+			_OS_QueueInsert(&semobj->periodic_task_queue, (void*)g_current_task, 
+				((OS_PeriodicTask *)g_current_task)->alarm_time); 
+		}
 		else
 		{
-			semobj->count--;
-			Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore - ", semobj->count);
+			// Delete the current task from ready tasks queue
+			_OS_QueueDelete(&g_ap_ready_q, (void*)g_current_task); 
 			
-			status = SUCCESS;
-			break;
+			// Add the current task to the semaphore's blocked queue for aperiodic tasks
+			_OS_QueueInsert(&semobj->aperiodic_task_queue, (void*)g_current_task, 
+				((OS_AperiodicTask *)g_current_task)->priority);
 		}
+		
+		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore :- ", semobj->count);				
+	}	
+	else
+	{
+		// Decrement the semaphore count in order to acquire it
+		semobj->count--;
+		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore - ", semobj->count);		
+		
+		// The return path for this function is through _OS_Schedule, so it is important to
+		// update the result in the syscall_result
+		if(g_current_task->syscall_result) 
+			g_current_task->syscall_result[0] = SUCCESS;		
 	}
-	
+
 	_OS_Schedule();
 	
 exit:
@@ -155,7 +153,6 @@ OS_Error _OS_SemPost(OS_Sem sem)
 			// Place this task in the periodic task ready queue
 			_OS_QueueInsert(&g_ready_q,(void*)task, key);
 		}
-		
 		else 
 		{
 			// Now check the Aperiodic queue
@@ -167,14 +164,25 @@ OS_Error _OS_SemPost(OS_Sem sem)
 			}
 		}
 	}
-
-	// Increase the resource count
-	semobj->count++;	
-	Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore + ", semobj->count);
 	
+	if(task)
+	{
+		// If a task is getting ready, then there is no need to increment the semaphore count
+		// The return path for this function is through _OS_Schedule, so it is important to
+		// update the result in the syscall_result
+		if(task->syscall_result) 
+			task->syscall_result[0] = SUCCESS;
+		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore :+ ", semobj->count);		
+	}
+	else
+	{
+		// Increment the resource count
+		semobj->count++;	
+		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore + ", semobj->count);		
+	}
+		
 	_OS_Schedule();
 	
-	status = SUCCESS;
 exit:
 	return status;
 }
@@ -207,6 +215,11 @@ OS_Error _OS_SemFree(OS_Sem sem)
 
 		if(!task) break;
 		
+		// The return path for waiting tasks is through _OS_Schedule, so it is important to
+		// update the result in the syscall_result	
+		if(task->syscall_result) 
+			task->syscall_result[0] = RESOURCE_DELETED;
+		
 		// Place this task in the periodic task ready queue
 		_OS_QueueInsert(&g_ready_q,(void*)task, key);
 	}	
@@ -218,13 +231,17 @@ OS_Error _OS_SemFree(OS_Sem sem)
 
 		if(!task) break;
 		
+		// The return path for waiting tasks is through _OS_Schedule, so it is important to
+		// update the result in the syscall_result	
+		if(task->syscall_result) 
+			task->syscall_result[0] = RESOURCE_DELETED;
+		
 		// Insert this task into Aperiodic ready queue
 		_OS_QueueInsert(&g_ap_ready_q,(void*)task, key);
 	}	
 
 	semobj->count = 0;
 	semobj->owner = NULL;
-	status = SUCCESS;
 	
 exit:
 	return status;

@@ -64,7 +64,9 @@ struct OS_PeriodicTask
 	UINT32 *stack;
 	UINT32 stack_size;
 	void (*task_function)(void *pdata);
-	void *pdata;	
+	void *pdata;
+	
+	void *syscall_result;		// Some syscalls put the thread to wait. This member holds a pointer to its return argiments
 
 	// Folliwing attributes are common in both type of tasks. They should be in the same order.
 	UINT16 attributes;
@@ -111,6 +113,8 @@ struct OS_AperiodicTask
 	UINT32 stack_size;
 	void (*task_function)(void *pdata);
 	void *pdata;
+	
+	void *syscall_result;		// Some syscalls put the thread to wait. This member holds a pointer to its return argiments
 
 	UINT16 attributes;
 	UINT16 id;
@@ -142,7 +146,9 @@ typedef union OS_GenericTask
 		UINT32 *stack;
 		UINT32 stack_size;
 		void (*task_function)(void *pdata);
-		void *pdata;		
+		void *pdata;
+
+		UINT32 *syscall_result;		// Some syscalls put the thread to wait. This member holds a pointer to its return argiments
 
 		UINT16 attributes;
 		UINT16 id;
