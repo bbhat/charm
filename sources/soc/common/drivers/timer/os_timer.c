@@ -73,7 +73,7 @@ void _OS_InitTimer ()
 void _OS_Timer_PeriodicTimerStart(UINT32 interval_us)
 {
 	// Below expression will be evaluated at compile time
-	rTCNTB0 = ((((UINT64)TIMER0_TICK_FREQ * interval_us) + (1000000-1)) / 1000000);
+	rTCNTB0 = CONVERT_TMR0_us_TO_TICKS(interval_us);
 
 	// Inform that Timer 0 Buffer has changed by updating manual update bit
 	rTCON = (rTCON & (~0x0f)) | TIMER0_UPDATE;

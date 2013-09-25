@@ -58,10 +58,10 @@ void _OS_StartSyncTimer();
 
 // TODO: I need to make below calculations extremely efficient.
 // Use 64 bit calculation for accuracy and always round up
-#define CONVERT_TMR0_us_TO_TICKS(us)		((((UINT64)TIMER0_TICK_FREQ * (us)) + (1000000-1)) / 1000000)
-#define CONVERT_TMR1_us_TO_TICKS(us)		((((UINT64)TIMER1_TICK_FREQ * (us)) + (1000000-1)) / 1000000)
-#define CONVERT_TMR0_TICKS_TO_us(tick)	((((tick) * 1000000ull) + (TIMER0_TICK_FREQ - 1)) / TIMER0_TICK_FREQ)
-#define CONVERT_TMR1_TICKS_TO_us(tick)	((((tick) * 1000000ull) + (TIMER1_TICK_FREQ - 1)) / TIMER1_TICK_FREQ)
+#define CONVERT_TMR0_us_TO_TICKS(us)	(TIMER0_TICK_PER_us * (us))
+#define CONVERT_TMR1_us_TO_TICKS(us)	(TIMER1_TICK_PER_us * (us))
+#define CONVERT_TMR0_TICKS_TO_us(tick)	((tick) * TIMER0_us_PER_TICK)
+#define CONVERT_TMR1_TICKS_TO_us(tick)	((tick) * TIMER1_us_PER_TICK)
 
 // Timer functions
 void _OS_Timer_AckInterrupt(UINT32 timer);

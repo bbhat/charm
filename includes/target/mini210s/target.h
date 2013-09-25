@@ -48,8 +48,10 @@
 	#define	TIMER_PRESCALAR_0	(0x01)		// PCLK/2
 	#define	TIMER0_DIVIDER		(0x01)		// PCLK/PRESCALAR0/2
 	#define	TIMER1_DIVIDER		(0x01)		// PCLK/PRESCALAR0/2
-	#define	TIMER0_TICK_FREQ	(16675000)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 0.05997 uSec per tick
-	#define	TIMER1_TICK_FREQ	(16675000)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 0.05997 uSec per tick
+	#define	TIMER0_TICK_PER_us	(16.675)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 0.05997 uSec per tick
+	#define	TIMER1_TICK_PER_us	(16.675)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 0.05997 uSec per tick
+	#define	TIMER0_us_PER_TICK	(0.05997)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 0.05997 uSec per tick
+	#define	TIMER1_us_PER_TICK	(0.05997)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 0.05997 uSec per tick
 
 	// (0xffffffff * 1000000) / TIMER0_TICK_FREQ. Lets use 1 second for this.
 	#define	MAX_TIMER0_INTERVAL_uS		1000000
