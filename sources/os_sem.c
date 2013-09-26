@@ -15,7 +15,7 @@
 OS_SemaphoreCB g_semaphore_pool[MAX_SEMAPHORE_COUNT];
 UINT32 g_semaphore_usage_mask[(MAX_SEMAPHORE_COUNT + 31) >> 5];
 
-extern volatile OS_GenericTask * g_current_task;
+extern OS_GenericTask * g_current_task;
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;

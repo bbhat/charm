@@ -39,7 +39,7 @@ extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_block_q;
-extern volatile UINT32 g_current_period_us;
+extern UINT32 g_current_period_us;
 
 extern void _OS_Schedule();
 extern void _OS_SetAlarm(OS_PeriodicTask *task, UINT64 abs_time_in_us, BOOL is_new_job, BOOL update_timer);

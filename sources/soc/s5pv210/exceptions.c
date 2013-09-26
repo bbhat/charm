@@ -10,7 +10,7 @@
 #include "vic.h"
 #include "soc.h"
 
-extern volatile UINT32 _interrupt_vector_table;
+extern UINT32 _interrupt_vector_table;
 
 void _IRQHandler_(void);
 void _reset_handler(void);

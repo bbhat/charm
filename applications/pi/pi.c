@@ -10,7 +10,7 @@
 #include "os_core.h"
 #include "target.h"
 
-extern volatile OS_GenericTask * g_current_task;
+extern OS_GenericTask * g_current_task;
 void pi_main(void* data);
 
 void pi_main(void* data)

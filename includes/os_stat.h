@@ -15,14 +15,14 @@
 #if OS_ENABLE_CPU_STATS==1
 
 // Some statistics counters to keep track.
-extern volatile UINT32 max_scheduler_elapsed_count;
-extern volatile UINT32 periodic_timer_intr_counter;
-extern volatile UINT32 budget_timer_intr_counter;
+extern UINT32 max_scheduler_elapsed_count;
+extern UINT32 periodic_timer_intr_counter;
+extern UINT32 budget_timer_intr_counter;
 
 // Variables to keep track of the idle task execution
-extern volatile UINT32 g_idle_max_count;
-extern volatile UINT32 g_idle_count;
-extern volatile FP32 _OS_CPUUsage;
+extern UINT32 g_idle_max_count;
+extern UINT32 g_idle_count;
+extern FP32 _OS_CPUUsage;
 
 extern OS_PeriodicTask * g_stat_task;		// A TCB for the idle task
 extern UINT32 g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];

@@ -27,24 +27,24 @@ BOOL _OS_IsRunning = FALSE;
 
 // This variable holds the beginning time (in us) of the current period
 // It gets updated everytime the Periodic ISR is fired (NOT updated for budget timer)
-volatile UINT64 g_current_period_us;
+UINT64 g_current_period_us;
 
 // This variable holds the starting time of next period (in us)
-volatile UINT64 g_next_period_us;
+UINT64 g_next_period_us;
 
 // Amount of time elapsed since the beginning of the period. This is updated whenever
 // a budget timer interrupt happens or when the task yields
-volatile UINT32 g_current_period_offset_us;
+UINT32 g_current_period_offset_us;
 
-volatile OS_GenericTask * g_current_task;
+OS_GenericTask * g_current_task;
 
-volatile UINT32 periodic_timer_intr_counter;
-volatile UINT32 budget_timer_intr_counter;
+UINT32 periodic_timer_intr_counter;
+UINT32 budget_timer_intr_counter;
 
 #if OS_ENABLE_CPU_STATS==1
-static volatile UINT32 g_sched_starting_counter_value;
-static volatile UINT32 g_sched_ending_counter_value;
-extern volatile UINT32 g_max_scheduler_elapsed_count;
+static UINT32 g_sched_starting_counter_value;
+static UINT32 g_sched_ending_counter_value;
+extern UINT32 g_max_scheduler_elapsed_count;
 #endif
 
 static OS_AperiodicTask * g_idle_task;  // A TCB for the idle task

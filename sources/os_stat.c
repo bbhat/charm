@@ -17,13 +17,13 @@ OS_PeriodicTask * g_stat_task;		// A TCB for the idle task
 UINT32 g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];
 
 // Some statistics counters to keep track.
-volatile UINT32 g_max_scheduler_elapsed_count;
+UINT32 g_max_scheduler_elapsed_count;
 static UINT32 stat_task_count;
 
 // Variables to keep track of the idle task execution
-volatile UINT32 g_idle_max_count;
-volatile UINT32 g_idle_count;
-volatile FP32 _OS_CPUUsage;
+UINT32 g_idle_max_count;
+UINT32 g_idle_count;
+FP32 _OS_CPUUsage;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Statistics variable initialization
