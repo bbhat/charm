@@ -29,6 +29,8 @@
 #define TIMER1_UPDATE		0x200
 #define TIMER1_AUTORELOAD	0x800
 
+#define MAX_TIMER_VALUE		0xFFFFFFFF
+
 ///////////////////////////////////////////////////////////////////////////////
 // Function to initialize the timers 0 & 1
 ///////////////////////////////////////////////////////////////////////////////
@@ -110,6 +112,24 @@ void _OS_Timer_SetTimeout_us(UINT32 delay_in_us)
 	ACK_TIMER_INTERRUPT(TIMER1);
 
     rTCNTB1 = CONVERT_TMR1_us_TO_TICKS(delay_in_us);
+    
+    // Inform that Timer 1 Buffer has changed by updating manual update bit
+    // We are going to use Timer 1 as one shot timer.
+    rTCON = (rTCON & (~0xf00)) | TIMER1_UPDATE;
+    rTCON = (rTCON & (~0xf00)) | TIMER1_START;
+}
+
+void _OS_Timer_SetMaxTimeout(void)
+{
+    Klog32(KLOG_BUDGET_TIMER_SET, "Budget Timer Set - ", MAX_TIMER_VALUE);
+    
+	// First stop the budget timer
+	rTCON &= ~0xf00;
+	
+	// Ack any outstanding interrupts
+	ACK_TIMER_INTERRUPT(TIMER1);
+
+    rTCNTB1 = MAX_TIMER_VALUE;
     
     // Inform that Timer 1 Buffer has changed by updating manual update bit
     // We are going to use Timer 1 as one shot timer.

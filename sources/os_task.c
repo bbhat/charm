@@ -325,6 +325,7 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 	tcb->priority = priority;
 	tcb->attributes = (APERIODIC_TASK | options);
 	tcb->top_of_stack = stack + stack_size; // Stack grows bottom up
+	tcb->accumulated_budget = 0;
 	
 	// Build a Stack for the new thread
 	if(IS_SYSTEM_TASK(tcb->attributes))
@@ -433,22 +434,18 @@ void AperiodicKernelTaskEntry(void *pdata)
 // The following function gets the total time taken by the current
 // thread since the thread has begun. Note that this is not the global 
 // time, this is just the time taken from only the current thread.
-// Note that this function is defined only for periodic tasks
 ///////////////////////////////////////////////////////////////////////////////
 UINT64 OS_GetThreadElapsedTime()
 {
     UINT64 thread_elapsed_time = 0;
 	UINT64 old_global_time;
-
-	// First get the current task which is running...
-	OS_PeriodicTask * task = (OS_PeriodicTask *)OS_GetCurrentTask();
 		
-	if(task && IS_PERIODIC_TASK(task->attributes)) 
+	if(g_current_task) 
 	{
 		do
 		{
 			old_global_time = g_current_period_us;
-			thread_elapsed_time = task->accumulated_budget + _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
+			thread_elapsed_time = g_current_task->accumulated_budget + _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
 		} 
 		while(old_global_time != g_current_period_us);
 	}

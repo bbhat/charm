@@ -13,12 +13,14 @@
 
 #if OS_ENABLE_CPU_STATS==1
 
-OS_PeriodicTask * g_stat_task;		// A TCB for the idle task
-UINT32 g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];
+extern OS_AperiodicTask * g_idle_task;
 
 // Some statistics counters to keep track.
 UINT32 g_max_scheduler_elapsed_count;
 static UINT32 stat_task_count;
+
+static UINT64 previous_idle_time;
+static UINT64 previous_timestamp;
 
 // Variables to keep track of the idle task execution
 UINT32 g_idle_max_count;
@@ -51,9 +53,21 @@ void _OS_StatisticsFn(void * ptr)
 		_OS_StatInit();
 		return;
 	}
-
- 	Syslog32("STAT: Max scheduler time in us = ", 
- 		CONVERT_TMR0_TICKS_TO_us(g_max_scheduler_elapsed_count));
+	
+	// On most ARM platforms, floating point multiplication is cheaper than integer division
+	UINT64 current_idle_time = g_idle_task->accumulated_budget;
+	UINT64 current_timestamp = OS_GetElapsedTime();
+	
+	UINT32 idle_time = (UINT32)(current_idle_time - previous_idle_time); 
+	UINT32 duration = (UINT32)(current_timestamp - previous_timestamp);
+	
+	previous_idle_time = g_idle_task->accumulated_budget;
+	previous_timestamp = current_timestamp;
+	
+	UINT32 cpu_load = (UINT32)(((FP32)(duration - idle_time) / duration) * 100.0);
+		
+ 	Syslog32("STAT: CPU Usage (%) ", cpu_load);
+ 	Syslog32("STAT: Max scheduler time in us = ", CONVERT_TMR0_TICKS_TO_us(g_max_scheduler_elapsed_count));
  	g_max_scheduler_elapsed_count = 0;
 // 	Syslog32("STAT: periodic_timer_intr_counter = ", periodic_timer_intr_counter);
 //	Syslog32("STAT: budget_timer_intr_counter = ", budget_timer_intr_counter);

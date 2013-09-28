@@ -92,11 +92,14 @@ OS_Error _OS_SemWait(OS_Sem sem)
 
     // Get the task execution time
     UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-    
-    // Adjust the remaining & accumulated budgets for the current task
-    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
-    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;
-    ((OS_PeriodicTask *)g_current_task)->accumulated_budget += budget_spent;
+    g_current_task->accumulated_budget += budget_spent;
+	
+	if(IS_PERIODIC_TASK(g_current_task->attributes))
+	{
+	    // Adjust the remaining  budget for the current task
+	    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
+	    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;		
+	}
 
 	// If the semaphore count is 0, then block the thread
 	if(semobj->count == 0)
@@ -167,11 +170,14 @@ OS_Error _OS_SemPost(OS_Sem sem)
 	
     // Get the task execution time
     UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-    
-    // Adjust the remaining & accumulated budgets for the current task
-    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
-    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;
-    ((OS_PeriodicTask *)g_current_task)->accumulated_budget += budget_spent;		
+    g_current_task->accumulated_budget += budget_spent;
+	
+	if(IS_PERIODIC_TASK(g_current_task->attributes))
+	{
+	    // Adjust the remaining  budget for the current task
+	    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
+	    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;		
+	}
 
 	if(semobj->count == 0)
 	{
@@ -242,11 +248,14 @@ OS_Error _OS_SemFree(OS_Sem sem)
 
     // Get the task execution time
     UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-    
-    // Adjust the remaining & accumulated budgets for the current task
-    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
-    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;
-    ((OS_PeriodicTask *)g_current_task)->accumulated_budget += budget_spent;	
+    g_current_task->accumulated_budget += budget_spent;
+	
+	if(IS_PERIODIC_TASK(g_current_task->attributes))
+	{
+	    // Adjust the remaining  budget for the current task
+	    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
+	    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;		
+	}
 
 	// We need to unblock all waiting threads in its wait queues and make them ready
 	while(TRUE)

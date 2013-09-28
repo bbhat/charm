@@ -42,12 +42,15 @@ UINT32 periodic_timer_intr_counter;
 UINT32 budget_timer_intr_counter;
 
 #if OS_ENABLE_CPU_STATS==1
+OS_PeriodicTask * g_stat_task;		// A TCB for the statistics task
+static UINT32 g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];
+
 UINT32 g_sched_starting_counter_value;
 static UINT32 g_sched_ending_counter_value;
 extern UINT32 g_max_scheduler_elapsed_count;
 #endif
 
-static OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
+OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
 static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
 static char os_name_string [] = { OS_NAME_STRING };
 
@@ -276,13 +279,13 @@ void _OS_BudgetTimerISR(void *arg)
 // Check task budget & deadline
 ///////////////////////////////////////////////////////////////////////////////
 static void _OS_Sched_CheckTaskBudgetDline(OS_PeriodicTask * task)
-{
-    UINT64 new_time = 0;
+{	
+	UINT64 new_time = 0;
+	UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
+    task->accumulated_budget += budget_spent;
     
     if(IS_PERIODIC_TASK(task->attributes))
     {
-        UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-        
 		// The budget spent should always be < remaining_budget. However because of
 		// inaccuracies in the tick <-> us conversions, it is better to limit the budget_spent
         if(budget_spent > task->remaining_budget)
@@ -290,7 +293,6 @@ static void _OS_Sched_CheckTaskBudgetDline(OS_PeriodicTask * task)
 
         // Adjust the remaining & accumulated budgets
 		task->remaining_budget -= budget_spent;
-        task->accumulated_budget += budget_spent;
         
         // If the remaining_budget == 0, there was a TBE exception.
         if(task->remaining_budget == 0)
@@ -390,8 +392,8 @@ void _OS_Schedule()
     }
     else
     {
-        // If this is a Aperiodic task, disable the Budget timer
-        _OS_Timer_Disable(BUDGET_TIMER);
+        // If this is a Aperiodic task, keep the timer running so that we can calculate the budget used
+        _OS_Timer_SetMaxTimeout();
     }
     
 #if OS_ENABLE_CPU_STATS==1
@@ -419,26 +421,23 @@ void _OS_Schedule()
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_TaskYield()
 {
-    UINT32 intsts;
     if(g_current_task)
     {
+		UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
+        g_current_task->accumulated_budget += budget_spent;
+		
         if(IS_PERIODIC_TASK(g_current_task->attributes))
         {
 #if OS_ENABLE_CPU_STATS==1
 	    	g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
 #endif
-
             OS_PeriodicTask * task = (OS_PeriodicTask *)g_current_task;
 
             task->exec_count++;
             
-            // Get the task execution time
-            UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-            
             // Adjust the remaining & accumulated budgets
             ASSERT(budget_spent <= task->remaining_budget);
             task->remaining_budget -= budget_spent;
-            task->accumulated_budget += budget_spent;
             
             // Take the current task out of ready queue
             _OS_QueueGet(&g_ready_q, NULL, NULL);

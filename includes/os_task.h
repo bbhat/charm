@@ -67,6 +67,7 @@ struct OS_PeriodicTask
 	void *pdata;
 	
 	void *syscall_result;		// Some syscalls put the thread to wait. This member holds a pointer to its return argiments
+	UINT64 accumulated_budget;
 
 	// Folliwing attributes are common in both type of tasks. They should be in the same order.
 	UINT16 attributes;
@@ -88,7 +89,6 @@ struct OS_PeriodicTask
     // When the task is in the wait_queue, it will have its job_release_time as the next release time
     // When it is in the ready queue, it is the task period beginning value for the current period
     UINT64 job_release_time;
-	UINT64 accumulated_budget;
 	UINT32 exec_count;
 	UINT32 TBE_count;
 	UINT32 dline_miss_count;
@@ -115,16 +115,14 @@ struct OS_AperiodicTask
 	void *pdata;
 	
 	void *syscall_result;		// Some syscalls put the thread to wait. This member holds a pointer to its return argiments
+	UINT64 accumulated_budget;
 
 	UINT16 attributes;
 	UINT16 id;
 	INT8 name[OS_TASK_NAME_SIZE];
 #if OS_WITH_VALIDATE_TASK==1
 	UINT32 signature;		// A unique identifier to validate the task structure
-#endif	// OS_WITH_VALIDATE_TASK
-	
-	// Following arguments are specific to Aperiodic task
-	// None at this point
+#endif	// OS_WITH_VALIDATE_TASK	
 };
 
 typedef union OS_GenericTask
@@ -149,6 +147,7 @@ typedef union OS_GenericTask
 		void *pdata;
 
 		UINT32 *syscall_result;		// Some syscalls put the thread to wait. This member holds a pointer to its return argiments
+		UINT64 accumulated_budget;
 
 		UINT16 attributes;
 		UINT16 id;
