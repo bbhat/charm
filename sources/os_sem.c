@@ -9,11 +9,16 @@
 
 #include "os_core.h"
 #include "os_sem.h"
+#include "os_timer.h"
 #include "util.h"
 
 // Placeholders for all the semaphore objects
 OS_SemaphoreCB g_semaphore_pool[MAX_SEMAPHORE_COUNT];
 UINT32 g_semaphore_usage_mask[(MAX_SEMAPHORE_COUNT + 31) >> 5];
+
+#if OS_ENABLE_CPU_STATS==1
+extern UINT32 g_sched_starting_counter_value;
+#endif
 
 extern OS_GenericTask * g_current_task;
 extern _OS_Queue g_ready_q;
@@ -66,6 +71,10 @@ exit:
 OS_Error _OS_SemWait(OS_Sem sem)
 {
 	OS_Error status;
+	
+#if OS_ENABLE_CPU_STATS==1
+    g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
+#endif	
 
 	if((status = assert_open(sem)) != SUCCESS) {
 		goto exit;
@@ -79,7 +88,15 @@ OS_Error _OS_SemWait(OS_Sem sem)
 	{
 		status = RESOURCE_NOT_OWNED;
 		goto exit;
-	}	
+	}
+
+    // Get the task execution time
+    UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
+    
+    // Adjust the remaining & accumulated budgets for the current task
+    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
+    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;
+    ((OS_PeriodicTask *)g_current_task)->accumulated_budget += budget_spent;
 
 	// If the semaphore count is 0, then block the thread
 	if(semobj->count == 0)
@@ -116,8 +133,8 @@ OS_Error _OS_SemWait(OS_Sem sem)
 		// update the result in the syscall_result
 		if(g_current_task->syscall_result) 
 			g_current_task->syscall_result[0] = SUCCESS;		
-	}
-
+	}	
+	
 	_OS_Schedule();
 	
 exit:
@@ -129,6 +146,10 @@ OS_Error _OS_SemPost(OS_Sem sem)
 	OS_GenericTask* task = NULL;
 	OS_Error status;
 	UINT64 key = 0;
+	
+#if OS_ENABLE_CPU_STATS==1
+    g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
+#endif
 
 	if((status = assert_open(sem)) != SUCCESS) {
 		goto exit;
@@ -142,7 +163,15 @@ OS_Error _OS_SemPost(OS_Sem sem)
 	{
 		status = RESOURCE_NOT_OWNED;
 		goto exit;
-	}	
+	}
+	
+    // Get the task execution time
+    UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
+    
+    // Adjust the remaining & accumulated budgets for the current task
+    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
+    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;
+    ((OS_PeriodicTask *)g_current_task)->accumulated_budget += budget_spent;		
 
 	if(semobj->count == 0)
 	{
@@ -181,7 +210,7 @@ OS_Error _OS_SemPost(OS_Sem sem)
 		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore + ", semobj->count);		
 	}
 		
-	_OS_Schedule();
+	_OS_Schedule();	
 	
 exit:
 	return status;
@@ -192,6 +221,10 @@ OS_Error _OS_SemFree(OS_Sem sem)
 	OS_Error status;
 	OS_GenericTask* task = NULL;
 	UINT64 key = 0;
+	
+#if OS_ENABLE_CPU_STATS==1
+    g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
+#endif
 	
 	if((status = assert_open(sem)) != SUCCESS) {
 		goto exit;
@@ -205,7 +238,15 @@ OS_Error _OS_SemFree(OS_Sem sem)
 	{
 		status = RESOURCE_NOT_OWNED;
 		goto exit;
-	}	
+	}
+
+    // Get the task execution time
+    UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
+    
+    // Adjust the remaining & accumulated budgets for the current task
+    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
+    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;
+    ((OS_PeriodicTask *)g_current_task)->accumulated_budget += budget_spent;	
 
 	// We need to unblock all waiting threads in its wait queues and make them ready
 	while(TRUE)
@@ -242,6 +283,8 @@ OS_Error _OS_SemFree(OS_Sem sem)
 
 	semobj->count = 0;
 	semobj->owner = NULL;
+	
+	_OS_Schedule();	
 	
 exit:
 	return status;
