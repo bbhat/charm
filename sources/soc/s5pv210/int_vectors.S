@@ -109,3 +109,15 @@ _jump_to_custom_IRQ_Handler:
 
 	// If we dont find any interrupts, lets hangup. This should never happen
 	b		.
+
+//-----------------------------------------------------------------------
+// Function to set interrupt vector table
+// register r0 has the isr
+//-----------------------------------------------------------------------
+	.global _set_interrupt_vector
+_set_interrupt_vector:
+	
+	mcr	p15, 0, r0, c12, c0, 0
+	mrc	p15, 0, r0, c12, c0, 0
+	
+	mov pc, lr

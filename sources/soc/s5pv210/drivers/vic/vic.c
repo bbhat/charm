@@ -36,22 +36,22 @@ void _vic_set_interrupt_vector(OS_InterruptVector isr, UINT32 index)
 	// VIC0
 	if(index < 32)			
 	{
-		VIC0VECTADDR[index] = (UINT32) isr;
+		*VIC0VECTADDR(index) = (UINT32) isr;
 	}
 	// VIC1
 	else if(index < 64) 		
 	{
-		VIC1VECTADDR[index - 32] = (UINT32) isr;
+		*VIC1VECTADDR(index - 32) = (UINT32) isr;
 	}
 	// VIC2
 	else if(index < 96) 
 	{
-		VIC2VECTADDR[index - 64] = (UINT32) isr;
+		*VIC2VECTADDR(index - 64) = (UINT32) isr;
 	}
 	// VIC3
 	else if(index < 128) 
 	{
-		VIC3VECTADDR[index - 96] = (UINT32) isr;
+		*VIC3VECTADDR(index - 96) = (UINT32) isr;
 	}
 	else
 	{

@@ -81,10 +81,14 @@ void _OS_Init()
 	_OS_QueueInit(&g_ap_ready_q);
 	_OS_QueueInit(&g_block_q);
 	
+    KlogStr(KLOG_OS_STARTUP, "Creating process - ", "kernel");
+	
 	// Initialize the Kernel process
 	OS_CreateProcess(&kernel_pcb, "kernel", &kernel_process_entry, NULL);	
 	g_kernel_process = &g_process_pool[kernel_pcb];
 
+    KlogStr(KLOG_OS_STARTUP, "Calling - ", "OS_Start");
+	
 	// This will start the scheuling
 	OS_Start();
 	
