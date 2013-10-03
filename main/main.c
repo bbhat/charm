@@ -47,7 +47,8 @@ void task_budget(void * ptr)
 	PFM_SetUserLED(*(LED_Number *)ptr, LED_TOGGLE);
 //	Syslog32("task_budget - ", count++);
 
- 	while(dm == OS_GetTBECount());
+	while(dm == OS_GetTBECount());
+//	while(1);
 }
 
 int test_kernel()
@@ -55,10 +56,10 @@ int test_kernel()
 	SyslogStr("Calling - ",  __func__);
 	
 	// Test Casual
-//  	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
-//   	OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
-//   	OS_CreatePeriodicTask( 500000, 500000, 30000, 15000, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
-//   	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+ 	// OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
+ 	//   	OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
+ 	//   	OS_CreatePeriodicTask( 500000, 500000, 30000, 15000, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
+ 	//   	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 
 	// test_short_intervals
 	// OS_CreatePeriodicTask( 1000, 1000, 400, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
@@ -76,7 +77,7 @@ int test_kernel()
 	// OS_CreatePeriodicTask( 1000000, 1000000, 50000, 0, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
 	//  	OS_CreatePeriodicTask( 1200000, 1200000, 20000, 0, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
 	//  	OS_CreatePeriodicTask( 5000000, 5000000, 30000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
- 	// OS_CreatePeriodicTask( 2000000, 2000000, 90000, 0, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+	//  	OS_CreatePeriodicTask( 2000000, 2000000, 90000, 0, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 
 	// Test TBE
 	OS_CreatePeriodicTask( 1000, 1000, 300, 1000, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);

@@ -228,9 +228,11 @@ void _OS_PeriodicTimerISR(void *arg)
     while(_OS_QueuePeek(&g_wait_q, NULL, &new_time) == SUCCESS)
     {
         if(new_time > g_current_period_us) break;
-        
+		
         // Dequeue the new task from the queue.
         _OS_QueueGet(&g_wait_q, (void**) &task, NULL);
+        
+		ASSERT(g_current_period_us == task->job_release_time);
         
         // Reset the remaining budget to full
         task->remaining_budget = task->budget;
@@ -308,16 +310,19 @@ static void _OS_Sched_CheckTaskBudgetDline(OS_PeriodicTask * task)
             // We are done for the current period. Update the next job_release_time.
             task->job_release_time += task->period;
             
-            // Put into the ready queue, if the job_release time is the current time
-            // Otherwise it will go into the wait queue
-            _OS_SetAlarm(task, task->job_release_time, (task->job_release_time == g_current_period_us));
+			// If we are going to put the task into ready queue, then the alarm time
+			// should be the deadline. Or else, it should be the next release time
+			if(task->job_release_time == g_current_period_us)
+				_OS_SetAlarm(task, task->job_release_time + task->deadline, TRUE);
+			else
+				_OS_SetAlarm(task, task->job_release_time, FALSE);
         }
     }
     
     // Check if anyone in the ready queue exceeded the deadline
     while(_OS_QueuePeek(&g_ready_q, NULL, &new_time) == SUCCESS)
     {
-        if(new_time > g_current_period_us) break;
+        if(new_time > (g_current_period_us + g_current_period_offset_us)) break;
         
         // Now get the front task from the queue.
         _OS_QueueGet(&g_ready_q, (void**) &task, NULL);
@@ -332,8 +337,12 @@ static void _OS_Sched_CheckTaskBudgetDline(OS_PeriodicTask * task)
         // We are done for the current period. Update the next job_release_time.
         task->job_release_time += task->period;
         
-        // Put into the ready queue, if the job_release time is the current time
-        _OS_SetAlarm(task, task->job_release_time, (task->job_release_time == g_current_period_us));
+		// If we are going to put the task into ready queue, then the alarm time
+		// should be the deadline. Or else, it should be the next release time
+		if(task->job_release_time == g_current_period_us)
+			_OS_SetAlarm(task, task->job_release_time + task->deadline, TRUE);
+		else
+			_OS_SetAlarm(task, task->job_release_time, FALSE);
     }
 }
 
@@ -442,9 +451,12 @@ void _OS_TaskYield()
             // We are done for the current period. Update the next job_release_time.
             task->job_release_time += task->period;
             
-            // Put into the ready queue, if the job_release time is the current time
-            // Otherwise it will go into the wait queue
-            _OS_SetAlarm(task, task->job_release_time, (task->job_release_time == g_current_period_us));
+			// If we are going to put the task into ready queue, then the alarm time
+			// should be the deadline. Or else, it should be the next release time
+			if(task->job_release_time == g_current_period_us)
+				_OS_SetAlarm(task, task->job_release_time + task->deadline, TRUE);
+			else
+				_OS_SetAlarm(task, task->job_release_time, FALSE);
         }
 
         // Before calling _OS_Schedule, update g_current_period_offset_us
