@@ -17,8 +17,8 @@
 	#define FIN 	(24000000)				// 24MHz Crystal
 	
 	// PLL 
-	#define APLL						(1000000000)
-	#define MPLL						(667000000)
+	#define APLL				(1000000000)
+	#define MPLL				(667000000)
 	
 	// Clock Dividers for best performance
 	#define DIVAPLL				0

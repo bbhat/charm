@@ -120,9 +120,6 @@ void OS_Start()
 
         _OS_IsRunning = TRUE;
 
-        // Start processing interrupts
-        _OS_InitInterrupts();
-        
         // Call reschedule. 
         _OS_Schedule();
         

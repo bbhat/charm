@@ -88,8 +88,13 @@ _sysctl_enable_l2cache:
 
 	// Program the Auxiliary Control Register to set the L2EN bit to 1
 	mrc  p15,0,r0,c1,c0,1
-	orr  r0, r0, #(1<<1)
-	mcr  p15, 0, r0, c1, c0, 1	
+	orr  r0, r0, #(1 << 1)
+	mcr  p15, 0, r0, c1, c0, 1
+	
+	// Program the L2 Auxiliary Control Register to configure L2 cache
+	// L2 data RAM read multiplexer select, Tag RAM latency, Data RAM latency 
+	ldr  r0, =((1 << 29) | (1 << 6) | (1 << 0))
+	mcr  p15, 1, r0, c9, c0, 2 
 
 	// Program the C bit in the CP15 Control Register c1	
 	mrc  p15,0,r0,c1,c0,0 
@@ -441,6 +446,14 @@ _sysctl_query_l2_cache_params:
 	str  r2, [r1]
 	
 	mov  pc, lr
+
+//----------------------------------------------------------------------------------------
+// Helper functions
+//----------------------------------------------------------------------------------------
+	.global _sysctl_query_l2_aux_control_reg
+_sysctl_query_l2_aux_control_reg:
+	mrc p15, 1, r0, c9, c0, 2
+	mov pc, lr
 
 //----------------------------------------------------------------------------------------
 // Some global variables to hold cache attributes

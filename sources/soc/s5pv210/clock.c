@@ -8,8 +8,8 @@
 #include "soc.h"
 
 // Values for FIN 24MHz and APLL at 1GHz
-#define APLL_MDIV       		0x7d
-#define APLL_PDIV       		0x3
+#define APLL_MDIV       	0x7d
+#define APLL_PDIV       	0x3
 #define APLL_SDIV      	 	0x1
 
 // Values for FIN 24MHz and MPLL at 667 MHz

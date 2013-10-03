@@ -11,9 +11,9 @@
 #include "target.h"
 #include "sysctl.h"
 
-//#define TEST_KERNEL
+#define TEST_KERNEL
 //#define TEST_OS
-#define TEST_SRT
+//#define TEST_SRT
 //#define TEST_APERIODIC
 
 OS_Process test_proc;
@@ -32,6 +32,8 @@ int b = 1;
 int c = 2;
 int d = 3;
 
+UINT32 _sysctl_query_l2_aux_control_reg(void);
+	
 void task_task(void * ptr)
 {
 	PFM_SetUserLED(*(LED_Number *)ptr, LED_TOGGLE);
@@ -115,6 +117,7 @@ int main(int argc, char *argv[])
 	Klog32(KLOG_GENERAL_INFO, "l2 cache line len - ", _l2_cache_line_size);
 	Klog32(KLOG_GENERAL_INFO, "l2 cache set num - ", _l2_cache_set_count);
 	Klog32(KLOG_GENERAL_INFO, "l2 cache ways - ", _l2_cache_ways_count);
+	Klog32(KLOG_GENERAL_INFO, "l2 cache control register - ", _sysctl_query_l2_aux_control_reg());
 #endif
 
 #if defined(TEST_KERNEL)
