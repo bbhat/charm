@@ -11,8 +11,8 @@
 #include "target.h"
 #include "sysctl.h"
 
-#define TEST_KERNEL
-//#define TEST_OS
+//#define TEST_KERNEL
+#define TEST_OS
 //#define TEST_SRT
 //#define TEST_APERIODIC
 
@@ -48,7 +48,7 @@ void task_budget(void * ptr)
 //	Syslog32("task_budget - ", count++);
 
 	while(dm == OS_GetTBECount());
-//	while(1);
+	//	while(1);
 }
 
 int test_kernel()
