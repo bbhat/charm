@@ -10,7 +10,6 @@
 #include "os_core.h"
 #include "target.h"
 #include "util.h"
-#include "os_stat.h"
 
 OS_PeriodicTask task1;
 OS_PeriodicTask task2;

@@ -99,10 +99,12 @@ OS_Error OS_CreateAperiodicTask(
 OS_Error OS_CreateProcess(
 		OS_Process *process,
 		const INT8 * process_name,
+		UINT16 attributes,
 		void (*process_entry_function)(void *pdata),
 		void *pdata
 	)
 {
+	// TODO: Implement this function
 	return SUCCESS;
 }
 
@@ -245,4 +247,44 @@ OS_Error OS_SemGetValue(OS_Sem sem, INT32 *val)
 	}
 		
 	return (OS_Error) ret[0];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Statistics Functions
+///////////////////////////////////////////////////////////////////////////////
+OS_Error OS_GetStatCounters(OS_StatCounters * ptr)
+{
+	_OS_Syscall_Args param_info;
+	void * arg[1];
+	UINT32 ret[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_OS_GET_STAT;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)ptr;	
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+			
+	return (OS_Error) ret[0];
+}
+
+OS_Error OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr)
+{
+	_OS_Syscall_Args param_info;
+	void * arg[2];
+	UINT32 ret[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_TASK_GET_STAT;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)task;
+	arg[1] = (void *)ptr;	
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+			
+	return (OS_Error) ret[0];	
 }

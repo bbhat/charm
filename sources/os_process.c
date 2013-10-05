@@ -39,6 +39,7 @@ OS_Error elf_load(void * elfdata, void ** start_address);
 OS_Error OS_CreateProcess(
 	OS_Process *process,
 	const INT8 *process_name,
+	UINT16 attributes,
 	void (*process_entry_function)(void *pdata),
 	void *pdata)
 {
@@ -74,6 +75,7 @@ OS_Error OS_CreateProcess(
 	// Copy process name
 	strncpy(pcb->name, process_name, OS_PROCESS_NAME_SIZE);
 	
+	pcb->attributes = attributes;
 	pcb->process_entry_function = process_entry_function;
 	pcb->pdata = pdata;
 	pcb->next = NULL;
@@ -104,6 +106,7 @@ OS_Error OS_CreateProcess(
 OS_Error OS_CreateProcessFromFile(
 		OS_Process *process,
 		const INT8 * process_name,
+		UINT16 attributes,
 		const INT8 * exec_path,
 		void *pdata
 	)
@@ -135,7 +138,7 @@ OS_Error OS_CreateProcessFromFile(
 	OS_Error status = elf_load(program, &start_address);
 	if(status == SUCCESS)
 	{
-		status = OS_CreateProcess(process, process_name, start_address, pdata);
+		status = OS_CreateProcess(process, process_name, attributes, start_address, pdata);
 	}
 
 	return status;	

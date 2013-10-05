@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 #endif
 
 #if defined(TEST_KERNEL)
-	OS_CreateProcess(&test_proc, "test_os", process_entry, NULL);
+	OS_CreateProcess(&test_proc, "test_os", 0, process_entry, NULL);
 #else
 	// Ensure that ramdisk is enabled
 	#if ENABLE_RAMDISK==0
@@ -130,15 +130,15 @@ int main(int argc, char *argv[])
 	#endif
 
 #if defined(TEST_OS)	
-	OS_CreateProcessFromFile(&test_proc1, "test_os", "applications/bin/test_os.elf", NULL);
+	OS_CreateProcessFromFile(&test_proc1, "test_os", 0, "applications/bin/test_os.elf", NULL);
 #endif
 
 #if defined(TEST_SRT)
-	OS_CreateProcessFromFile(&test_proc2, "srt", "applications/bin/srt.elf", NULL);
+	OS_CreateProcessFromFile(&test_proc2, "srt", 0, "applications/bin/srt.elf", NULL);
 #endif
 
 #if defined(TEST_APERIODIC)
-	OS_CreateProcessFromFile(&test_proc2, "test_aperiodic", "applications/bin/test_aperiodic.elf", NULL);
+	OS_CreateProcessFromFile(&test_proc2, "test_aperiodic", 0, "applications/bin/test_aperiodic.elf", NULL);
 #endif
 
 #endif

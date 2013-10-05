@@ -84,7 +84,7 @@ void _OS_Init()
     KlogStr(KLOG_OS_STARTUP, "Creating process - ", "kernel");
 	
 	// Initialize the Kernel process
-	OS_CreateProcess(&kernel_pcb, "kernel", &kernel_process_entry, NULL);	
+	OS_CreateProcess(&kernel_pcb, "kernel", ADMIN_PROCESS, &kernel_process_entry, NULL);	
 	g_kernel_process = &g_process_pool[kernel_pcb];
 
     KlogStr(KLOG_OS_STARTUP, "Calling - ", "OS_Start");

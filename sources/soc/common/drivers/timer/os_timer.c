@@ -9,7 +9,6 @@
 
 #include "os_timer.h"
 #include "os_core.h"
-#include "os_stat.h"
 #include "soc.h"
 #include "target.h"
 

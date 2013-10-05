@@ -36,7 +36,22 @@ typedef enum
 	INVALID_ARG = 23, 
 	INVALID_DEADLINE = 24,
 	FORMAT_ERROR = 25,
-
+	RAMDISK_INVALID = 26,
+	CONFIGURATION_ERROR = 27,
+	INVALID_ELF_FILE = 28,
+	FILE_ERROR = 29,
+	SYSCALL_ERROR = 30,
+	INVALID_SWI_ERROR = 30,
+	RESOURCE_EXHAUSTED = 31,
+	PROCESS_INVALID = 32,			// Certain functions can only be called from a valid process
+	RESOURCE_NOT_OPEN = 33,
+	RESOURCE_NOT_OWNED = 34,
+	RESOURCE_DELETED = 35,
+	INVALID_PHASE = 36,
+	NOT_ADMINISTRATOR = 37,
+	NOT_IMPLEMENTED = 38,
+	NOT_CONFIGURED = 39,
+	
 	UNKNOWN = 99	
 
 } OS_Error;
@@ -92,6 +107,7 @@ OS_Error OS_CreateAperiodicTask(
 OS_Error OS_CreateProcess(
 		OS_Process *process,
 		const INT8 * process_name,
+		UINT16 attributes,
 		void (*process_entry_function)(void *pdata),
 		void *pdata
 	);
@@ -105,6 +121,7 @@ OS_Error OS_CreateProcess(
 OS_Error OS_CreateProcessFromFile(
 		OS_Process *process,
 		const INT8 * process_name,
+		UINT16 attributes,
 		const INT8 * exec_path,
 		void *pdata
 	);
@@ -165,6 +182,34 @@ OS_Error OS_GetTime(OS_Time *time);
 OS_Error OS_SetAlarm(const OS_DateAndTime *date_and_time);
 OS_Error OS_GetAlarm(OS_DateAndTime *date_and_time);
 */
+
+///////////////////////////////////////////////////////////////////////////////
+// Statistics functions
+///////////////////////////////////////////////////////////////////////////////
+typedef struct
+{
+	UINT64 idle_time_us;
+	UINT64 total_time_us;
+	UINT32 max_scheduler_elapsed_count;		// This will be reset each time, its value is read
+	UINT32 periodic_timer_intr_counter;
+	UINT32 budget_timer_intr_counter;
+	
+} OS_StatCounters;
+
+typedef struct
+{
+	UINT64 task_time_us;
+	UINT64 total_time_us;
+	UINT32 period;
+	UINT32 budget;
+	UINT32 exec_count;
+	UINT32 TBE_count;
+	UINT32 dline_miss_count;
+	
+} OS_TaskStatCounters;
+
+OS_Error OS_GetStatCounters(OS_StatCounters * ptr);
+OS_Error OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Some platform utilities

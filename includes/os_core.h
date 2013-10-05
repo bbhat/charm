@@ -49,6 +49,10 @@ typedef enum
 	RESOURCE_NOT_OWNED = 34,
 	RESOURCE_DELETED = 35,
 	INVALID_PHASE = 36,
+	NOT_ADMINISTRATOR = 37,
+	NOT_IMPLEMENTED = 38,
+	NOT_CONFIGURED = 39,
+	
 	
 	UNKNOWN = 99	
 
@@ -129,6 +133,7 @@ OS_Error OS_CreateAperiodicTask(
 OS_Error OS_CreateProcess(
 		OS_Process *process,
 		const INT8 * process_name,
+		UINT16 attributes,
 		void (*process_entry_function)(void *pdata),
 		void *pdata
 	);
@@ -142,6 +147,7 @@ OS_Error OS_CreateProcess(
 OS_Error OS_CreateProcessFromFile(
 		OS_Process *process,
 		const INT8 * process_name,
+		UINT16 attributes,
 		const INT8 * exec_path,
 		void *pdata
 	);
@@ -172,11 +178,6 @@ UINT64 OS_GetElapsedTime();
 // For aperiodic tasks, this function will return zero.
 ///////////////////////////////////////////////////////////////////////////////
 UINT64 OS_GetThreadElapsedTime();
-
-///////////////////////////////////////////////////////////////////////////////
-// Get Task Budget Exceeded count
-///////////////////////////////////////////////////////////////////////////////
-UINT32 OS_GetTBECount();
 
 ///////////////////////////////////////////////////////////////////////////////
 // Date and Time functions
@@ -214,6 +215,34 @@ void * OS_GetCurrentTask();
 // Can be used with both Periodic / Aperiodic Tasks
 ///////////////////////////////////////////////////////////////////////////////
 void OS_TaskYield();
+
+///////////////////////////////////////////////////////////////////////////////
+// Statistics functions
+///////////////////////////////////////////////////////////////////////////////
+typedef struct
+{
+	UINT64 idle_time_us;
+	UINT64 total_time_us;
+	UINT32 max_scheduler_elapsed_count;		// This will be reset each time, its value is read
+	UINT32 periodic_timer_intr_counter;
+	UINT32 budget_timer_intr_counter;
+	
+} OS_StatCounters;
+
+typedef struct
+{
+	UINT64 task_time_us;
+	UINT64 total_time_us;
+	UINT32 period;
+	UINT32 budget;
+	UINT32 exec_count;
+	UINT32 TBE_count;
+	UINT32 dline_miss_count;
+	
+} OS_TaskStatCounters;
+
+OS_Error OS_GetStatCounters(OS_StatCounters * ptr);
+OS_Error OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Function to set Interrupt Vector for a given index

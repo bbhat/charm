@@ -9,6 +9,7 @@
 
 #include "os_core.h"
 #include "os_sem.h"
+#include "os_stat.h"
 #include "usr/includes/os_syscall.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -26,6 +27,8 @@ static void syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void 
 static void syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 //////////////////////////////////////////////////////////////////////////////
 // Other function prototypes
@@ -53,7 +56,9 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_SemGetValue,
 		syscall_GetCurTask,
 		syscall_TaskYield, 
-		0, 0, 0, 0, 0, 
+		syscall_OSGetStat,
+		syscall_TaskGetStat,
+		0, 0, 0, 
 		0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0,
@@ -206,7 +211,7 @@ static void syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void 
 
 static void syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	return SYSCALL_ERROR;
+	// TODO: Implement this function
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -222,4 +227,46 @@ static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void *
 	{
 		_PFM_SetUserLED((UINT32)uint_args[0], (UINT32)uint_args[1]);
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Statistics functions
+///////////////////////////////////////////////////////////////////////////////
+static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+#if OS_ENABLE_CPU_STATS==1
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	OS_StatCounters * stat = (OS_StatCounters *)uint_args[0];
+	UINT32 * uint_ret = (UINT32 *)ret;
+	OS_Error result = SYSCALL_ERROR;
+	
+	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
+	{
+		_OS_GetStatCounters(stat);
+	}
+	
+	if(uint_ret) uint_ret[0] = result;
+#else
+	if(uint_ret) uint_ret[0] = NOT_CONFIGURED;	
+#endif
+}
+
+static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+#if OS_ENABLE_CPU_STATS==1
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	OS_Task * task = (OS_Task *)uint_args[0];
+	OS_TaskStatCounters * stat = (OS_TaskStatCounters *)uint_args[1];
+	UINT32 * uint_ret = (UINT32 *)ret;
+	OS_Error result = SYSCALL_ERROR;
+	
+	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
+	{
+		_OS_GetTaskStatCounters(task, stat);
+	}
+	
+	if(uint_ret) uint_ret[0] = result;
+#else
+	if(uint_ret) uint_ret[0] = NOT_CONFIGURED;	
+#endif	
 }

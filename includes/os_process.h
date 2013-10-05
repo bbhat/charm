@@ -18,12 +18,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Process PCB 
 ///////////////////////////////////////////////////////////////////////////////
+typedef enum
+{
+	ADMIN_PROCESS = 1	
+} OS_ProcessAttr;
+
 typedef struct OS_ProcessCB
 {
 	INT8 name[OS_PROCESS_NAME_SIZE];
 	void (*process_entry_function)(void *pdata);
 	void * pdata;
 	UINT16 id;
+	UINT16 attributes;
 
 	// Pointer to next process in the list
 	struct OS_ProcessCB *next;	

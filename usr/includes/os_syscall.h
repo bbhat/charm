@@ -25,6 +25,8 @@ enum
 	SYSCALL_SEM_GET_VALUE,
 	SYSCALL_GET_CUR_TASK,
 	SYSCALL_TASK_YIELD,
+	SYSCALL_OS_GET_STAT,
+	SYSCALL_TASK_GET_STAT,
 	
 	// Reserved space for other syscall
 	

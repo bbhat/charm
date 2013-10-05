@@ -16,7 +16,7 @@
 
 typedef struct 
 {
-	INT32 count;						
+	UINT32 count;						
 	OS_ProcessCB * owner;					// Owner process
 	_OS_Queue periodic_task_queue;    		// Wait queue for periodic tasks
 	_OS_Queue aperiodic_task_queue;  		// Wait queue for aperiodic tasks
@@ -27,6 +27,6 @@ OS_Error _OS_SemAlloc(OS_Sem *sem, UINT32 value);
 OS_Error _OS_SemWait(OS_Sem sem);
 OS_Error _OS_SemPost(OS_Sem sem);
 OS_Error _OS_SemFree(OS_Sem sem);
-OS_Error _OS_SemGetValue(OS_Sem sem, INT32 *val);
+OS_Error _OS_SemGetValue(OS_Sem sem, UINT32 *val);
 
 #endif //_OS_SEM_H

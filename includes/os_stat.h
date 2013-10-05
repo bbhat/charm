@@ -15,18 +15,13 @@
 #if OS_ENABLE_CPU_STATS==1
 
 // Some statistics counters to keep track.
-extern UINT32 max_scheduler_elapsed_count;
-extern UINT32 periodic_timer_intr_counter;
-extern UINT32 budget_timer_intr_counter;
+extern UINT32 g_max_scheduler_elapsed_count;
+extern UINT32 g_periodic_timer_intr_counter;
+extern UINT32 g_budget_timer_intr_counter;
 
-// Variables to keep track of the idle task execution
-extern UINT32 g_idle_max_count;
-extern UINT32 g_idle_count;
-extern FP32 _OS_CPUUsage;
-
-// OS Statistics Capture function
 void _OS_StatInit(void);
-void _OS_StatisticsFn(void * ptr);
+OS_Error _OS_GetStatCounters(OS_StatCounters * ptr);
+OS_Error _OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr);
 
 #endif
 

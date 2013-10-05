@@ -299,7 +299,7 @@ exit:
 	return status;
 }
 
-OS_Error _OS_SemGetValue(OS_Sem sem, INT32* val)
+OS_Error _OS_SemGetValue(OS_Sem sem, UINT32* val)
 {
 	OS_Error status;
 		

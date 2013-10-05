@@ -10,7 +10,6 @@
 #include "os_core.h"
 #include "os_queue.h"
 #include "os_timer.h"
-#include "os_stat.h"
 #include "util.h"
 #include "sysctl.h"
 
@@ -38,16 +37,13 @@ UINT32 g_current_period_offset_us;
 
 OS_GenericTask * g_current_task;
 
-UINT32 periodic_timer_intr_counter;
-UINT32 budget_timer_intr_counter;
+UINT32 g_periodic_timer_intr_counter;
+UINT32 g_budget_timer_intr_counter;
 
 #if OS_ENABLE_CPU_STATS==1
-OS_PeriodicTask * g_stat_task;		// A TCB for the statistics task
-static UINT32 g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];
-
+UINT32 g_max_scheduler_elapsed_count;
 UINT32 g_sched_starting_counter_value;
-static UINT32 g_sched_ending_counter_value;
-extern UINT32 g_max_scheduler_elapsed_count;
+UINT32 g_sched_ending_counter_value;
 #endif
 
 OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
@@ -135,13 +131,9 @@ void OS_Start()
 void kernel_process_entry(void * pdata)
 {
     OS_Task idle_tcb;
-#if OS_ENABLE_CPU_STATS==1
-    OS_Task stat_tcb;
-#endif
     
     // Create all kernel tasks. Currently there are:
     // - Idle task
-    // - Statistics task
     
     // Create the IDLE task 
     _OS_CreateAperiodicTask(MIN_PRIORITY + 1,
@@ -158,22 +150,6 @@ void kernel_process_entry(void * pdata)
             g_idle_task = (OS_AperiodicTask *)&g_task_pool[idle_tcb];
         }
         
-        // Create the statistics task
-#if OS_ENABLE_CPU_STATS==1
-    _OS_CreatePeriodicTask(STAT_TASK_PERIOD, STAT_TASK_PERIOD, 
-        STAT_TASK_PERIOD / 50, 0, g_stat_task_stack, 
-        sizeof(g_stat_task_stack), 
-        "STATISTICS", 
-        SYSTEM_TASK,
-        &stat_tcb, 
-        _OS_StatisticsFn, 0);
-        
-        if(stat_tcb != INVALID) 
-        {
-            g_stat_task = (OS_PeriodicTask *)&g_task_pool[stat_tcb];
-        }
-#endif
-
     // Call main from the kernel process which will create more processes
     // Note that main() should return in order for normal scheduling to start
     // This is a difference in the other OS and this OS.
@@ -189,10 +165,6 @@ static void _OS_idle_task(void * ptr)
     {
         // Wait for interrupt at lower power state
         _sysctl_wait_for_interrupt();
-        
-#if OS_ENABLE_CPU_STATS==1
-        g_idle_count++;
-#endif
     }
 }
 
@@ -218,7 +190,7 @@ void _OS_PeriodicTimerISR(void *arg)
     
 #if OS_ENABLE_CPU_STATS==1
     g_sched_starting_counter_value = _OS_Timer_GetMaxCount(PERIODIC_TIMER);
-    periodic_timer_intr_counter++;
+    g_periodic_timer_intr_counter++;
 #endif
     
     // Check if any ready task exceeded budget or deadline
@@ -260,7 +232,7 @@ void _OS_BudgetTimerISR(void *arg)
 
 #if OS_ENABLE_CPU_STATS==1
     g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
-    budget_timer_intr_counter++;
+    g_budget_timer_intr_counter++;
 #endif
     
     // Get the time elapsed since the beginning of the period
@@ -471,7 +443,7 @@ void _OS_TaskYield()
 // The below function, gets the total elapsed time since the beginning
 // of the system in microseconds.
 ///////////////////////////////////////////////////////////////////////////////
-UINT64 OS_GetElapsedTime()
+UINT64 _OS_GetElapsedTime()
 {
     UINT64 elapsed_time, old_global_time;
 

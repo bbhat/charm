@@ -105,6 +105,7 @@ endif
 all:
 	make boot
 	make kernel
+	make application APP=SystemMonitor
 	make application APP=test_os
 	make application APP=srt
 	make application APP=test_aperiodic

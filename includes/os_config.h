@@ -38,8 +38,6 @@
 // Task related configuration parameters
 #define MIN_PRIORITY                      255
 #define OS_IDLE_TASK_STACK_SIZE           0x40        // In Words
-#define OS_STAT_TASK_STACK_SIZE           0x40        // In Words
-#define STAT_TASK_PERIOD                  5000000     // 5 sec
 #define OS_TASK_NAME_SIZE                 16
 #define OS_MIN_USER_STACK_SIZE            256         // Minimum stack size in bytes
 
