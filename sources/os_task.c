@@ -27,7 +27,9 @@ static BOOL ValidateNewThread(UINT32 period, UINT32 budget);
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #define ALIGNED_ARRAY(ptr) ASSERT((int) ptr % 8 == 0)
 
-// Variable declaration/definition
+///////////////////////////////////////////////////////////////////////////////
+// Global Data
+///////////////////////////////////////////////////////////////////////////////
 static UINT32 g_task_id_counter = 0;
 static FP32 g_total_allocated_cpu = 0.0;
 

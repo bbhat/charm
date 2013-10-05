@@ -255,7 +255,5 @@ int main(int argc, char *argv[])
 	OS_CreatePeriodicTask( 20000, 20000, 5000, 4000, stack3, sizeof(stack3), "LED3", &task3, task_3, &c);
 	OS_CreateAperiodicTask(1, stack4, sizeof(stack4), "Menu", &task4, task_rtc, &d);
 
-	OS_Start();
-
 	return 0;
 }

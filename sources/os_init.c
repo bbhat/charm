@@ -28,6 +28,7 @@ extern UINT32 __ramdisk_start__;
 OS_ProcessCB	* g_kernel_process;	// Kernel process
 
 void _OS_Init(void);
+void _OS_Start(void);
 void _OS_Exit(void);
 static void _OS_InitFreeResources(void);
 void kernel_process_entry(void * pdata);
@@ -87,10 +88,10 @@ void _OS_Init()
 	OS_CreateProcess(&kernel_pcb, "kernel", ADMIN_PROCESS, &kernel_process_entry, NULL);	
 	g_kernel_process = &g_process_pool[kernel_pcb];
 
-    KlogStr(KLOG_OS_STARTUP, "Calling - ", "OS_Start");
+    KlogStr(KLOG_OS_STARTUP, "Calling - ", "_OS_Start");
 	
 	// This will start the scheuling
-	OS_Start();
+	_OS_Start();
 	
 	// The main function should never return if it called OS_Start. 
 	// If it does not call we may return from main.

@@ -54,8 +54,6 @@ int main(int argc, char *argv[])
 	OS_CreatePeriodicTask(500000, 400000, 10000, 100000, stack2, sizeof(stack2), &task2, task_fn2, &b);
 	OS_CreatePeriodicTask(500000, 500000, 10000, 200000, stack3, sizeof(stack3), &task3, task_fn3, &c);
 	
-	OS_Start();
-
 	return 0;
 }
 

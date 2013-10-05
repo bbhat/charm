@@ -79,8 +79,9 @@ static void _OS_idle_task(void * ptr);
 
 ///////////////////////////////////////////////////////////////////////////////
 // The following funcstion starts the OS scheduling
+// Note that this function never returns
 ///////////////////////////////////////////////////////////////////////////////
-void OS_Start()
+void _OS_Start()
 {
     // Check if the OS is already running
     if(!_OS_IsRunning)
