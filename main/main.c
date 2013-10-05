@@ -120,6 +120,10 @@ int main(int argc, char *argv[])
 	Klog32(KLOG_GENERAL_INFO, "l2 cache ways - ", _l2_cache_ways_count);
 	Klog32(KLOG_GENERAL_INFO, "l2 cache control register - ", _sysctl_query_l2_aux_control_reg());
 #endif
+	
+#if OS_ENABLE_CPU_STATS==1
+	OS_CreateProcessFromFile(&test_proc1, "STAT", ADMIN_PROCESS, "applications/bin/StstemMonitor.elf", NULL);	
+#endif
 
 #if defined(TEST_KERNEL)
 	OS_CreateProcess(&test_proc, "test_os", 0, process_entry, NULL);
