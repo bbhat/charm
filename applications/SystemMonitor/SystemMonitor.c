@@ -8,6 +8,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_api.h"
+#include "printf.h"
 
 #define OS_STAT_TASK_STACK_SIZE           0x40        // In Words
 #define STAT_TASK_PERIOD                  5000000     // 5 sec
@@ -39,8 +40,7 @@ void StatisticsTaskFn(void * ptr)
 	
 		cpu_load = (UINT32)(((FP32)(duration - idle_time) / duration) * 100.0);
 		
-	 	//Syslog32("STAT: CPU Usage (%) ", cpu_load);
-	 	//Syslog32("STAT: Max scheduler time in us = ", CONVERT_TMR0_TICKS_TO_us(os_stat.max_scheduler_elapsed_count));		
+	 	printf("STAT: CPU Usage %d, Max Scheduler Time %d\n", cpu_load, os_stat.max_scheduler_elapsed_us);
 	}
 }
 

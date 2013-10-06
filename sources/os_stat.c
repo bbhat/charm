@@ -9,6 +9,7 @@
 
 #include "target.h"
 #include "os_stat.h"
+#include "os_timer.h"
 
 #if OS_ENABLE_CPU_STATS==1
 
@@ -36,9 +37,11 @@ OS_Error _OS_GetStatCounters(OS_StatCounters * ptr)
 	
 	ptr->idle_time_us = g_idle_task->accumulated_budget;
 	ptr->total_time_us = _OS_GetElapsedTime();
-	ptr->max_scheduler_elapsed_count = g_max_scheduler_elapsed_count;
+	ptr->max_scheduler_elapsed_us = CONVERT_TMR0_TICKS_TO_us(g_max_scheduler_elapsed_count);
 	ptr->periodic_timer_intr_counter = g_periodic_timer_intr_counter;
 	ptr->budget_timer_intr_counter = g_budget_timer_intr_counter;
+	
+	g_max_scheduler_elapsed_count = 0;	// Reset this every time this function is called
 	
 	return SUCCESS;
 }

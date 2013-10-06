@@ -217,7 +217,7 @@ typedef struct
 {
 	UINT64 idle_time_us;
 	UINT64 total_time_us;
-	UINT32 max_scheduler_elapsed_count;		// This will be reset each time, its value is read
+	UINT32 max_scheduler_elapsed_us;		// This will be reset each time, its value is read
 	UINT32 periodic_timer_intr_counter;
 	UINT32 budget_timer_intr_counter;
 	
