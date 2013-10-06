@@ -10,7 +10,7 @@
 #ifndef _OS_API_H
 #define _OS_API_H
 
-#include "os_types.h"
+#include "types.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // OS Error Codes

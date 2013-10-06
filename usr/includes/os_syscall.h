@@ -10,7 +10,7 @@
 #ifndef OS_SYSCALL_H
 #define OS_SYSCALL_H
 
-#include "os_types.h"
+#include "types.h"
 
 enum
 {

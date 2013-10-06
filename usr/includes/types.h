@@ -1,16 +1,8 @@
-///////////////////////////////////////////////////////////////////////////////
-//	
-//						Copyright 2009-2013 xxxxxxx, xxxxxxx
-// File: os_types.h
-// Author: Bala B. (bhat.balasubramanya@gmail.com)
-// Description: Header file for the data types used in the user mode applications
-//
-///////////////////////////////////////////////////////////////////////////////
 
-#ifndef _OS_TYPES_H
-#define _OS_TYPES_H
+#ifndef _TPYES_H
+#define _TPYES_H
 
-// Some useful Macros
+//macro definitions
 #ifndef TRUE
 #define TRUE 1
 #endif
@@ -22,6 +14,13 @@
 #ifndef NULL
 #define NULL 0
 #endif // NULL
+
+#ifndef _SIZE_T
+#define _SIZE_T
+typedef unsigned int size_t;
+#endif  // _SIZE_T
+
+#define INVALID	(-1)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Redefine datatypes so that the OS can be ported easily on
@@ -40,4 +39,4 @@ typedef long long INT64; // Signed 64 bit data
 typedef float FP32; // 32 bit Floating point data
 typedef double FP64; // 64 bit Floating point data
 
-#endif // _OS_TYPES_H
+#endif /* _TPYES_H */
