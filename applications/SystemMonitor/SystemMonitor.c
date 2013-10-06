@@ -24,7 +24,7 @@ UINT32 cpu_load;
 // This runs every 100ms and recomputes the current CPU utilization
 // 
 ///////////////////////////////////////////////////////////////////////////////
-void StatisticsFn(void * ptr)
+void StatisticsTaskFn(void * ptr)
 {
 	OS_StatCounters os_stat;
 	OS_StatCounters task_stat;
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     OS_CreatePeriodicTask(STAT_TASK_PERIOD, STAT_TASK_PERIOD, 
         STAT_TASK_PERIOD / 50, 0, g_stat_task_stack, sizeof(g_stat_task_stack), 
         "STATISTICS", 
-        &g_stat_task, StatisticsFn, 0);
+        &g_stat_task, StatisticsTaskFn, 0);
         
 	return 0;
 }

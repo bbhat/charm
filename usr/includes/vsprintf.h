@@ -5,9 +5,6 @@
  * native C library.
  */
 
-#ifndef _VSPRINTF_H
-#define _VSPRINTF_H
-
 #include "types.h"
 
 #ifndef va_arg
@@ -47,5 +44,3 @@ int vsprintf(char *buf, const char *fmt, va_list args);
 int sprintf(char * buf, const char *fmt, ...);
 int vsscanf(const char * buf, const char * fmt, va_list args);
 int sscanf(const char * buf, const char * fmt, ...);
-
-#endif /* _VSPRINTF_H */

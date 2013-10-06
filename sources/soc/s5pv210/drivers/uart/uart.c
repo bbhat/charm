@@ -36,6 +36,8 @@ static UINT8 Uart_init_status = 0;
 #define UINTSP(ch) 		( *((volatile unsigned long *)(ELFIN_UART_BASE + UINTSP_OFFSET + (ch << 10)) )
 #define UINTM(ch) 		( *((volatile unsigned long *)(ELFIN_UART_BASE + UINTM_OFFSET + (ch << 10))) )
 
+#define MIN(a, b)		(((a) > (b)) ? (b) : (a))
+
 void Uart_Init(UART_Channel ch) 
 {
 	// Configure appropriate GPIO pins
@@ -91,6 +93,8 @@ void Uart_Init(UART_Channel ch)
 
 void Uart_Print(UART_Channel ch, const INT8 *buf) 
 {
+	UINT32 intsts;
+	
 	ASSERT(buf);
 	ASSERT(Uart_init_status & (1 << ch));
 	
@@ -100,17 +104,21 @@ void Uart_Print(UART_Channel ch, const INT8 *buf)
 		while(UFSTAT(ch) & (1 << 24)) {
 			// TODO: Do something useful here
 		}
-	
+		
+		OS_ENTER_CRITICAL(intsts);
 		UINT32 available = UART_FIFO_SIZE(ch) - ((UFSTAT(ch) >> 16) & 0xff);
 		while(*buf && available--) {
 			UTXH(ch) = *buf;
 			buf++;
 		}
+		OS_EXIT_CRITICAL(intsts);
 	}
 }
 
 void Uart_Write(UART_Channel ch, const INT8 *buf, UINT32 count) 
 {
+	UINT32 intsts;
+	
 	ASSERT(buf);
 	ASSERT(Uart_init_status & (1 << ch));
 	
@@ -120,17 +128,41 @@ void Uart_Write(UART_Channel ch, const INT8 *buf, UINT32 count)
 			// TODO: Do something useful here
 		}
 	
+		OS_ENTER_CRITICAL(intsts);
 		UINT32 available = UART_FIFO_SIZE(ch) - ((UFSTAT(ch) >> 16) & 0xff);
 		while(available--) {
 			UTXH(ch) = *buf;
 			buf++;
 			count--;
 		}
+		OS_EXIT_CRITICAL(intsts);
 	}
+}
+
+UINT32 Uart_DebugWriteNB(const INT8 *buf, UINT32 count) 
+{
+	UINT32 intsts;
+	
+	ASSERT(buf);
+	ASSERT(Uart_init_status & (1 << DEBUG_UART));
+	
+	OS_ENTER_CRITICAL(intsts);
+	UINT32 available = UART_FIFO_SIZE(DEBUG_UART) - ((UFSTAT(DEBUG_UART) >> 16) & 0xff);
+	UINT32 actual_count = MIN(count, available);
+	UINT32 written = actual_count;
+	
+	while(actual_count--) {
+		UTXH(DEBUG_UART) = *buf;
+		buf++;
+	}
+	OS_EXIT_CRITICAL(intsts);
+	
+	return written;
 }
 
 void Uart_ReadB(UART_Channel ch, INT8 *buf, UINT32 count) 
 {
+	UINT32 intsts;
 	ASSERT(buf);
 	ASSERT(Uart_init_status & (1 << ch));
 	
@@ -139,19 +171,26 @@ void Uart_ReadB(UART_Channel ch, INT8 *buf, UINT32 count)
 		while((available = (UFSTAT(ch) & 0xff)) == 0) {
 			// TODO: Do something useful here
 		}
-	
+		
+		OS_ENTER_CRITICAL(intsts);
+		available = (UFSTAT(ch) & 0xff);
 		while(available--) {
 			*buf = URXH(ch);
 			buf++;
 			count--;
 		}
+		OS_EXIT_CRITICAL(intsts);
 	}
 }
 
 void Uart_ReadNB(UART_Channel ch, INT8 *buf, UINT32 *count) 
 {
+	UINT32 intsts;
+	
 	ASSERT(buf && count);
 		
+	OS_ENTER_CRITICAL(intsts);
+	
 	UINT32 available = UFSTAT(ch) & 0xff;
 	if (available > *count) {
 		available = *count;
@@ -164,32 +203,48 @@ void Uart_ReadNB(UART_Channel ch, INT8 *buf, UINT32 *count)
 		*buf = URXH(ch);
 		buf++;
 	}
+	OS_EXIT_CRITICAL(intsts);
 }
 
 // Non Blocking single ASCII character read. When there is no data available, it returns 0
 INT8 Uart_GetChar(UART_Channel ch)
 {
+	UINT32 intsts;
+	
 	ASSERT(Uart_init_status & (1 << ch));
 
+	OS_ENTER_CRITICAL(intsts);
+	
 	UINT32 available = UFSTAT(ch) & 0xff;
 	if(available) {
-		return URXH(ch);
+		UINT8 data = URXH(ch);
+		OS_EXIT_CRITICAL(intsts);
+		
+		return data;
 	}
+	OS_EXIT_CRITICAL(intsts);
 	
 	return 0;
 }
 
 INT8 Uart_PutChar(UART_Channel ch, UINT8 data)
 {
+	UINT32 intsts;
+	
 	ASSERT(Uart_init_status & (1 << ch));
-
+	
+	OS_ENTER_CRITICAL(intsts);
+	
 	// Check if FIFO is full
 	if(UFSTAT(ch) & (1 << 24)) {
+		OS_EXIT_CRITICAL(intsts);
 		return 0;
 	}
 	
 	// Write the character
 	UTXH(ch) = data;
+	
+	OS_EXIT_CRITICAL(intsts);
 	
 	return 1;
 }

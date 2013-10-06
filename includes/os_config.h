@@ -37,7 +37,7 @@
 
 // Task related configuration parameters
 #define MIN_PRIORITY                      255
-#define OS_IDLE_TASK_STACK_SIZE           0x40        // In Words
+#define OS_IDLE_TASK_STACK_SIZE           64        // In Words
 #define OS_TASK_NAME_SIZE                 16
 #define OS_MIN_USER_STACK_SIZE            256         // Minimum stack size in bytes
 
@@ -57,6 +57,13 @@
 #define MAX_MUTEX_COUNT                   64          // This number is used to preallocate Mutex structures
 
 // Debug & Info related
+
+// Serial task related. This task is needed for all user space logging into serial log.
+// Without this, the user space will not be able to log anything into serial
+#define WITH_SERIAL_LOGGING_TASK		  1			  
+#define SERIAL_LOG_BUFFER_SIZE			  512		  // In bytes. This is used by UART driver to buffer requested output strings
+#define SERIAL_TASK_PERIOD			      10000		  // 10 milliseconds
+#define SERIAL_TASK_STACK_SIZE			  256		  // In words
 
 // Define the Debug masks
 typedef enum

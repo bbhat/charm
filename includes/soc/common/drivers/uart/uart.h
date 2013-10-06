@@ -17,7 +17,8 @@ typedef enum {
 	UART1,
 	UART2
 	} UART_Channel;
-	
+
+#define DEBUG_UART	UART0
 #define UART_BAUD_RATE	115200
 #define UART_LOOPBACK_MODE	0
 
@@ -30,8 +31,12 @@ typedef enum {
 void Uart_Init(UART_Channel ch);
 void Uart_Print(UART_Channel ch, const INT8 *buf);
 void Uart_Write(UART_Channel ch, const INT8 *buf, UINT32 count);
+UINT32 Uart_DebugWriteNB(const INT8 *buf, UINT32 count);	// Non blocking write to debug uart.
 void Uart_ReadB(UART_Channel ch, INT8 *buf, UINT32 count);	// Blocking read
 void Uart_ReadNB(UART_Channel ch, INT8 *buf, UINT32 * count);	// Non Blocking Read
+
+// Platform support functions
+UINT32 _PFM_SerialLog(const INT8 *buf, UINT32 count);
 
 // Non Blocking single ASCII character read
 INT8 Uart_GetChar(UART_Channel ch);	

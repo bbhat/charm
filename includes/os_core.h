@@ -266,10 +266,13 @@ typedef enum
 // the options provided
 OS_Error PFM_SetUserLED(LED_Number led, LED_Options options);
 
+// Serial logging functions
+// Returns the number of bytes actually written
+UINT32 PFM_SerialLog(const INT8 * str, UINT32 size);
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utility functions & Macros
 ///////////////////////////////////////////////////////////////////////////////
-
 void panic(const INT8 *format, ...);
 void SyslogStr(const INT8 * str, const INT8 * value);
 #define Syslog(str)	SyslogStr(str, NULL)

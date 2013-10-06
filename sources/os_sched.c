@@ -45,10 +45,10 @@ UINT32 g_max_scheduler_elapsed_count;
 UINT32 g_sched_starting_counter_value;
 UINT32 g_sched_ending_counter_value;
 #endif
+static char os_name_string [] = { OS_NAME_STRING };
 
 OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
 static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
-static char os_name_string [] = { OS_NAME_STRING };
 
 // Periodic timer ISR
 void _OS_PeriodicTimerISR(void *arg);
@@ -68,6 +68,7 @@ void _OS_SetAlarm(OS_PeriodicTask *task,
                   UINT64 abs_time_in_us,
                   BOOL ready);
 
+void init_serial(void);
 void kernel_process_entry(void * pdata);
 void main(int argc, char **argv);
 
@@ -135,6 +136,7 @@ void kernel_process_entry(void * pdata)
     
     // Create all kernel tasks. Currently there are:
     // - Idle task
+    // - Serial task
     
     // Create the IDLE task 
     _OS_CreateAperiodicTask(MIN_PRIORITY + 1,
@@ -150,6 +152,10 @@ void kernel_process_entry(void * pdata)
         {
             g_idle_task = (OS_AperiodicTask *)&g_task_pool[idle_tcb];
         }
+        
+#if WITH_SERIAL_LOGGING_TASK==1
+	init_serial();
+#endif        
         
     // Call main from the kernel process which will create more processes
     // Note that main() should return in order for normal scheduling to start

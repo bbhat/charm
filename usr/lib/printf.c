@@ -29,8 +29,6 @@ int printf(const char *fmt, ...)
 	return len;
 }
 
-
-
 int scanf(const char * fmt, ...)
 {
 	int i = 0;

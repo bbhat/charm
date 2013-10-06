@@ -29,12 +29,14 @@ static void syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * 
 static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_SerialLog(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 //////////////////////////////////////////////////////////////////////////////
 // Other function prototypes
 //////////////////////////////////////////////////////////////////////////////
 void _OS_TaskYield(void);
 OS_Error _PFM_SetUserLED(LED_Number led, LED_Options options);
+UINT32 _PFM_SerialLog(const INT8 * str, UINT32 size);
 
 OS_GenericTask * g_current_task;
 
@@ -58,7 +60,8 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_TaskYield, 
 		syscall_OSGetStat,
 		syscall_TaskGetStat,
-		0, 0, 0, 
+		syscall_SerialLog,
+		0, 0, 
 		0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0,
@@ -227,6 +230,23 @@ static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void *
 	{
 		_PFM_SetUserLED((UINT32)uint_args[0], (UINT32)uint_args[1]);
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Serial logging function
+///////////////////////////////////////////////////////////////////////////////
+static void syscall_SerialLog(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	UINT32 * uint_ret = (UINT32 *)ret;
+	UINT32 result = 0;
+	
+	if(((param_info->arg_bytes >> 2) >= 2) && ((param_info->ret_bytes >> 2) >= 1))
+	{
+		result = _PFM_SerialLog((const INT8 *)uint_args[0], uint_args[1]);
+	}
+	
+	if(uint_ret) uint_ret[0] = result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
