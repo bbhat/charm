@@ -38,19 +38,16 @@ void StatisticsTaskFn(void * ptr)
 		g_previous_idle_time = os_stat.idle_time_us ;
 		g_previous_timestamp = os_stat.total_time_us;
 		
-		if(idle_time <= duration)
-		{
-			cpu_load = (UINT32)(((FP32)(duration - idle_time) / duration) * 100.0);
-		
-			printf("STAT: CPU usage %u\%, Max Scheduler Time %uus\n", cpu_load, os_stat.max_scheduler_elapsed_us);
-		}
+		cpu_load = (UINT32)(((FP32)(duration - idle_time) / duration) * 100.0);
+	
+		printf("STAT: CPU usage %u\%, Max Scheduler Time %uus\n", cpu_load, os_stat.max_scheduler_elapsed_us);
 	}
 }
 
 int main(int argc, char *argv[])
 {
     OS_CreatePeriodicTask(STAT_TASK_PERIOD, STAT_TASK_PERIOD, 
-        STAT_TASK_PERIOD / 50, 0, g_stat_task_stack, sizeof(g_stat_task_stack), 
+        STAT_TASK_PERIOD / 50, STAT_TASK_PERIOD, g_stat_task_stack, sizeof(g_stat_task_stack), 
         "STATISTICS", 
         &g_stat_task, StatisticsTaskFn, 0);
         
