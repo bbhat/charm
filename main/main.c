@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 #endif
 	
 #if OS_ENABLE_CPU_STATS==1
-	OS_CreateProcessFromFile(&test_proc1, "STAT", ADMIN_PROCESS, "applications/bin/StstemMonitor.elf", NULL);	
+	OS_CreateProcessFromFile(&test_proc1, "STAT", ADMIN_PROCESS, "applications/bin/SystemMonitor.elf", NULL);	
 #endif
 
 #if defined(TEST_KERNEL)

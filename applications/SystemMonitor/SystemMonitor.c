@@ -10,7 +10,7 @@
 #include "os_api.h"
 #include "printf.h"
 
-#define OS_STAT_TASK_STACK_SIZE           0x40        // In Words
+#define OS_STAT_TASK_STACK_SIZE           0x400        // In Words
 #define STAT_TASK_PERIOD                  5000000     // 5 sec
 
 static OS_Task  g_stat_task;
@@ -37,10 +37,13 @@ void StatisticsTaskFn(void * ptr)
 	
 		g_previous_idle_time = os_stat.idle_time_us ;
 		g_previous_timestamp = os_stat.total_time_us;
-	
-		cpu_load = (UINT32)(((FP32)(duration - idle_time) / duration) * 100.0);
 		
-	 	printf("STAT: CPU Usage %d, Max Scheduler Time %d\n", cpu_load, os_stat.max_scheduler_elapsed_us);
+		if(idle_time <= duration)
+		{
+			cpu_load = (UINT32)(((FP32)(duration - idle_time) / duration) * 100.0);
+		
+			printf("STAT: CPU usage %u\%, Max Scheduler Time %uus\n", cpu_load, os_stat.max_scheduler_elapsed_us);
+		}
 	}
 }
 

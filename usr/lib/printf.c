@@ -13,7 +13,6 @@ extern unsigned char getc(void);
 static char g_pcOutBuf[OUTBUFSIZE];
 static char g_pcInBuf[INBUFSIZE];
 
-
 int printf(const char *fmt, ...)
 {
 	int i;

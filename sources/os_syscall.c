@@ -262,7 +262,7 @@ static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * 
 	
 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
 	{
-		_OS_GetStatCounters(stat);
+		result = _OS_GetStatCounters(stat);
 	}
 	
 	if(uint_ret) uint_ret[0] = result;
@@ -282,7 +282,7 @@ static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void 
 	
 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
 	{
-		_OS_GetTaskStatCounters(task, stat);
+		result = _OS_GetTaskStatCounters(task, stat);
 	}
 	
 	if(uint_ret) uint_ret[0] = result;
