@@ -28,6 +28,7 @@ enum
 	SYSCALL_OS_GET_STAT,
 	SYSCALL_TASK_GET_STAT,
 	SYSCALL_PFM_SERIAL_LOG,
+	SYSCALL_GET_TASK_ALLOC_MASK,
 	
 	// Reserved space for other syscall
 	

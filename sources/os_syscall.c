@@ -30,6 +30,7 @@ static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void *
 static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_SerialLog(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 //////////////////////////////////////////////////////////////////////////////
 // Other function prototypes
@@ -37,6 +38,7 @@ static void syscall_SerialLog(const _OS_Syscall_Args * param_info, const void * 
 void _OS_TaskYield(void);
 OS_Error _PFM_SetUserLED(LED_Number led, LED_Options options);
 UINT32 _PFM_SerialLog(const INT8 * str, UINT32 size);
+OS_Error _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
 
 OS_GenericTask * g_current_task;
 
@@ -61,7 +63,8 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_OSGetStat,
 		syscall_TaskGetStat,
 		syscall_SerialLog,
-		0, 0, 
+		syscall_GetTaskAllocMask,
+		0, 
 		0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0,
@@ -254,15 +257,14 @@ static void syscall_SerialLog(const _OS_Syscall_Args * param_info, const void * 
 ///////////////////////////////////////////////////////////////////////////////
 static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-#if OS_ENABLE_CPU_STATS==1
+#if OS_ENABLE_CPU_STATS==1	
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_StatCounters * stat = (OS_StatCounters *)uint_args[0];
 	UINT32 * uint_ret = (UINT32 *)ret;
 	OS_Error result = SYSCALL_ERROR;
-	
+
 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
 	{
-		result = _OS_GetStatCounters(stat);
+		result = _OS_GetStatCounters((OS_StatCounters *)uint_args[0]);
 	}
 	
 	if(uint_ret) uint_ret[0] = result;
@@ -275,18 +277,34 @@ static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void 
 {
 #if OS_ENABLE_CPU_STATS==1
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Task * task = (OS_Task *)uint_args[0];
-	OS_TaskStatCounters * stat = (OS_TaskStatCounters *)uint_args[1];
 	UINT32 * uint_ret = (UINT32 *)ret;
 	OS_Error result = SYSCALL_ERROR;
 	
-	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
+	if(((param_info->arg_bytes >> 2) >= 2) && ((param_info->ret_bytes >> 2) >= 1))
 	{
-		result = _OS_GetTaskStatCounters(task, stat);
+		result = _OS_GetTaskStatCounters((OS_Task )uint_args[0], (OS_TaskStatCounters *)uint_args[1]);
 	}
 	
 	if(uint_ret) uint_ret[0] = result;
 #else
 	if(uint_ret) uint_ret[0] = NOT_CONFIGURED;	
 #endif	
+}
+
+static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+#if OS_ENABLE_CPU_STATS==1
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	UINT32 * uint_ret = (UINT32 *)ret;
+	OS_Error result = SYSCALL_ERROR;
+	
+	if(((param_info->arg_bytes >> 2) >= 3) && ((param_info->ret_bytes >> 2) >= 1))
+	{
+		result = _OS_GetTaskAllocMask((UINT32 *)uint_args[0], uint_args[1], uint_args[2]);
+	}
+	
+	if(uint_ret) uint_ret[0] = result;
+#else
+	if(uint_ret) uint_ret[0] = NOT_CONFIGURED;	
+#endif
 }

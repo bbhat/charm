@@ -184,6 +184,8 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 	void(* task_entry_function)(void * pdata),
 	void * pdata);
 
+OS_Error _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
+
 // Placeholders for all the process control blocks
 extern OS_GenericTask	g_task_pool[MAX_TASK_COUNT];
 extern UINT32 			g_task_usage_mask[];

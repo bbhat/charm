@@ -46,7 +46,7 @@ OS_Error _OS_GetStatCounters(OS_StatCounters * ptr)
 	return SUCCESS;
 }
 
-OS_Error _OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr)
+OS_Error _OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
 {
 	if(!ptr)
 		return INVALID_ARG;
@@ -55,16 +55,34 @@ OS_Error _OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr)
 	if(!(g_current_process->attributes & ADMIN_PROCESS))
 		return NOT_ADMINISTRATOR;
 	
-	// TODO: Implement this function
+	if(task >= MAX_TASK_COUNT)
+		return INVALID_TASK;
 	
-	ptr->task_time_us = 0;
-	ptr->total_time_us = 0;
-	ptr->period = 0;
-	ptr->budget = 0;
-	ptr->exec_count = 0;
-	ptr->TBE_count = 0;
-	ptr->dline_miss_count = 0;
+	OS_PeriodicTask * tcb = &g_task_pool[task];
 	
+	if(!tcb)
+		return INVALID_TASK;
+		
+	ptr->task_time_us = tcb->accumulated_budget;
+	ptr->total_time_us = _OS_GetElapsedTime();
+
+    if(IS_PERIODIC_TASK(tcb->attributes))
+	{
+		ptr->period = tcb->period;
+		ptr->budget = tcb->budget;
+		ptr->exec_count = tcb->exec_count;
+		ptr->TBE_count = tcb->TBE_count;
+		ptr->dline_miss_count = tcb->dline_miss_count;
+	}
+	else
+	{
+		ptr->period = 0;
+		ptr->budget = 0;
+		ptr->exec_count = 0;
+		ptr->TBE_count = 0;
+		ptr->dline_miss_count = 0;
+	}
+		
 	return SUCCESS;	
 }
 

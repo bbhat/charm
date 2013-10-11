@@ -454,3 +454,36 @@ UINT64 OS_GetThreadElapsedTime()
 		
 	return thread_elapsed_time;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Get global Task allocation mask. This function can be called only from Admin process
+// Non-admin tasks will get NOT_ADMINISTRATOR error
+///////////////////////////////////////////////////////////////////////////////
+OS_Error _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task)
+{
+	const UINT32 MAX_INDEX = (MAX_TASK_COUNT + 31) >> 5;
+	int i;
+
+	if(!alloc_mask || !count)
+		return INVALID_ARG;
+	
+	// This function can only be called by process with admin previleges.
+	if(!(g_current_process->attributes & ADMIN_PROCESS))
+		return NOT_ADMINISTRATOR;
+
+	// Calculate the index into g_task_usage_mask
+	starting_task >>= 5;
+	
+	for(i = 0; (i < count) && (starting_task < MAX_INDEX); i++, starting_task++)
+	{
+		alloc_mask[i] = g_task_usage_mask[starting_task];
+	}
+	
+	// Fill remaining words with zeros
+	for(; i < count; i++)
+	{
+		alloc_mask[i] = 0;
+	}
+	
+	return SUCCESS;
+}

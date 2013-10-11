@@ -217,7 +217,7 @@ OS_Error OS_GetStatCounters(OS_StatCounters * ptr)
 }
 
 
-OS_Error OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr)
+OS_Error OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
 {
 	_OS_Syscall_Args param_info;
 	void * arg[2];
@@ -233,6 +233,27 @@ OS_Error OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr)
 	arg[1] = (void *)ptr;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 			
+	return (OS_Error) ret[0];	
+}
+
+OS_Error OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task)
+{
+	_OS_Syscall_Args param_info;
+	void * arg[3];
+	UINT32 ret[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_GET_TASK_ALLOC_MASK;
+	param_info.version = SYSCALL_VER_1_0;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)alloc_mask;
+	arg[1] = (void *)count;
+	arg[2] = (void *)starting_task;
+
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+		
 	return (OS_Error) ret[0];	
 }
 

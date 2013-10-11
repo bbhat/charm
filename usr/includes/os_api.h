@@ -208,8 +208,24 @@ typedef struct
 	
 } OS_TaskStatCounters;
 
+// Get global OS statistics. This function can be called only from Admin process
+// Non-admin tasks will get NOT_ADMINISTRATOR error
 OS_Error OS_GetStatCounters(OS_StatCounters * ptr);
-OS_Error OS_GetTaskStatCounters(OS_Task *task, OS_TaskStatCounters * ptr);
+
+// Get Task specific statistics. This function can be called only from Admin process
+// Non-admin tasks will get NOT_ADMINISTRATOR error
+OS_Error OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr);
+
+// Get global Task allocation mask. This function can be called only from Admin process
+// Non-admin tasks will get NOT_ADMINISTRATOR error
+// alloc_mask - is a bit mask indicating which task numbers are under use.
+// count - The number of elements in the task_usage_mask array
+// starting_task - The task_number where we are requesting the bit_mask.
+//                 This number will be truncated to multiples of 32
+// For example, if starting_task=32 and count = 1, then we will get the task_usage_mask 
+// from 32 - 63. If starting_task < 32, it will be truncated to 0. 
+// If (starting_task >=32 && starting_task < 64), it will be truncated to 32
+OS_Error OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Some platform utilities
