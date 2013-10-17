@@ -65,7 +65,10 @@ OS_Error _OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
 		
 	ptr->task_time_us = tcb->accumulated_budget;
 	ptr->total_time_us = _OS_GetElapsedTime();
-
+	
+	strncpy(ptr->name, tcb->name, sizeof(ptr->name) - 1);
+	ptr->name[sizeof(ptr->name) - 1] = '\0';
+	
     if(IS_PERIODIC_TASK(tcb->attributes))
 	{
 		ptr->period = tcb->period;

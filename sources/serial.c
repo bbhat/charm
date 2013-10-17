@@ -29,7 +29,7 @@ void init_serial()
 {
     // Create the Serial task 
     OS_CreatePeriodicTask(SERIAL_TASK_PERIOD, SERIAL_TASK_PERIOD, 
-        SERIAL_TASK_PERIOD / 50, 0, g_serial_task_stack, sizeof(g_serial_task_stack), 
+        SERIAL_TASK_PERIOD / 40, 0, g_serial_task_stack, sizeof(g_serial_task_stack), 
         "SERIAL", 
         &g_serial_task, SerialTaskFn, 0);
 }

@@ -73,7 +73,8 @@ OS_Error OS_CreateProcess(
 	memset(pcb, 0, sizeof(OS_ProcessCB));
 	
 	// Copy process name
-	strncpy(pcb->name, process_name, OS_PROCESS_NAME_SIZE);
+	strncpy(pcb->name, process_name, OS_PROCESS_NAME_SIZE - 1);
+	pcb->name[OS_PROCESS_NAME_SIZE - 1] = '\0';
 	
 	pcb->attributes = attributes;
 	pcb->process_entry_function = process_entry_function;

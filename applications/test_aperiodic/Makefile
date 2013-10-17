@@ -36,7 +36,7 @@ endif
 ROOT_DIR		:=	$(realpath ../..)
 BUILD_DIR		:=	$(DST)/$(CONFIG)
 MAP_FILE		:=	$(BUILD_DIR)/$(APP).map
-LINKERS_CRIPT	:=	$(ROOT_DIR)/scripts/$(TARGET)/applications/memmap_$(APP).ld
+LINKERS_SCRIPT	:=	$(ROOT_DIR)/scripts/$(TARGET)/applications/memmap_$(APP).ld
 DEP_DIR			:=	$(BUILD_DIR)/dep
 OBJ_DIR			:=	$(BUILD_DIR)/obj
 BUILD_TARGET	:=	$(BUILD_DIR)/$(APP).elf
@@ -54,9 +54,9 @@ INCLUDES		:=	$(addprefix -I , $(INCLUDES))
 OBJS			:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
 
 ## Build flags
-AFLAGS		:=	-mcpu=arm920t -EL -g -mlittle-endian -mfloat-abi=softfp -mfpu=neon
+AFLAGS		:=	-mcpu=$(CORE) -g -mlittle-endian -mfloat-abi=softfp -mfpu=neon
 CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian -mfloat-abi=softfp -mfpu=neon
-LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_CRIPT) -Map $(MAP_FILE)
+LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Map $(MAP_FILE)
 ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)
 else ifeq ($(CONFIG),release)

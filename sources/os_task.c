@@ -30,7 +30,6 @@ static BOOL ValidateNewThread(UINT32 period, UINT32 budget);
 ///////////////////////////////////////////////////////////////////////////////
 // Global Data
 ///////////////////////////////////////////////////////////////////////////////
-static UINT32 g_task_id_counter = 0;
 static FP32 g_total_allocated_cpu = 0.0;
 
 // Placeholders for all the task control blocks
@@ -42,6 +41,8 @@ extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_block_q;
 extern UINT32 g_current_period_us;
+
+extern OS_AperiodicTask * g_idle_task;
 
 extern void _OS_Schedule();
 extern void _OS_SetAlarm(OS_PeriodicTask *task, UINT64 abs_time_in_us, BOOL is_new_job, BOOL update_timer);
@@ -174,8 +175,9 @@ OS_Error _OS_CreatePeriodicTask(
 #if OS_WITH_VALIDATE_TASK==1
 	tcb->signature = TASK_SIGNATURE;
 #endif
-	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE);
-
+	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE - 1);
+	tcb->name[OS_TASK_NAME_SIZE-1] = '\0';
+	
 	tcb->budget = budget_in_us;
 	tcb->period = period_in_us;
 	tcb->deadline = deadline_in_us;
@@ -192,6 +194,7 @@ OS_Error _OS_CreatePeriodicTask(
 	tcb->TBE_count = 0;
 	tcb->dline_miss_count = 0;
 	tcb->alarm_time = 0;
+	tcb->id = *task;
 	
 	// Note down the owner process
 	tcb->owner_process = g_current_process;
@@ -204,8 +207,6 @@ OS_Error _OS_CreatePeriodicTask(
 		FAULT("The total allocated CPU exceeds %d%", 100);
 		return EXCEEDS_MAX_CPU;
 	}
-
-	tcb->id = ++g_task_id_counter;
 	
 	// Block the thread resource
 	SetResourceStatus(g_task_usage_mask, *task, FALSE);
@@ -328,6 +329,7 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 	tcb->attributes = (APERIODIC_TASK | options);
 	tcb->top_of_stack = stack + stack_size; // Stack grows bottom up
 	tcb->accumulated_budget = 0;
+	tcb->id = *task;
 	
 	// Build a Stack for the new thread
 	if(IS_SYSTEM_TASK(tcb->attributes))
@@ -344,13 +346,13 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 #if OS_WITH_VALIDATE_TASK==1
 	tcb->signature = TASK_SIGNATURE;
 #endif
-	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE);
+	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE - 1);
+	tcb->name[OS_TASK_NAME_SIZE-1] = '\0';
 
 	// Note down the owner process
 	tcb->owner_process = g_current_process;
 
 	OS_ENTER_CRITICAL(intsts); // Enter critical section
-	tcb->id = ++g_task_id_counter;
 	
 	// Block the resource
 	SetResourceStatus(g_task_usage_mask, *task, FALSE);
@@ -472,17 +474,25 @@ OS_Error _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting
 		return NOT_ADMINISTRATOR;
 
 	// Calculate the index into g_task_usage_mask
-	starting_task >>= 5;
+	UINT32 usage_index = (starting_task >> 5);
 	
-	for(i = 0; (i < count) && (starting_task < MAX_INDEX); i++, starting_task++)
+	for(i = 0; (i < count) && (usage_index < MAX_INDEX); i++, usage_index++)
 	{
-		alloc_mask[i] = g_task_usage_mask[starting_task];
+		alloc_mask[i] = g_task_usage_mask[usage_index];
 	}
 	
 	// Fill remaining words with zeros
 	for(; i < count; i++)
 	{
 		alloc_mask[i] = 0;
+	}
+	
+	// We really don't want to expose the idle task as it is internal to the OS
+	UINT32 min_task = (starting_task & ~0x1f);
+	UINT32 max_task = min_task + (count << 5) - 1;
+	if((g_idle_task->id >= min_task) && (g_idle_task->id <= max_task))
+	{
+		SetResourceStatus(alloc_mask, (g_idle_task->id - min_task), TRUE);
 	}
 	
 	return SUCCESS;

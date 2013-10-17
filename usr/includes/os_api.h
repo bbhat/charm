@@ -200,6 +200,7 @@ typedef struct
 {
 	UINT64 task_time_us;
 	UINT64 total_time_us;
+	INT8 name[16];
 	UINT32 period;
 	UINT32 budget;
 	UINT32 exec_count;
