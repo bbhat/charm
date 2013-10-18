@@ -12,8 +12,8 @@
 #include "sysctl.h"
 
 //#define TEST_KERNEL
-#define TEST_OS
-//#define TEST_SRT
+//#define TEST_OS
+#define TEST_SRT
 //#define TEST_APERIODIC
 
 OS_Process test_proc;

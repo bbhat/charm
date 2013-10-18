@@ -151,7 +151,20 @@ UINT32 Uart_DebugWriteNB(const INT8 *buf, UINT32 count)
 	UINT32 actual_count = MIN(count, available);
 	UINT32 written = actual_count;
 	
-	while(actual_count--) {
+	while(actual_count >= 8)
+	{
+		UTXH(DEBUG_UART) = *buf++;
+		UTXH(DEBUG_UART) = *buf++;
+		UTXH(DEBUG_UART) = *buf++;
+		UTXH(DEBUG_UART) = *buf++;
+		UTXH(DEBUG_UART) = *buf++;
+		UTXH(DEBUG_UART) = *buf++;
+		UTXH(DEBUG_UART) = *buf++;
+		UTXH(DEBUG_UART) = *buf++;
+		actual_count -= 8;
+	}
+	while(actual_count--)
+	{
 		UTXH(DEBUG_UART) = *buf;
 		buf++;
 	}

@@ -97,7 +97,7 @@ UINT32 _PFM_SerialLog(const INT8 * str, UINT32 size)
 			{
 				g_serial_log_write_index = 0;
 				free_count = (g_serial_log_read_index - 1);
-				to_write = MIN(free_count, size);
+				to_write = MIN(free_count, size - written);
 				if(to_write)
 				{
 					memcpy(&g_serial_log_buffer, &str[written], to_write);
