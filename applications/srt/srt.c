@@ -114,19 +114,22 @@ int TestResults(Array)
 void srt_main(Argument *arg)
 {
 	int ret = 1;
-	Initialize(arg->array);
-	BubbleSort(arg->array);
-
-	ret = TestResults(arg->array);
-
-	if(ret)
-	{	
-		PFM_SetUserLED(arg->led, LED_TOGGLE);
-	}
-	else
+	while(1)
 	{
-		// The LED should stop blinking
-		while(1);
+		Initialize(arg->array);
+		BubbleSort(arg->array);
+
+		ret = TestResults(arg->array);
+
+		if(ret)
+		{	
+			PFM_SetUserLED(arg->led, LED_TOGGLE);
+		}
+		else
+		{
+			// The LED should stop blinking
+			while(1);
+		}
 	}
 }
 

@@ -48,7 +48,7 @@ static __inline__ UINT32 clz(UINT32 input)
 void StatisticsTaskFn(void * ptr)
 {
 	OS_StatCounters os_stat;
-	UINT32 cpu_load;
+	FP32 cpu_load;
 	
 	if(OS_GetStatCounters(&os_stat) == SUCCESS)
 	{
@@ -58,9 +58,14 @@ void StatisticsTaskFn(void * ptr)
 		g_previous_idle_time = os_stat.idle_time_us ;
 		g_previous_timestamp = os_stat.total_time_us;
 		
-		cpu_load = (UINT32)(((duration - idle_time) * 100.0/ duration));
-
-		printf("\n\nSTAT: Total CPU %u\%\, Max Scheduler Time %u us", cpu_load, os_stat.max_scheduler_elapsed_us);
+		// Adding 0.005 in the below expression is to help rounding to 2 decimal places
+		cpu_load = ((duration - idle_time) * 100.0 / duration) + 0.005;
+		
+		UINT32 int_part = (UINT32) cpu_load;
+		UINT32 dec_part = (UINT32)((cpu_load - int_part) * 100.0);	// Just 2 digits are enough
+		
+		printf("\n\nSTAT: Total CPU %2u.%02u\%\, Max Scheduler Time %u us", 
+			int_part, dec_part, os_stat.max_scheduler_elapsed_us);
 		
 		// Show task specific statistics
 		ShowTaskStatistics();
@@ -82,7 +87,7 @@ void ShowTaskStatistics()
 	}
 	
 	// Print the heading
-	printf("\nId               Name CPU        TBE      Dline");
+	printf("\nId               Name  CPU(%)  Alloc(%)    TBE    Dline");
 		
 	for(i = MAX_INDEX - 1; i >= 0; i--)
 	{
@@ -98,16 +103,28 @@ void ShowTaskStatistics()
 			{
 				UINT32 task_time = (UINT32) (stat.task_time_us - prev_stat[item].task_time_us);
 				UINT32 total_time = (UINT32) (stat.total_time_us - prev_stat[item].total_time_us);
-				UINT32 cpu_load = (UINT32)((task_time * 100.0 / total_time));
+				
+				// Adding 0.005 in the below expression is to help rounding to 2 decimal places
+				FP32 cpu_load = (task_time * 100.0 / total_time) + 0.005;	
 
 				prev_stat[item].task_time_us = stat.task_time_us;
 				prev_stat[item].total_time_us = stat.total_time_us;
 
-				printf("\n[%2u] %16s %2u\%", item, stat.name, cpu_load);
+				UINT32 usage_whole = (UINT32) cpu_load;
+				UINT32 usage_dec = (UINT32)((cpu_load - usage_whole) * 100.0);	// Just 2 digit are enough
+				
+				printf("\n[%2u] %16s  %2u.%02u", item, stat.name, 
+					usage_whole, usage_dec);
 				
 				if(stat.period > 0)
 				{
-					printf(" %10u %10u", stat.TBE_count, stat.dline_miss_count);	
+					// Adding 0.005 in the below expression is to help rounding to 2 decimal places
+					FP32 alloc_percent = (stat.budget * 100.0  / stat.period) + 0.005;
+				
+					UINT32 alloc_whole = (UINT32) alloc_percent;
+					UINT32 alloc_dec = (UINT32)((alloc_percent - alloc_whole) * 100.0);	// Just 2 digit are enough				
+
+					printf("    %2u.%02u %8u %8u", alloc_whole, alloc_dec, stat.TBE_count, stat.dline_miss_count);	
 				}
 			}
 			else
