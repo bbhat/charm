@@ -32,3 +32,12 @@ Main Features of the RTOS
 * Currently this RTOS runs on Mini210s & TQ2440 development boards. The timing and accuracy of the scheduled has been excellent.
 
 * The git repository has all the necessary tools & scripts to enable connecting and debugging using JLink & OpenOCD
+
+
+### Mini210s Development Board
+
+[Mini210s | S5PV210 ARM Cortex-A8 Board](http://www.friendlyarm.net/products/mini210s)
+
+### Mini2440 / TQ2440 Development Board
+
+[Mini2440 | S3C2440 ARM9 Board](http://www.friendlyarm.net/products/mini2440)
