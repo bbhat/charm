@@ -75,16 +75,30 @@ OS_Error OS_CreateProcess(
 	// Copy process name
 	strncpy(pcb->name, process_name, OS_PROCESS_NAME_SIZE - 1);
 	pcb->name[OS_PROCESS_NAME_SIZE - 1] = '\0';
-	
+		
+	pcb->id = *process;	// Assign a unique process id
 	pcb->attributes = attributes;
 	pcb->process_entry_function = process_entry_function;
 	pcb->pdata = pdata;
 	pcb->next = NULL;
+
+#if ENABLE_MMU
+	ptable = _MMU_allocate_l1_page_table();
+	if(!ptable)
+	{
+		FAULT("OS_CreateProcess failed for '%s': No space in page table area\n", g_current_process->name);
+		return RESOURCE_EXHAUSTED;	
+	}
 	
-	OS_ENTER_CRITICAL(intsts); // Enter critical section
+	// Create a mapping for the code region. For now, lets create VA = PA mapping
+	_MMU_add_l1_va_to_pa_map(ptable, (VADDR) start_address, (PADDR)start_address, USER_READ_ONLY, TRUE, TRUE);
 	
-	pcb->id = ++g_process_id_counter;	// Assign a unique process id
+	// TODO: Create mapping for data, stack and other regions 
+	// ....
+	// ....
 	
+#endif	
+
 	// Block the process resource
 	SetResourceStatus(g_process_usage_mask, *process, FALSE);
 	
@@ -98,8 +112,6 @@ OS_Error OS_CreateProcess(
 	{
 		g_process_list_head = g_process_list_tail = pcb;
 	}
-	
-	OS_EXIT_CRITICAL(intsts); 	// Exit the critical section
 	
 	return SUCCESS; 
 }

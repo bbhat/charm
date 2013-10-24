@@ -35,8 +35,8 @@ typedef unsigned char UINT8; // Unsigned 8 bit data
 typedef char INT8; // Singned 8 bit data
 typedef unsigned short UINT16; // Unsigned 16 bit data
 typedef short INT16; // Signed 16 bit data
-typedef unsigned int UINT32; // Unsigned 32 bit data
-typedef int INT32; // Signed 32 bit data
+typedef unsigned long UINT32; // Unsigned 32 bit data
+typedef long INT32; // Signed 32 bit data
 typedef unsigned long long UINT64; // Unsigned 64 bit data
 typedef long long INT64; // Signed 64 bit data
 typedef float FP32; // 32 bit Floating point data
@@ -48,5 +48,15 @@ typedef _OS_KernelObj_Handle 	OS_Task;
 typedef _OS_KernelObj_Handle 	OS_Process;
 typedef _OS_KernelObj_Handle	OS_Sem;
 typedef _OS_KernelObj_Handle	OS_Mutex;
+
+// An unsigned integer type which is guaranteed to be able to hold a pointer for the given platform
+typedef unsigned long UINTPTR;	
+
+#if ENABLE_MMU
+
+typedef UINTPTR VADDR;
+typedef UINTPTR PADDR;
+
+#endif // ENABLE_MMU
 
 #endif // _OS_TYPES_H

@@ -8,5 +8,6 @@ endif
 INCLUDES	+=	includes/soc/common/drivers/uart
 INCLUDES	+=	includes/soc/common/drivers/rtc
 INCLUDES	+=	includes/soc/common/drivers/timer
+INCLUDES	+=	includes/mmu
 INCLUDES	+=	includes/target/$(TARGET)
 INCLUDES	+=	includes/filesystem

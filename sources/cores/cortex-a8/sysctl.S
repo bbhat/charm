@@ -454,6 +454,30 @@ _sysctl_query_l2_cache_params:
 _sysctl_query_l2_aux_control_reg:
 	mrc p15, 1, r0, c9, c0, 2
 	mov pc, lr
+	
+//----------------------------------------------------------------------------------------
+// Functions to enable/disable MMU
+//----------------------------------------------------------------------------------------
+	.global _sysctl_enable_mmu
+_sysctl_enable_mmu:
+
+	mrc  p15, 0, r1, c1, c0, 0     // read CP15 Register 1
+	orr  r1, r1, #1
+	mcr  p15, 0, r1, c1, c0, 0     // Enable MMU
+	
+	// Virtual addressing starts from here
+	mov  pc, lr
+	
+	.global _sysctl_enable_mmu
+_sysctl_enable_mmu:
+		
+	mrc  p15, 0, r1, c1, c0, 0     // read CP15 Register 1
+	bic  r1, r1, #1
+	mcr  p15, 0, r1, c1, c0, 0     // Disable MMU
+	
+	// Flat addressing from here
+	mov  pc, lr
+	
 
 //----------------------------------------------------------------------------------------
 // Some global variables to hold cache attributes

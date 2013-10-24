@@ -14,6 +14,7 @@
 #include "os_config.h"
 #include "os_task.h"
 #include "fs_api.h"
+#include "mmu.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Process PCB 
@@ -30,6 +31,10 @@ typedef struct OS_ProcessCB
 	void * pdata;
 	UINT16 id;
 	UINT16 attributes;
+
+#if ENABLE_MMU
+	_MMU_L1_PageTable * ptable;
+#endif
 
 	// Pointer to next process in the list
 	struct OS_ProcessCB *next;	
