@@ -12,29 +12,29 @@
 
 #include "os_types.h"
 
-#if defined(TARGET_TQ2440)
+#define FIN 	(12000000)				// 12MHz Crystal
 
-	#define FIN 	(12000000)				// 12MHz Crystal
+#define FCLK (405000000)				// Main Processor clock	405 MHz
+#define HCLK (FCLK/3)					// AHB Clock	135 MHz
+#define PCLK (HCLK/2)					// APB Clock	67.5 MHz
+#define UCLK (48000000)					// USB Clock
 
-	#define FCLK (405000000)				// Main Processor clock	405 MHz
-	#define HCLK (FCLK/3)					// AHB Clock	135 MHz
-	#define PCLK (HCLK/2)					// APB Clock	67.5 MHz
-	#define UCLK (48000000)					// USB Clock
+#define	TIMER_PRESCALAR_0	(0x3f)		// PCLK/64
+#define	TIMER0_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
+#define	TIMER1_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
+#define	TIMER0_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
+#define	TIMER1_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
 
-	#define	TIMER_PRESCALAR_0	(0x3f)		// PCLK/64
-	#define	TIMER0_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
-	#define	TIMER1_DIVIDER		(0x00)		// PCLK/PRESCALAR0/2
-	#define	TIMER0_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
-	#define	TIMER1_TICK_FREQ	(527344)	// (PCLK/(TIMER_PRESCALAR_0+1)/2) - Resolution 1.8963 uSec per tick
+// (65535 * 1000000) / TIMER0_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
+// This way there will be at least one interrupt every 100ms
+#define	MAX_TIMER0_INTERVAL_uS		100000		
 
-	// (65535 * 1000000) / TIMER0_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
-	// This way there will be at least one interrupt every 100ms
-	#define	MAX_TIMER0_INTERVAL_uS		100000		
+// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
+#define	MAX_TIMER1_INTERVAL_uS		100000
 
-	// (65535 * 1000000) / TIMER1_TICK_FREQ = 124273.78 uSec. Lets use 100ms for this.
-	#define	MAX_TIMER1_INTERVAL_uS		100000
-
-#endif
+// Architecture related macros
+#define _ARM_ARCH			4
+#define _ARM_ARCH_v4
 
 void _OS_TargetInit(void);
 

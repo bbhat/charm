@@ -26,12 +26,23 @@
 
 typedef enum
 {
-	NO_ACCESS = 0,
-	PRIVILEGED_ONLY = 1,
-	USER_READ_ONLY = 2,
-	USER_READ_WRITE = 3
+	// See Table B4-1 MMU access permissions of ARM Architecture Reference Manual
+	NO_ACCESS = 0,					// No Access: Privileged, User 
+	PRIVILEGED_RW_USER_NA = 1,		// Read/Write: Privileged, No Access: User 
+	PRIVILEGED_RW_USER_RO = 2,		// Read/Write: Privileged, Read Only: User 
+	PRIVILEGED_RW_USER_RW = 3,		// Read/Write: Privileged, Read/Write: User 
+	PRIVILEGED_RO_USER_NA = 5,		// Read/Only: Privileged, No Access: User 
+	PRIVILEGED_RO_USER_RO = 6		// Read/Only: Privileged, Read/Only: User 
 	
 } _MMU_PTE_AccessPermission;
+
+typedef enum
+{
+	PTE_FAULT		= 0,
+	PTE_CORSE		= 1,
+	PTE_SECTION		= 2,
+	PTE_FINE		= 3
+} _MMU_PTE_Type;
 
 // The L1 page table has 4096 entries. Each entry describes 1M section of memory
 typedef enum
@@ -58,11 +69,13 @@ _MMU_L1_PageTable * _MMU_allocate_l1_page_table();
 _MMU_L2_PageTable * _MMU_allocate_l2_page_table();
 
 // Function to create L1 VA to PA mapping for a given page table
-void _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, _MMU_PTE_AccessPermission ap, 
+void _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+								UINT32 size, _MMU_PTE_AccessPermission ap, 
 								BOOL cache_enable, BOOL write_buffer);
 
 // Function to create L2 VA to PA mapping for a given page table							
-void _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, _MMU_PTE_AccessPermission ap,
+void _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+								UINT32 size, _MMU_PTE_AccessPermission ap,
 								BOOL cache_enable, BOOL write_buffer);
 
 #endif // ENABLE_MMU

@@ -62,13 +62,46 @@ _MMU_L2_PageTable * _MMU_allocate_l2_page_table()
 }
 
 // Function to create L1 VA to PA mapping for a given process
-void _MMU_add_l1_va_to_pa_map(OS_Process proc, VADDR va, PADDR pa, _MMU_PTE_AccessPermission ap, 
+void _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+								UINT32 size, _MMU_PTE_AccessPermission ap, 
 								BOOL cache_enable, BOOL write_buffer)
 {
+	// Validate the inputs
+	ASSERT(ptable && size);
+	
+	// Extract the section_base_address. Since each section is 1MB in size, extract
+	// the top 12 bits of the virtual address
+	UINT32 section_base_address = (va >> 20) & 0xfff;
+
+#if _ARM_ARCH >= 6
+	
+	// Convert size to multiples of 1 MB
+	size += (0x100000 - 1);
+	size &= (0x100000 - 1);
+	
+	while(size > 0)
+	{
+		ptable->pte[section_base_address] = 
+			((pa & 0xfff00000) | 				// Base physical address of the section
+			((ap & 0x4) << 13) |				// APX: Extended Access permissions
+			((ap & 0x3) << 10) |				// Access permissions
+			(cache_enable ? (1 << 3) : 0) |		// Enable cache?
+			(write_buffer ? (1 << 2) : 0) |		// Enable write buffer?
+			PTE_SECTION);						// Section Page Table Entry
+		
+		section_base_address++;
+		size -= 0x100000;
+	}	
+	
+#else
+	#error "Not implemented Yet"
+#endif
+	
 }
 
 // Function to create L2 VA to PA mapping for a given process								
-void _MMU_add_l2_va_to_pa_map(OS_Process proc, VADDR va, PADDR pa, _MMU_PTE_AccessPermission ap,
+void _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+								UINT32 size, _MMU_PTE_AccessPermission ap,
 								BOOL cache_enable, BOOL write_buffer)
 {
 }

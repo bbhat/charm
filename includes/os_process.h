@@ -21,7 +21,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 typedef enum
 {
-	ADMIN_PROCESS = 1	
+	ADMIN_PROCESS = 1,
+	SYSTEM_PROCESS = 2
 } OS_ProcessAttr;
 
 typedef struct OS_ProcessCB

@@ -23,7 +23,16 @@ extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_block_q;
 
+// Following variable are derived from the linker script file.
+// They are used to create memory maps for the kernel process
 extern UINT32 __ramdisk_start__;
+extern UINT32 __ramdisk_length__;
+extern UINT32 __RO_system_area_start__;
+extern UINT32 __RO_system_area_length__;
+extern UINT32 __RW_system_area_start__;
+extern UINT32 __RW_system_area_length__;
+extern UINT32 __page_table_area_start__;
+extern UINT32 __page_table_area_length__;
 
 OS_ProcessCB	* g_kernel_process;	// Kernel process
 
@@ -85,8 +94,43 @@ void _OS_Init()
     KlogStr(KLOG_OS_STARTUP, "Creating process - ", "kernel");
 	
 	// Initialize the Kernel process
-	OS_CreateProcess(&kernel_pcb, "kernel", ADMIN_PROCESS, &kernel_process_entry, NULL);	
+	OS_CreateProcess(&kernel_pcb, "kernel", (SYSTEM_PROCESS | ADMIN_PROCESS), &kernel_process_entry, NULL);	
 	g_kernel_process = &g_process_pool[kernel_pcb];
+	
+#if ENABLE_MMU
+
+	// Create mappings for the kernel task. 
+	// We will use only one section for the kernel task for now
+	// Also, we will be using VA == PA
+
+	// TODO: In the future, create separate sections for below cases
+	// 1. for all Read / Write sections
+	// 2. for Read only sections
+	if(g_kernel_process->ptable)
+	{
+		// Create Map for Read Only Kernel Sections
+		_MMU_add_l1_va_to_pa_map(g_kernel_process->ptable, 
+				(VADDR) &__RO_system_area_start__, (PADDR) &__RO_system_area_start__, 
+				(UINT32) &__RO_system_area_length__, PRIVILEGED_RO_USER_NA, TRUE, TRUE);
+				
+		// Create Map for Read/Write Kernel Sections				
+		_MMU_add_l1_va_to_pa_map(g_kernel_process->ptable, 
+				(VADDR) &__RW_system_area_start__, (PADDR) &__RW_system_area_start__, 
+				(UINT32) &__RW_system_area_length__, PRIVILEGED_RW_USER_NA, TRUE, TRUE);
+
+		// Create Map for Ramdisk space. Kernel will have read/write permissions
+		_MMU_add_l1_va_to_pa_map(g_kernel_process->ptable, 
+				(VADDR) &__ramdisk_start__, (PADDR) &__ramdisk_start__, 
+				(UINT32) &__ramdisk_length__, PRIVILEGED_RW_USER_NA, TRUE, TRUE);
+
+		// Create Map for Page Table space. Kernel will have read/write permissions
+		// This space should not be cacheable / buffer-able
+		_MMU_add_l1_va_to_pa_map(g_kernel_process->ptable,
+				(VADDR) &__page_table_area_start__, (PADDR) &__page_table_area_start__, 
+				(UINT32) &__page_table_area_length__, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+	}
+	
+#endif
 
     KlogStr(KLOG_OS_STARTUP, "Calling - ", "_OS_Start");
 	

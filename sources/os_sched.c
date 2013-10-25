@@ -103,6 +103,10 @@ void _OS_Start()
             g_current_process->process_entry_function(g_current_process->pdata);
             g_current_process = g_current_process->next;
         }
+
+#if ENABLE_MMU
+		_sysctl_enable_mmu();	// Start the MMU and Virtual Memory
+#endif
         
         // Enable L2 Cache if required
 #if ENABLE_UNIFIED_L2_CACHE==1
@@ -115,7 +119,6 @@ void _OS_Start()
 #if OS_ENABLE_CPU_STATS==1
         Syslog32("Max periodic timer count = ", _OS_Timer_GetMaxCount(PERIODIC_TIMER));
 #endif
-
         _OS_IsRunning = TRUE;
 
         // Call reschedule. 

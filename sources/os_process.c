@@ -26,7 +26,6 @@ UINT32 			g_process_usage_mask[(MAX_PROCESS_COUNT + 31) >> 5];
 // Placeholders for Ramdisk file structures
 FILE g_rdfile_pool[MAX_OPEN_FILES];
 UINT32 g_rdfile_usage_mask[(MAX_OPEN_FILES + 31) >> 5];
-
 	
 #ifdef _USE_STD_LIBS
 	#define FAULT(x, ...) printf(x, ...);
@@ -83,20 +82,14 @@ OS_Error OS_CreateProcess(
 	pcb->next = NULL;
 
 #if ENABLE_MMU
-	ptable = _MMU_allocate_l1_page_table();
+	pcb->ptable = _MMU_allocate_l1_page_table();
 	if(!ptable)
 	{
 		FAULT("OS_CreateProcess failed for '%s': No space in page table area\n", g_current_process->name);
 		return RESOURCE_EXHAUSTED;	
 	}
 	
-	// Create a mapping for the code region. For now, lets create VA = PA mapping
-	_MMU_add_l1_va_to_pa_map(ptable, (VADDR) start_address, (PADDR)start_address, USER_READ_ONLY, TRUE, TRUE);
-	
-	// TODO: Create mapping for data, stack and other regions 
-	// ....
-	// ....
-	
+	// This function will not create the actual mapping. It should be done by the caller	
 #endif	
 
 	// Block the process resource
