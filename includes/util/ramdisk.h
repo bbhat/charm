@@ -28,7 +28,6 @@ typedef struct
 	UINT32	rootOffset;							// Offset of the first file header
 	UINT32	crc;								// CRC of the ramdisk file. The CRC computation not include 
 												// ramdisk header data. It includes everything after this header
-	
 } FS_RamdiskHdr;
 
 // There are zero or more file headers in the ramdisk

@@ -468,8 +468,8 @@ _sysctl_enable_mmu:
 	// Virtual addressing starts from here
 	mov  pc, lr
 	
-	.global _sysctl_enable_mmu
-_sysctl_enable_mmu:
+	.global _sysctl_disable_mmu
+_sysctl_disable_mmu:
 		
 	mrc  p15, 0, r1, c1, c0, 0     // read CP15 Register 1
 	bic  r1, r1, #1
@@ -477,7 +477,41 @@ _sysctl_enable_mmu:
 	
 	// Flat addressing from here
 	mov  pc, lr
+
+//----------------------------------------------------------------------------------------
+// Function to set page table address
+// r0: Should have the Page Table address
+// Note: The Page Table address must be aligned on a 16 KB boundary in memory
+//----------------------------------------------------------------------------------------
+	.global _sysctl_set_ptable	
+_sysctl_set_ptable:
+
+	mrc  p15, 0, r0, c2, c0, 0     // Set page table base address	
+	mov  pc, lr
+
+//----------------------------------------------------------------------------------------
+// Function to flush TLB
+//----------------------------------------------------------------------------------------
+	.global _sysctl_flush_tlb
+_sysctl_flush_tlb:
+
+	mov  r0, #0
+	mcr  p15, 0, r0, c8, c7, 0
+	mov  pc, lr
 	
+//----------------------------------------------------------------------------------------
+// Function to set domain access rights
+// r0: New value
+// r1: Mask for bits that change
+//----------------------------------------------------------------------------------------
+	.global _sysctl_set_domain_rights
+_sysctl_set_domain_rights:
+	
+	mrc  p15, 0, r2, c3, c0, 0		// Read domain register into r2
+	bic  r2, r1						// Clear bits that change
+	orr  r2, r0						// Set bits that change
+	mcr  p15, 0, r2, c3, c0, 0		// Write domain register
+	mov  pc, lr
 
 //----------------------------------------------------------------------------------------
 // Some global variables to hold cache attributes

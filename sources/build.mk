@@ -9,6 +9,7 @@ endif
 SOURCE_DIRS	+=	sources/soc/common/drivers/rtc
 SOURCE_DIRS	+=	sources/soc/common/drivers/timer
 SOURCE_DIRS	+=	sources/target/$(TARGET)
+SOURCE_DIRS	+=	sources/mmu/common
 SOURCE_DIRS	+=	sources/util
 
 SOURCES		+=	$(foreach srcdir, $(SOURCE_DIRS), $(wildcard $(srcdir)/*.c))

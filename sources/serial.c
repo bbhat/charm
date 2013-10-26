@@ -15,11 +15,11 @@
 #if WITH_SERIAL_LOGGING_TASK==1
 
 // Ring buffer used for storing the serial logs
-static UINT8 g_serial_log_buffer[SERIAL_LOG_BUFFER_SIZE];
+static INT8 g_serial_log_buffer[SERIAL_LOG_BUFFER_SIZE];
 static UINT32 g_serial_log_write_index;
 static UINT32 g_serial_log_read_index;
 
-OS_AperiodicTask * g_serial_task;  // A TCB for the serial task
+static OS_Task g_serial_task;  // A TCB for the serial task
 static UINT32 g_serial_task_stack [SERIAL_TASK_STACK_SIZE];
 static void SerialTaskFn(void * ptr);
 
@@ -53,7 +53,7 @@ void SerialTaskFn(void * ptr)
 		{
 			g_serial_log_read_index = 0;
 			g_serial_log_read_index += Uart_DebugWriteNB(
-				&g_serial_log_buffer, g_serial_log_write_index);			
+				&g_serial_log_buffer[0], g_serial_log_write_index);			
 		}			
 	}
 	
@@ -64,7 +64,7 @@ UINT32 _PFM_SerialLog(const INT8 * str, UINT32 size)
 {
 	UINT32 free_count;
 	UINT32 to_write;
-	UINT32 written;
+	UINT32 written = 0;
 	
 	if(g_serial_log_write_index < g_serial_log_read_index)
 	{

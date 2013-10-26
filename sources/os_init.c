@@ -91,7 +91,7 @@ void _OS_Init()
 	_OS_QueueInit(&g_ap_ready_q);
 	_OS_QueueInit(&g_block_q);
 	
-    KlogStr(KLOG_OS_STARTUP, "Creating process - ", "kernel");
+	KlogStr(KLOG_OS_STARTUP, "Creating process - ", "kernel");
 	
 	// Initialize the Kernel process
 	OS_CreateProcess(&kernel_pcb, "kernel", (SYSTEM_PROCESS | ADMIN_PROCESS), &kernel_process_entry, NULL);	

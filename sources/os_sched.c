@@ -50,6 +50,8 @@ static char os_name_string [] = { OS_NAME_STRING };
 OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
 static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
 
+extern OS_ProcessCB	* g_kernel_process;	// Kernel process
+
 // Periodic timer ISR
 void _OS_PeriodicTimerISR(void *arg);
 
@@ -104,15 +106,22 @@ void _OS_Start()
             g_current_process = g_current_process->next;
         }
 
-#if ENABLE_MMU
-		_sysctl_enable_mmu();	// Start the MMU and Virtual Memory
+#if ENABLE_MMU		
+		// We need to set permissions in the domain access register before we enable MMU
+		_sysctl_set_domain_rights(
+			(DOMAIN_ACCESS_MANAGER << KERNEL_DOMAIN), 
+			(DOMAIN_ACCESS_MASK << KERNEL_DOMAIN));
+								  
+		// Before we enable MMU, we need to flush TLB
+		_sysctl_flush_tlb();
+		
+		// Before enabling MMU, set the page table address in SYSCTL register
+		_sysctl_set_ptable((PADDR)g_kernel_process->ptable);
+
+		// Start the MMU and Virtual Memory
+		_sysctl_enable_mmu();	
 #endif
-        
-        // Enable L2 Cache if required
-#if ENABLE_UNIFIED_L2_CACHE==1
-        _MMU_EnableL2Cache();
-#endif
-        
+	
         // Start the Periodic timer
         _OS_Timer_PeriodicTimerStart(PERIODIC_TIMER_INTERVAL);
         

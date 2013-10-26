@@ -51,20 +51,20 @@ SECTIONS
 		*(.text)
 		*(.text.*)	
 		
-	} > OS_MEM : code_seg
+	} > OS_MEM_RO : code_seg
 
 	.rodata : ALIGN(0x1000)
 	{
 		*(.rodata)
 		*(.rodata.*)
 		
-	} > OS_MEM : rodata_seg
+	} > OS_MEM_RO : rodata_seg
 	
 	.data : ALIGN(0x1000)
 	{
 		*(.data)
 		
-	} > OS_MEM : data_seg
+	} > OS_MEM_RW : data_seg
 	
 	.bss :
 	{
@@ -75,12 +75,12 @@ SECTIONS
 		. = ALIGN(4);
 		__bss_end__ = .;
 		
-	} > OS_MEM : data_seg
+	} > OS_MEM_RW : data_seg
 	
 	.stack :
 	{
 		*(.stack)
 						
-	} > OS_MEM : data_seg
+	} > OS_MEM_RW : data_seg
 		
 }

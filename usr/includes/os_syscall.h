@@ -10,8 +10,6 @@
 #ifndef OS_SYSCALL_H
 #define OS_SYSCALL_H
 
-#include "types.h"
-
 enum
 {
 	SYSCALL_PERIODIC_TASK_CREATE = 0,

@@ -15,14 +15,12 @@
 //  4K pages for applications
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "os_core.h"
+
 #ifndef _MMU_H
 #define _MMU_H
 
-#include os_config.h
-
 #if ENABLE_MMU
-
-#include "os_types.h"
 
 typedef enum
 {
@@ -42,25 +40,46 @@ typedef enum
 	PTE_CORSE		= 1,
 	PTE_SECTION		= 2,
 	PTE_FINE		= 3
+	
 } _MMU_PTE_Type;
 
 // The L1 page table has 4096 entries. Each entry describes 1M section of memory
-typedef enum
+typedef struct
 {
 	UINT32 pte[4096];
 	
 } _MMU_L1_PageTable;
 
 // The L2 page table has 256 entries. Each entry describes 4K sized page
-typedef enum
+typedef struct
 {
 	UINT32 pte[256];
 	
 } _MMU_L2_PageTable;
 
+// The domain number to be used for kernel
+#define KERNEL_DOMAIN		0
+
+enum
+{
+	DOMAIN_ACCESS_NONE		= 0,	// generates a domain fault
+	DOMAIN_ACCESS_CLIENT	= 1,	// access controlled by permission values set in PTE
+	DOMAIN_ACCESS_MANAGER	= 3,	// access is uncontrolled, no permission aborts generated
+	DOMAIN_ACCESS_MASK		= 3
+};
+
 // Functions to enable / disable MMU in SYSCTL co-processor
 void _sysctl_enable_mmu();
 void _sysctl_disable_mmu();
+
+// Function to set page table address in the SYSCTL register
+void _sysctl_set_ptable(PADDR ptable);
+
+// Function to flush TLB
+void _sysctl_flush_tlb(void);
+
+// Function to set domain access rights
+void _sysctl_set_domain_rights(UINT32 value, UINT32 mask);
 
 // Function to allocate L1 Page Table
 _MMU_L1_PageTable * _MMU_allocate_l1_page_table();

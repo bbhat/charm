@@ -83,7 +83,7 @@ OS_Error OS_CreateProcess(
 
 #if ENABLE_MMU
 	pcb->ptable = _MMU_allocate_l1_page_table();
-	if(!ptable)
+	if(!pcb->ptable)
 	{
 		FAULT("OS_CreateProcess failed for '%s': No space in page table area\n", g_current_process->name);
 		return RESOURCE_EXHAUSTED;	
