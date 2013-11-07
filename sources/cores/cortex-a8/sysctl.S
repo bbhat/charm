@@ -36,6 +36,12 @@ _sysctl_init:
 	orr  r0, r0, #(1<<10)		// Set the SW bit in System Control Register (SCTLR)
 	mcr  p15,0,r0,c1,c0,0
 	
+	// Strict alignment. If a data access is not aligned to the width of 
+	// the accessed data item, a Data Abort exception is generated.
+	mrc  p15,0,r0,c1,c0,0
+	orr  r0, r0, #(1<<1)
+	mcr  p15,0,r0,c1,c0,0
+	
 	// Initialize cache parameters
 	bl _sysctl_query_icache_params
 	bl _sysctl_query_dcache_params
@@ -486,7 +492,7 @@ _sysctl_disable_mmu:
 	.global _sysctl_set_ptable	
 _sysctl_set_ptable:
 
-	mrc  p15, 0, r0, c2, c0, 0     // Set page table base address	
+	mcr  p15, 0, r0, c2, c0, 0     // Set page table base address	
 	mov  pc, lr
 
 //----------------------------------------------------------------------------------------

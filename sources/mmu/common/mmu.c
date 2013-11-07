@@ -99,7 +99,6 @@ void _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa,
 #else
 	#error "Not implemented Yet"
 #endif
-	
 }
 
 // Function to create L2 VA to PA mapping for a given process								
