@@ -21,6 +21,8 @@ extern UINT32 __page_table_area_length__;
 static UINTPTR g_page_table_alloc_head = (UINTPTR)&__page_table_area_start__;
 static UINT32 g_page_table_space_available = (UINT32)&__page_table_area_length__;
 
+extern OS_ProcessCB	* g_kernel_process;	// Kernel process
+
 // Function to allocate L1 Page Table
 _MMU_L1_PageTable * _MMU_allocate_l1_page_table()
 {
@@ -69,7 +71,13 @@ void _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa,
 								BOOL cache_enable, BOOL write_buffer)
 {
 #if _ARM_ARCH >= 6
-
+	
+	// If ptable is NULL, assume kernel process	
+	if(!ptable) {
+		ASSERT(g_kernel_process);
+		ptable = g_kernel_process->ptable;
+	}
+	
 	// Validate the inputs
 	ASSERT(ptable && size);
 	

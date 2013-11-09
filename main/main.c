@@ -10,6 +10,7 @@
 #include "os_core.h"
 #include "target.h"
 #include "sysctl.h"
+#include "mmu.h"
 
 #define TEST_KERNEL
 //#define TEST_OS
@@ -56,34 +57,34 @@ int test_kernel()
 	SyslogStr("Calling - ",  __func__);
 	
 	// Test Casual
- 	// OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
- 	//   	OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
- 	//   	OS_CreatePeriodicTask( 500000, 500000, 30000, 15000, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
- 	//   	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+	OS_CreatePeriodicTask( 100000, 100000, 30000, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
+	OS_CreatePeriodicTask( 120000, 120000, 20000, 10000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
+	OS_CreatePeriodicTask( 500000, 500000, 30000, 15000, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
+	OS_CreatePeriodicTask( 200000, 200000, 40000, 20000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 
 	// test_short_intervals
-	// OS_CreatePeriodicTask( 1000, 1000, 400, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
-	//  	OS_CreatePeriodicTask( 2000, 2000, 500, 1000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
-	//  	OS_CreatePeriodicTask( 5000, 5000, 1000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
-	//  	OS_CreatePeriodicTask(100000, 100000, 10000, 3000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+// 	OS_CreatePeriodicTask( 1000, 1000, 400, 5000, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
+//  OS_CreatePeriodicTask( 2000, 2000, 500, 1000, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
+//  OS_CreatePeriodicTask( 5000, 5000, 1000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
+//  OS_CreatePeriodicTask(100000, 100000, 10000, 3000, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 	
 	// Test Long Budget
-	// OS_CreatePeriodicTask( 100000, 100000, 10000, 0, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);
-	//   	OS_CreatePeriodicTask( 120000, 120000, 12000, 0, stack2, sizeof(stack2), "LED2", &task2, task_budget, &b);
-	//   	OS_CreatePeriodicTask( 500000, 500000, 15000, 0, stack3, sizeof(stack3), "LED3", &task3, task_budget, &c);
-	//   	OS_CreatePeriodicTask( 200000, 200000, 20000, 0, stack4, sizeof(stack4), "LED4", &task4, task_budget, &d);
+// 	OS_CreatePeriodicTask( 100000, 100000, 10000, 0, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);
+//  OS_CreatePeriodicTask( 120000, 120000, 12000, 0, stack2, sizeof(stack2), "LED2", &task2, task_budget, &b);
+//  OS_CreatePeriodicTask( 500000, 500000, 15000, 0, stack3, sizeof(stack3), "LED3", &task3, task_budget, &c);
+//  OS_CreatePeriodicTask( 200000, 200000, 20000, 0, stack4, sizeof(stack4), "LED4", &task4, task_budget, &d);
 
 	// Test long intervals	
-	// OS_CreatePeriodicTask( 1000000, 1000000, 50000, 0, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
-	//  	OS_CreatePeriodicTask( 1200000, 1200000, 20000, 0, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
-	//  	OS_CreatePeriodicTask( 5000000, 5000000, 30000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
-	//  	OS_CreatePeriodicTask( 2000000, 2000000, 90000, 0, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
+// 	OS_CreatePeriodicTask( 1000000, 1000000, 50000, 0, stack1, sizeof(stack1), "LED1", &task1, task_task, &a);
+// 	OS_CreatePeriodicTask( 1200000, 1200000, 20000, 0, stack2, sizeof(stack2), "LED2", &task2, task_task, &b);
+// 	OS_CreatePeriodicTask( 5000000, 5000000, 30000, 0, stack3, sizeof(stack3), "LED3", &task3, task_task, &c);
+// 	OS_CreatePeriodicTask( 2000000, 2000000, 90000, 0, stack4, sizeof(stack4), "LED4", &task4, task_task, &d);
 
 	// Test TBE
-	OS_CreatePeriodicTask( 1000, 1000, 300, 1000, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);
-	OS_CreatePeriodicTask( 2000, 2000, 400, 2000, stack2, sizeof(stack2), "LED2", &task2, task_budget, &b);
-	OS_CreatePeriodicTask( 5000, 5000, 500, 3000, stack3, sizeof(stack3), "LED3", &task3, task_budget, &c);
-	OS_CreatePeriodicTask(400000, 400000, 40000, 10000, stack4, sizeof(stack4), "LED4", &task4, task_budget, &d);
+// 	OS_CreatePeriodicTask( 1000, 1000, 300, 1000, stack1, sizeof(stack1), "LED1", &task1, task_budget, &a);
+// 	OS_CreatePeriodicTask( 2000, 2000, 400, 2000, stack2, sizeof(stack2), "LED2", &task2, task_budget, &b);
+// 	OS_CreatePeriodicTask( 5000, 5000, 500, 3000, stack3, sizeof(stack3), "LED3", &task3, task_budget, &c);
+// 	OS_CreatePeriodicTask(400000, 400000, 40000, 10000, stack4, sizeof(stack4), "LED4", &task4, task_budget, &d);
 
 	return 0;
 }
@@ -122,6 +123,16 @@ int main(int argc, char *argv[])
 #endif
 	
 #if OS_ENABLE_CPU_STATS==1
+	// Create IO mappings for the kernel task before we access timer registers
+	// Disable caching and write buffer for this region
+
+#if ENABLE_MMU
+	// Create a mapping. This will be removed later when Applications start with their own VM
+	_MMU_add_l1_va_to_pa_map(NULL, 
+		(VADDR) 0x20400000, (PADDR) 0x20400000, 
+		(UINT32) 0x100000, PRIVILEGED_RW_USER_RW, TRUE, TRUE);
+#endif
+
 	OS_CreateProcessFromFile(&test_proc1, "STAT", ADMIN_PROCESS, "applications/bin/SystemMonitor.elf", NULL);	
 #endif
 

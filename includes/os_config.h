@@ -92,7 +92,7 @@ typedef enum
 #define OS_WITH_VALIDATE_TASK        1
 
 #define OS_KERNEL_LOGGING            0
-#define OS_KLOG_MASK                 (KLOG_TBE_EXCEPTION)
+#define OS_KLOG_MASK                 (KLOG_CONTEXT_SWITCH)
 #define DEBUG_UART_CHANNEL           0
 
 #endif // _OS_CONFIG_H

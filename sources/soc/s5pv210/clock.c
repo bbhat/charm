@@ -23,6 +23,9 @@
 
 void _platform_clock_init()
 {
+	// No need to create VM mappings as this function is called before the
+	// VM initialization and these registers are not accessed when RTOS is running
+	
 	// 1 to set various clock switch, temporarily using a PLL
 	rCLK_SRC0 = 0x0;
 	

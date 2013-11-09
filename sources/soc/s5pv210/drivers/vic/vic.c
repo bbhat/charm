@@ -9,10 +9,31 @@
 
 #include "vic.h"
 #include "soc.h"
+#include "mmu.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // VIC Helper functions
 ///////////////////////////////////////////////////////////////////////////////
+void _vic_initialize(void)
+{
+#if ENABLE_MMU
+	// Create IO mappings for the kernel task before we access VIC registers
+	// Disable caching and write buffer for this region
+	_MMU_add_l1_va_to_pa_map(NULL, 
+			(VADDR) ELFIN_VIC0_BASE_ADDR, (PADDR) ELFIN_VIC0_BASE_ADDR, 
+			(UINT32) 0x100000, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+	_MMU_add_l1_va_to_pa_map(NULL, 
+			(VADDR) ELFIN_VIC1_BASE_ADDR, (PADDR) ELFIN_VIC1_BASE_ADDR, 
+			(UINT32) 0x100000, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+	_MMU_add_l1_va_to_pa_map(NULL, 
+			(VADDR) ELFIN_VIC2_BASE_ADDR, (PADDR) ELFIN_VIC2_BASE_ADDR, 
+			(UINT32) 0x100000, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+	_MMU_add_l1_va_to_pa_map(NULL, 
+			(VADDR) ELFIN_VIC3_BASE_ADDR, (PADDR) ELFIN_VIC3_BASE_ADDR, 
+			(UINT32) 0x100000, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+#endif
+}
+
 void _vic_reset_interrupts(void)
 {
 	*VIC0INTENCLEAR = 0xffffffff;

@@ -20,6 +20,7 @@ typedef enum {
 	VIC3
 	} VIC_Index;
 	
+void _vic_initialize(void);
 void _vic_reset_interrupts(void);
 void _vic_set_interrupt_vector(OS_InterruptVector isr, UINT32 index);
 void _vic_enable_interrupt_vector(UINT32 index);
