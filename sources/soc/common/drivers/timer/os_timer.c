@@ -11,7 +11,6 @@
 #include "os_core.h"
 #include "soc.h"
 #include "target.h"
-#include "mmu.h"
 
 //The S3C2440A has five 16-bit timers. Timer 0, 1, 2, and 3 have Pulse Width Modulation (PWM) function. 
 // Timer 4 has an internal timer only with no output pins. The timer 0 has a dead-zone generator, 
@@ -38,14 +37,6 @@ void _OS_InitTimer ()
 
 	if(!initialized)
 	{
-#if ENABLE_MMU
-		// Create IO mappings for the kernel task before we access timer registers
-		// Disable caching and write buffer for this region
-		_MMU_add_l1_va_to_pa_map(NULL, 
-				(VADDR) ELFIN_TIMER_BASE, (PADDR) ELFIN_TIMER_BASE, 
-				(UINT32) 0x100000, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
-#endif
-	
 		// Place the timers 0 & 1 on hold 
 		rTCON &= ~0xfff;
 		

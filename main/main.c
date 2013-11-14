@@ -129,8 +129,8 @@ int main(int argc, char *argv[])
 #if ENABLE_MMU
 	// Create a mapping. This will be removed later when Applications start with their own VM
 	_MMU_add_l1_va_to_pa_map(NULL, 
-		(VADDR) 0x20400000, (PADDR) 0x20400000, 
-		(UINT32) 0x100000, PRIVILEGED_RW_USER_RW, TRUE, TRUE);
+		(VADDR) 0x20500000, (PADDR) 0x20500000,
+		(UINT32) 0x200000, PRIVILEGED_RW_USER_RW, TRUE, TRUE);
 #endif
 
 	OS_CreateProcessFromFile(&test_proc1, "STAT", ADMIN_PROCESS, "applications/bin/SystemMonitor.elf", NULL);	

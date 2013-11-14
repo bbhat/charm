@@ -15,7 +15,6 @@
 #include "target.h"
 #include "uart.h"
 #include "os_core.h"
-#include "mmu.h"
 
 static UINT8 Uart_init_status = 0;
 
@@ -41,14 +40,6 @@ static UINT8 Uart_init_status = 0;
 
 void Uart_Init(UART_Channel ch) 
 {
-#if ENABLE_MMU
-	// Create IO mappings for the kernel task before we access UART registers
-	// Disable caching and write buffer for this region
-	_MMU_add_l1_va_to_pa_map(NULL, 
-			(VADDR) ELFIN_UART_BASE, (PADDR) ELFIN_UART_BASE, 
-			(UINT32) 0x100000, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
-#endif
-
 	// Configure appropriate GPIO pins
 	if(ch == UART0) {
 		GPA0CON = (GPA0CON & 0xFFFF0000) | 0x00002222;

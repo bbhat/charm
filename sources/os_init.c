@@ -13,7 +13,11 @@
 #include "target.h"
 #include "cache.h"
 #include "uart.h"
+#include "soc.h"
 
+#define ONE_KB	1024
+#define ONE_MB	(ONE_KB * ONE_KB)
+	
 // External functions used in here
 extern void _OS_InitTimer();
 extern void _OS_PlatformInit();
@@ -27,6 +31,8 @@ extern _OS_Queue g_block_q;
 // They are used to create memory maps for the kernel process
 extern UINT32 __ramdisk_start__;
 extern UINT32 __ramdisk_length__;
+extern UINT32 __EX_system_area_start__;
+extern UINT32 __EX_system_area_length__;
 extern UINT32 __RO_system_area_start__;
 extern UINT32 __RO_system_area_length__;
 extern UINT32 __RW_system_area_start__;
@@ -90,31 +96,7 @@ void _OS_Init()
 	// Create mappings for the kernel task. 
 	// We will use only one section for the kernel task for now
 	// Also, we will be using VA == PA
-
-	// TODO: In the future, create separate sections for below cases
-	// 1. for all Read / Write sections
-	// 2. for Read only sections
-
-	// Create Map for Read Only Kernel Sections
-	_MMU_add_l1_va_to_pa_map(g_kernel_process->ptable, 
-			(VADDR) &__RO_system_area_start__, (PADDR) &__RO_system_area_start__, 
-			(UINT32) &__RO_system_area_length__, PRIVILEGED_RO_USER_NA, TRUE, TRUE);
-			
-	// Create Map for Read/Write Kernel Sections				
-	_MMU_add_l1_va_to_pa_map(g_kernel_process->ptable, 
-			(VADDR) &__RW_system_area_start__, (PADDR) &__RW_system_area_start__, 
-			(UINT32) &__RW_system_area_length__, PRIVILEGED_RW_USER_NA, TRUE, TRUE);
-
-	// Create Map for Ramdisk space. Kernel will have read/write permissions
-	_MMU_add_l1_va_to_pa_map(g_kernel_process->ptable, 
-			(VADDR) &__ramdisk_start__, (PADDR) &__ramdisk_start__, 
-			(UINT32) &__ramdisk_length__, PRIVILEGED_RW_USER_NA, TRUE, TRUE);
-
-	// Create Map for Page Table space. Kernel will have read/write permissions
-	// This space should not be cacheable / buffer-able
-	_MMU_add_l1_va_to_pa_map(g_kernel_process->ptable,
-			(VADDR) &__page_table_area_start__, (PADDR) &__page_table_area_start__, 
-			(UINT32) &__page_table_area_length__, PRIVILEGED_RW_USER_NA, FALSE, FALSE);	
+	_OS_create_kernel_memory_map(g_kernel_process->ptable);
 #endif
 
 	// Initialize debug UART
@@ -174,3 +156,77 @@ static void _OS_InitFreeResources(void)
 		|= ~((1 << (32 - (MAX_OPEN_FILES & 0x1f))) - 1);			
 	
 }
+
+#if ENABLE_MMU
+void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable)
+{
+	// TODO: In the future, create separate sections for below cases
+	// 1. for all Read / Write sections
+	// 2. for Read only sections
+
+	// Create Map for Executable Kernel Sections
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) &__EX_system_area_start__, (PADDR) &__EX_system_area_start__, 
+			(UINT32) &__EX_system_area_length__, PRIVILEGED_RO_USER_NA, TRUE, TRUE);
+
+	// Create Map for Read Only Kernel Sections
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) &__RO_system_area_start__, (PADDR) &__RO_system_area_start__, 
+			(UINT32) &__RO_system_area_length__, PRIVILEGED_RO_USER_NA, TRUE, TRUE);
+			
+	// Create Map for Read/Write Kernel Sections				
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) &__RW_system_area_start__, (PADDR) &__RW_system_area_start__, 
+			(UINT32) &__RW_system_area_length__, PRIVILEGED_RW_USER_NA, TRUE, TRUE);
+
+	// Create Map for Ramdisk space. Kernel will have read/write permissions
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) &__ramdisk_start__, (PADDR) &__ramdisk_start__, 
+			(UINT32) &__ramdisk_length__, PRIVILEGED_RW_USER_NA, TRUE, TRUE);
+
+	// Create Map for Page Table space. Kernel will have read/write permissions
+	// This space should not be cacheable / buffer-able
+	_MMU_add_l1_va_to_pa_map(ptable,
+			(VADDR) &__page_table_area_start__, (PADDR) &__page_table_area_start__, 
+			(UINT32) &__page_table_area_length__, PRIVILEGED_RW_USER_NA, FALSE, FALSE);	
+			
+	//------------------------- Timer ---------------------------------
+	// Create IO mappings for the kernel task before we access timer registers
+	// Disable caching and write buffer for this region
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) ELFIN_TIMER_BASE, (PADDR) ELFIN_TIMER_BASE, 
+			(UINT32) ONE_MB, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+
+
+	//------------------------- UART ---------------------------------
+	// Create IO mappings for the kernel task before we access UART registers
+	// Disable caching and write buffer for this region
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) ELFIN_UART_BASE, (PADDR) ELFIN_UART_BASE, 
+			(UINT32) ONE_MB, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+
+	//------------------------- VIC ---------------------------------
+	// Create IO mappings for the kernel task before we access VIC registers
+	// Disable caching and write buffer for this region
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) ELFIN_VIC0_BASE_ADDR, (PADDR) ELFIN_VIC0_BASE_ADDR, 
+			(UINT32) ONE_MB, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) ELFIN_VIC1_BASE_ADDR, (PADDR) ELFIN_VIC1_BASE_ADDR, 
+			(UINT32) ONE_MB, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) ELFIN_VIC2_BASE_ADDR, (PADDR) ELFIN_VIC2_BASE_ADDR, 
+			(UINT32) ONE_MB, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) ELFIN_VIC3_BASE_ADDR, (PADDR) ELFIN_VIC3_BASE_ADDR, 
+			(UINT32) ONE_MB, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+
+	//------------------------- GPIO ---------------------------------
+	// Create IO mappings for the kernel task before we access GPIO registers
+	// Disable caching and write buffer for this region
+	_MMU_add_l1_va_to_pa_map(ptable, 
+			(VADDR) ELFIN_GPIO_BASE, (PADDR) ELFIN_GPIO_BASE, 
+			(UINT32) ONE_MB, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
+
+}
+#endif	// ENABLE_MMU

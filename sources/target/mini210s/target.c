@@ -9,18 +9,9 @@
 
 #include "target.h"
 #include "soc.h"
-#include "mmu.h"
 
 void _OS_TargetInit(void)
 {
-#if ENABLE_MMU
-	// Create IO mappings for the kernel task before we access GPIO registers
-	// Disable caching and write buffer for this region
-	_MMU_add_l1_va_to_pa_map(NULL, 
-			(VADDR) ELFIN_GPIO_BASE, (PADDR) ELFIN_GPIO_BASE, 
-			(UINT32) 0x100000, PRIVILEGED_RW_USER_NA, FALSE, FALSE);
-#endif
-
 	// Configure the LEDs
 	configure_user_led(0);
 	configure_user_led(1);

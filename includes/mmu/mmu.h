@@ -97,5 +97,8 @@ void _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa,
 								UINT32 size, _MMU_PTE_AccessPermission ap,
 								BOOL cache_enable, BOOL write_buffer);
 
+// Function to create Kernel VA to PA mapping
+void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable);
+
 #endif // ENABLE_MMU
 #endif // _MMU_H
