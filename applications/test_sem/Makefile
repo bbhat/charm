@@ -33,14 +33,14 @@ LINKERS_SCRIPT	:=	$(OS_DIR)/scripts/$(TARGET)/applications/memmap_$(APP).ld
 DEP_DIR			:=	$(BUILD_DIR)/dep
 OBJ_DIR			:=	$(BUILD_DIR)/obj
 BUILD_TARGET	:=	$(BUILD_DIR)/$(APP).elf
-USR_LIB			:=	$(OS_DIR)/usr/lib
+USR_LIB			:=	$(OS_DIR)/sources/usr/lib
 SOURCES			:= 	$(wildcard $(USR_LIB)/*.c)
 
 ## Include source files
 include $(wildcard *.mk)
 
 ## Include folders
-INCLUDES		:=	$(INCLUDES) $(ROOT_DIR)/usr/includes
+INCLUDES		:=	$(INCLUDES) $(ROOT_DIR)/sources/usr/includes
 INCLUDES		:=	$(addprefix -I , $(INCLUDES))
 
 ## Build a list of corresponding object files

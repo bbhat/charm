@@ -4,9 +4,9 @@ BIN:=build/ramdiskmk
 OBJ:=build/ramdiskmk.o
 SRC:=ramdiskmk.c
 
-ROOT_DIR	:=	$(realpath ../..)
+ROOT_DIR	:= 	$(realpath ../..)
 
-INCLUDES=$(ROOT_DIR)/includes $(ROOT_DIR)/includes/util
+INCLUDES 	:= 	$(ROOT_DIR)/sources/filesystem/ramdisk 	$(ROOT_DIR)/sources/kernel
 
 INCLUDES	:=	$(addprefix -I ,$(INCLUDES))
 CFLAGS		:=	-Wall

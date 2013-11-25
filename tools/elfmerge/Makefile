@@ -6,7 +6,7 @@ SRC:=elfmerge.c
 
 ROOT_DIR	:=	$(realpath ../..)
 
-INCLUDES=$(ROOT_DIR)/includes $(ROOT_DIR)/includes/util
+INCLUDES 	:= 	$(ROOT_DIR)/sources/utilities
 
 INCLUDES	:=	$(addprefix -I ,$(INCLUDES))
 CFLAGS		:=	-Wall

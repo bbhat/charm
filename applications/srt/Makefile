@@ -40,14 +40,14 @@ LINKERS_SCRIPT	:=	$(ROOT_DIR)/scripts/$(TARGET)/applications/memmap_$(APP).ld
 DEP_DIR			:=	$(BUILD_DIR)/dep
 OBJ_DIR			:=	$(BUILD_DIR)/obj
 BUILD_TARGET	:=	$(BUILD_DIR)/$(APP).elf
-USR_LIB			:=	$(ROOT_DIR)/usr/lib/$(DST)/$(CONFIG)-$(TARGET)/usrlib.a
+USR_LIB			:=	$(ROOT_DIR)/sources/usr/lib/$(DST)/$(CONFIG)-$(TARGET)/usrlib.a
 ROOTFS_PATH		:=	$(ROOT_DIR)/rootfs
 
 ## Include source files
 include $(wildcard *.mk)
 
 ## Include folders
-INCLUDES		:=	$(ROOT_DIR)/usr/includes
+INCLUDES		:=	$(ROOT_DIR)/sources/usr/includes
 INCLUDES		:=	$(addprefix -I , $(INCLUDES))
 
 ## Build a list of corresponding object files
@@ -96,7 +96,7 @@ $(BUILD_TARGET): $(OBJS) $(USR_LIB)
 
 $(USR_LIB):
 	@echo "Building - " $@
-	make -C $(ROOT_DIR)/usr/lib
+	make -C $(ROOT_DIR)/sources/usr/lib
 
 rootfs: $(BUILD_TARGET)
 	@test -d $(dir $(ROOTFS_PATH)/applications/bin/) || mkdir -pm 775 $(dir $(ROOTFS_PATH)/applications/bin/)
@@ -105,7 +105,7 @@ rootfs: $(BUILD_TARGET)
 clean:
 	rm -rf $(DST)
 	rm -rf $(ROOTFS_PATH)/applications/bin/
-	make -C $(ROOT_DIR)/usr/lib clean
+	make -C $(ROOT_DIR)/sources/usr/lib clean
 
 ## Validate the arguments for build
 ifneq ($(CONFIG),debug)

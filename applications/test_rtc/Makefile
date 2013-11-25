@@ -32,13 +32,13 @@ LINKERS_CRIPT	:=	$(ROOT_DIR)/scripts/$(TARGET)/applications/memmap_$(APP).ld
 DEP_DIR			:=	$(BUILD_DIR)/dep
 OBJ_DIR			:=	$(BUILD_DIR)/obj
 BUILD_TARGET	:=	$(BUILD_DIR)/$(APP).elf
-USR_LIB			:=	$(ROOT_DIR)/usr/lib/$(DST)/$(CONFIG)-$(TARGET)/usrlib.a
+USR_LIB			:=	$(ROOT_DIR)/sources/usr/lib/$(DST)/$(CONFIG)-$(TARGET)/usrlib.a
 
 ## Include source files
 include $(wildcard *.mk)
 
 ## Include folders
-INCLUDES		:=	$(ROOT_DIR)/usr/includes
+INCLUDES		:=	$(ROOT_DIR)/sources/usr/includes
 INCLUDES		:=	$(addprefix -I , $(INCLUDES))
 
 ## Build a list of corresponding object files
@@ -83,7 +83,7 @@ $(BUILD_TARGET): $(USR_LIB) $(OBJS)
 	$(LINK) $^ $(LDFLAGS) -o $@
 
 $(USR_LIB):
-	make -C $(ROOT_DIR)/usr/lib
+	make -C $(ROOT_DIR)/sources/usr/lib
 	
 clean:
 	rm -rf $(DST)

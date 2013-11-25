@@ -50,22 +50,20 @@ BOOT_TARGET		:=	$(BUILD_DIR)/boot.elf
 RAMDISK_TARGET	:=	$(BUILD_DIR)/ramdisk.img
 ROOTFS_PATH		:=	rootfs
 
-## Create INCLUDES 
-include $(wildcard includes/*.mk)
-INCLUDES		:=	$(addprefix -I ,includes $(INCLUDES))
-
-## Create LIBPATH
-LIBPATH			:=	$(addprefix -L , $(LIBPATH))
-
 ## Build list of source and object files
 SUBDIRS			:=	sources main
-SOURCES			:=	$(wildcard *.c)
 
 ## Include Boot source files
 include $(wildcard boot/$(TARGET)/*.mk)
 
-## Include sources from other directories
+## Include sources from each subdirectories
 include $(foreach sdir, $(SUBDIRS), $(wildcard $(sdir)/*.mk))
+
+## Prefix each INCLUDES directory with -I
+INCLUDES		:=	$(addprefix -I , $(INCLUDES))
+
+## Create each LIBPATH directory with -L
+LIBPATH			:=	$(addprefix -L , $(LIBPATH))
 
 ## Build a list of corresponding object files
 OBJS		:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
@@ -147,7 +145,7 @@ boot:
 FORCE:
 
 usrlib:
-	make -C usr/lib	
+	make -C sources/usr/lib	
 	
 rootfs: $(KERNEL_TARGET)
 #	@test -d $(dir $(ROOTFS_PATH)/kernel/bin/) || mkdir -pm 775 $(dir $(ROOTFS_PATH)/kernel/bin/)
@@ -215,7 +213,7 @@ write2sd: $(BOOT_TARGET) mkv210_image
 clean:
 	rm -rf $(DST)
 	make -C applications/$(APP) clean
-	make -C usr/lib clean
+	make -C sources/usr/lib clean
 	make -C tools/elfmerge clean
 	make -C tools/ramdiskmk clean
 	make -C tools/mkv210_image clean
