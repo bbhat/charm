@@ -15,9 +15,6 @@
 #include "uart.h"
 #include "soc.h"
 
-#define ONE_KB	1024
-#define ONE_MB	(ONE_KB * ONE_KB)
-	
 // External functions used in here
 extern void _OS_InitTimer();
 extern void _OS_PlatformInit();
@@ -105,9 +102,6 @@ void _OS_Init()
 	// Start the scheduling timer
 	_OS_InitTimer();
 
-	// Initialize Vectored Interrupt Controller
-	_vic_initialize();
-
 	// Target Initialization
 	_OS_TargetInit();	
 
@@ -149,12 +143,11 @@ static void _OS_InitFreeResources(void)
 	// The resource usage masks are already cleared when BSS section is initialized
 	// Only mark the unused bits as busy
 	g_task_usage_mask[((MAX_TASK_COUNT + 31) >> 5) - 1] 
-		|= ~((1 << (32 - (MAX_TASK_COUNT & 0x1f))) - 1);	
+		|= ~((1ull << (32 - (MAX_TASK_COUNT & 0x1f))) - 1);	
 	g_process_usage_mask[((MAX_PROCESS_COUNT + 31) >> 5) - 1] 
-		|= ~((1 << (32 - (MAX_PROCESS_COUNT & 0x1f))) - 1);	
+		|= ~((1ull << (32 - (MAX_PROCESS_COUNT & 0x1f))) - 1);	
 	g_rdfile_usage_mask[((MAX_OPEN_FILES + 31) >> 5) - 1] 
-		|= ~((1 << (32 - (MAX_OPEN_FILES & 0x1f))) - 1);			
-	
+		|= ~((1ull << (32 - (MAX_OPEN_FILES & 0x1f))) - 1);			
 }
 
 #if ENABLE_MMU

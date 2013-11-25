@@ -42,7 +42,7 @@ void task_task(void * ptr)
 
 void task_budget(void * ptr)
 {
-	static int count = 0;
+//	static int count = 0;
  	UINT32 dm = OS_GetTBECount();
 
 	PFM_SetUserLED(*(LED_Number *)ptr, LED_TOGGLE);

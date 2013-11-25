@@ -42,7 +42,6 @@ OS_Error OS_CreateProcess(
 	void (*process_entry_function)(void *pdata),
 	void *pdata)
 {
-	UINT32 intsts;
 	OS_ProcessCB *pcb;
 	
 	if(!process)

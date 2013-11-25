@@ -146,7 +146,7 @@ UINT32 PFM_SerialLog(const INT8 * str, UINT32 size)
 	param_info.ret_bytes = sizeof(ret);
 	
 	arg[0] = (void *)str;
-	arg[1] = size;	
+	arg[1] = (void *)size;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 			
 	return ret[0];	
