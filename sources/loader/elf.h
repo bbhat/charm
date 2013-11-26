@@ -31,7 +31,7 @@
 #define	_SYS_ELF_H
 
 #if !defined(__APPLE__)
-#include "elftypes.h"
+#include "elf_types.h"
 #else /* is Apple Mac OS X */
 
 #ifdef KERNEL
@@ -40,7 +40,7 @@
 #endif
 #endif
 
-#include "elftypes.h" /* In lieu of Solaris <sys/elftypes.h> */
+#include "elf_types.h" /* In lieu of Solaris <sys/elftypes.h> */
 #endif /* __APPLE__ */
 
 #ifdef	__cplusplus

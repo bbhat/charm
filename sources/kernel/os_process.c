@@ -11,6 +11,8 @@
 #include "os_process.h"
 #include "util.h"
 #include "fs_api.h"
+#include "elf_loader.h"
+#include "mmu.h"
 
 UINT16 g_process_id_counter;
 
@@ -33,7 +35,7 @@ UINT32 g_rdfile_usage_mask[(MAX_OPEN_FILES + 31) >> 5];
 	#define FAULT(x, ...)
 #endif
 
-OS_Error elf_load(void * elfdata, void ** start_address);
+#define MAX_LOADABLE_SECTIONS	16
 
 OS_Error OS_CreateProcess(
 	OS_Process *process,
@@ -115,7 +117,7 @@ OS_Error OS_CreateProcessFromFile(
 		const INT8 * exec_path,
 		void *pdata
 	)
-{
+{		
 	// Validate inputs
 	if(!exec_path)
 	{
@@ -137,14 +139,75 @@ OS_Error OS_CreateProcessFromFile(
 		FAULT("OS_CreateProcessFromFile: could not read '%s'", exec_path);
 		return FILE_ERROR;		
 	}
-	
-	// Load the executable file to memory
+
+	// First read the section attributes from the ELF file so that we can create memory maps
+	// before we load the sections into memory
+	Elf_SectionAttribute sections[MAX_LOADABLE_SECTIONS];
+	UINT32 scount = MAX_LOADABLE_SECTIONS;
 	void * start_address = NULL;
-	OS_Error status = elf_load(program, &start_address);
+
+	// Read the section attributes
+	if(elf_get_sections(program, &start_address, sections, &scount) == SUCCESS)
+	{
+		if(scount > MAX_LOADABLE_SECTIONS) 
+		{	
+			// Not all sections were loaded. Generate an error
+			return EXCEEDED_MAX_SECTIONS;
+		}
+	}
+	
+	// All sections can be loaded. 
+	OS_Error status = OS_CreateProcess(process, process_name, attributes, start_address, pdata);
 	if(status == SUCCESS)
 	{
-		status = OS_CreateProcess(process, process_name, attributes, start_address, pdata);
-	}
+		// Get a pointer to actual PCB
+		OS_ProcessCB *pcb = &g_process_pool[*process];
+	
+#if ENABLE_MMU
+		// Now create the memory map for the task both in the kernel task as well as the
+		// new task
+		
+		// First copy master kernel map into this process. Every process is going to have map for 
+		// the whole kernel process. This makes it more efficient during system calls and interrupts
+		// by eliminating the need to change the page table.
+		// Note that this does not compromise the security as the user mode cannot read/write
+		// anything in the kernel memory map
+		// Also note that, we will be using VA == PA
+		_OS_create_kernel_memory_map(pcb->ptable);			
+		
+		// Map for all sections in this program
+		UINT32 i;
+		for(i = 0; i < scount; i++)
+		{
+			_MMU_PTE_AccessPermission ap;
+			switch(sections[i].flags)
+			{
+				case (PF_R):
+				case (PF_X):
+				case (PF_R | PF_X):
+					ap = PRIVILEGED_RW_USER_RO;
+					break;
+											
+				case (PF_R | PF_W):
+				case (PF_R | PF_W | PF_X):
+					ap = PRIVILEGED_RW_USER_RW;
+					break;
+								
+				default:
+					ap = NO_ACCESS;
+					break;				
+			}
+			
+			_MMU_add_l2_va_to_pa_map(pcb->ptable,
+									sections[i].vaddr, sections[i].vaddr,
+									sections[i].size, ap, 
+									TRUE, TRUE);
+		}
+#endif // ENABLE_MMU
 
+		// Now we are ready to actually load the program into memory
+		status = elf_load(program);
+	}
+	
 	return status;	
 }
