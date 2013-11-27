@@ -89,13 +89,6 @@ void _OS_Init()
 	OS_CreateProcess(&kernel_pcb, "kernel", (SYSTEM_PROCESS | ADMIN_PROCESS), &kernel_process_entry, NULL);	
 	g_kernel_process = &g_process_pool[kernel_pcb];
 	
-#if ENABLE_MMU
-	// Create mappings for the kernel task. 
-	// We will use only one section for the kernel task for now
-	// Also, we will be using VA == PA
-	_OS_create_kernel_memory_map(g_kernel_process->ptable);
-#endif
-
 	// Initialize debug UART
 	Uart_Init(UART0);	
 		

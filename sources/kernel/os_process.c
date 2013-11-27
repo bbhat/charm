@@ -89,8 +89,13 @@ OS_Error OS_CreateProcess(
 		FAULT("OS_CreateProcess failed for '%s': No space in page table area\n", g_current_process->name);
 		return RESOURCE_EXHAUSTED;	
 	}
-	
-	// This function will not create the actual mapping. It should be done by the caller	
+
+	// Now create a memory map for the task for the kernel space. Every process is going to have map for 
+	// the whole kernel process. This makes it more efficient during system calls and interrupts
+	// by eliminating the need to change the page table.
+	// Note that this does not compromise the security as the user mode cannot read/write
+	// anything in the kernel memory map
+	_OS_create_kernel_memory_map(pcb->ptable);
 #endif	
 
 	// Block the process resource
@@ -164,18 +169,8 @@ OS_Error OS_CreateProcessFromFile(
 		OS_ProcessCB *pcb = &g_process_pool[*process];
 	
 #if ENABLE_MMU
-		// Now create the memory map for the task both in the kernel task as well as the
-		// new task
-		
-		// First copy master kernel map into this process. Every process is going to have map for 
-		// the whole kernel process. This makes it more efficient during system calls and interrupts
-		// by eliminating the need to change the page table.
-		// Note that this does not compromise the security as the user mode cannot read/write
-		// anything in the kernel memory map
-		// Also note that, we will be using VA == PA
-		_OS_create_kernel_memory_map(pcb->ptable);			
-		
-		// Map for all sections in this program
+		// Create Memory Map for all sections in this program.
+		// The kernel space has already been mapped to this process
 		UINT32 i;
 		for(i = 0; i < scount; i++)
 		{

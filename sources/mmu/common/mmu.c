@@ -236,7 +236,7 @@ OS_Error _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa
 			va += PAGE_SIZE;
 			pa += PAGE_SIZE;
 		}
-		while(l2_index);
+		while(l2_index && size);
 	}	
 	
 #else

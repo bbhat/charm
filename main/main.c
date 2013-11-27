@@ -12,8 +12,8 @@
 #include "sysctl.h"
 #include "mmu.h"
 
-#define TEST_KERNEL
-//#define TEST_OS
+//#define TEST_KERNEL
+#define TEST_OS
 //#define TEST_SRT
 //#define TEST_APERIODIC
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 #endif
 
 #if defined(TEST_KERNEL)
-	OS_CreateProcess(&test_proc, "test_os", 0, process_entry, NULL);
+	OS_CreateProcess(&test_proc, "test_kernel", 0, process_entry, NULL);
 #else
 	// Ensure that ramdisk is enabled
 	#if ENABLE_RAMDISK==0

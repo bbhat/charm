@@ -257,9 +257,10 @@ static void syscall_SerialLog(const _OS_Syscall_Args * param_info, const void * 
 ///////////////////////////////////////////////////////////////////////////////
 static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
+	UINT32 * uint_ret = (UINT32 *)ret;
+	
 #if OS_ENABLE_CPU_STATS==1	
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	UINT32 * uint_ret = (UINT32 *)ret;
 	OS_Error result = SYSCALL_ERROR;
 
 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
@@ -275,9 +276,9 @@ static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * 
 
 static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
+	UINT32 * uint_ret = (UINT32 *)ret;
 #if OS_ENABLE_CPU_STATS==1
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	UINT32 * uint_ret = (UINT32 *)ret;
 	OS_Error result = SYSCALL_ERROR;
 	
 	if(((param_info->arg_bytes >> 2) >= 2) && ((param_info->ret_bytes >> 2) >= 1))
@@ -293,9 +294,9 @@ static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void 
 
 static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
+	UINT32 * uint_ret = (UINT32 *)ret;
 #if OS_ENABLE_CPU_STATS==1
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	UINT32 * uint_ret = (UINT32 *)ret;
 	OS_Error result = SYSCALL_ERROR;
 	
 	if(((param_info->arg_bytes >> 2) >= 3) && ((param_info->ret_bytes >> 2) >= 1))
