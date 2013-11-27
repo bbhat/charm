@@ -22,25 +22,40 @@
 
 #if ENABLE_MMU
 
+#define PAGE_SIZE			(4 * ONE_KB)
+#define SECTION_PAGE_SIZE	(ONE_MB)
+
 typedef enum
 {
-	// See Table B4-1 MMU access permissions of ARM Architecture Reference Manual
-	NO_ACCESS = 0,					// No Access: Privileged, User 
-	PRIVILEGED_RW_USER_NA = 1,		// Read/Write: Privileged, No Access: User 
-	PRIVILEGED_RW_USER_RO = 2,		// Read/Write: Privileged, Read Only: User 
-	PRIVILEGED_RW_USER_RW = 3,		// Read/Write: Privileged, Read/Write: User 
-	PRIVILEGED_RO_USER_NA = 5,		// Read/Only: Privileged, No Access: User 
-	PRIVILEGED_RO_USER_RO = 6		// Read/Only: Privileged, Read/Only: User 
+	// See Table B4-1 MMU access permissions of ARM Architecture Reference Manual	
+	// The values are assigned as follows:
+	//	EX 	: Bit #3
+	//	APX	: Bit #2
+	//	AP	: Bit #1,0
+	KERNEL_NA_USER_NA = (0),
+	KERNEL_RW_USER_NA = (1),
+	KERNEL_RW_USER_RO = (2),
+	KERNEL_RW_USER_RW = (3),
+	KERNEL_RO_USER_NA = ((1 << 2) | 1),
+	KERNEL_RO_USER_RO = ((1 << 2) | 2),
+	KERNEL_EX_USER_NA = ((1 << 3) | (1 << 2) | 1),
+	KERNEL_RW_USER_EX = ((1 << 3) | 2)
 	
 } _MMU_PTE_AccessPermission;
 
 typedef enum
 {
+	// L1 Page Table Entries
 	PTE_FAULT		= 0,
 	PTE_CORSE		= 1,
 	PTE_SECTION		= 2,
-	PTE_FINE		= 3
+	PTE_FINE		= 3,
 	
+	// L2 Page Table Entries
+	L2PTE_FAULT		= 0,
+	L2PTE_LARGE		= 1,
+	L2PTE_SMALL		= 2
+		
 } _MMU_PTE_Type;
 
 // The L1 page table has 4096 entries. Each entry describes 1M section of memory
@@ -50,7 +65,7 @@ typedef struct
 	
 } _MMU_L1_PageTable;
 
-// The L2 page table has 256 entries. Each entry describes 4K sized page
+// The L2 course page table has 256 entries. Each entry describes 4K sized page
 typedef struct
 {
 	UINT32 pte[256];
@@ -85,16 +100,16 @@ void _sysctl_set_domain_rights(UINT32 value, UINT32 mask);
 _MMU_L1_PageTable * _MMU_allocate_l1_page_table();
 
 // Function to allocate L2 Page Table
-_MMU_L2_PageTable * _MMU_allocate_l2_page_table();
+_MMU_L2_PageTable * _MMU_allocate_l2_course_page_table();
 
 // Function to create L1 VA to PA mapping for a given page table
-void _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
-								UINT32 size, _MMU_PTE_AccessPermission ap, 
+OS_Error _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+								UINT32 size, _MMU_PTE_AccessPermission access, 
 								BOOL cache_enable, BOOL write_buffer);
 
 // Function to create L2 VA to PA mapping for a given page table							
-void _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
-								UINT32 size, _MMU_PTE_AccessPermission ap,
+OS_Error _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+								UINT32 size, _MMU_PTE_AccessPermission access,
 								BOOL cache_enable, BOOL write_buffer);
 
 // Function to create Kernel VA to PA mapping

@@ -357,6 +357,7 @@ void _OS_SetAlarm(OS_PeriodicTask *task,
 ///////////////////////////////////////////////////////////////////////////////
 // The following function schedules the first task from the ready queue
 // It also sets appropriate timeout in the Budget timer (for periodic tasks)
+// It also sets the virtual table to the new task's process
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_Schedule()
 {
@@ -392,6 +393,11 @@ void _OS_Schedule()
         // If this is a Aperiodic task, keep the timer running so that we can calculate the budget used
         _OS_Timer_SetMaxTimeout();
     }
+    
+#if ENABLE_MMU
+	// Set the page table address in SYSCTL register to the new task's process
+	_sysctl_set_ptable((PADDR)task->owner_process->ptable);
+#endif
     
 #if OS_ENABLE_CPU_STATS==1
 	g_sched_ending_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);

@@ -15,6 +15,9 @@
 	#define FAULT(x, ...)
 #endif
 
+///////////////////////////////////////////////////////////////////////////////
+// The following function reads elf program section attributes.
+///////////////////////////////////////////////////////////////////////////////
 OS_Error elf_get_sections(void * elfdata, void ** start_address, 
 							Elf_SectionAttribute * sections, UINT32 * count)
 {	
@@ -98,6 +101,9 @@ OS_Error elf_get_sections(void * elfdata, void ** start_address,
 	return SUCCESS;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// The following function loads elf program sections into memory.
+///////////////////////////////////////////////////////////////////////////////
 OS_Error elf_load(void * elfdata)
 {	
 	UINT32 i;

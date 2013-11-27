@@ -183,18 +183,20 @@ OS_Error OS_CreateProcessFromFile(
 			switch(sections[i].flags)
 			{
 				case (PF_R):
+					ap = KERNEL_RW_USER_RO;
+					break;
+				
 				case (PF_X):
 				case (PF_R | PF_X):
-					ap = PRIVILEGED_RW_USER_RO;
+					ap = KERNEL_RW_USER_EX;
 					break;
 											
 				case (PF_R | PF_W):
-				case (PF_R | PF_W | PF_X):
-					ap = PRIVILEGED_RW_USER_RW;
+					ap = KERNEL_RW_USER_RW;
 					break;
 								
 				default:
-					ap = NO_ACCESS;
+					ap = KERNEL_NA_USER_NA;
 					break;				
 			}
 			
