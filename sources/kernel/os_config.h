@@ -59,6 +59,11 @@
 // MMU related
 #define ENABLE_MMU						  1			 // Support for Virtual memory and memory protection
 
+// Note: We will have to change the memmap.ld to ensure that individual sections are aligned
+// by the following page size.
+#define KERNEL_PAGE_SIZE                  64         // Possible Values 4, 64 and 1024 (in Kilobytes)
+#define USER_PAGE_SIZE                    4		     // Possible Values 4 and 64 (in Kilobytes)
+
 // Debug & Info related
 
 // Serial task related. This task is needed for all user space logging into serial log.

@@ -29,11 +29,11 @@ extern _OS_Queue g_block_q;
 extern UINT32 __ramdisk_start__;
 extern UINT32 __ramdisk_length__;
 extern UINT32 __EX_system_area_start__;
-extern UINT32 __EX_system_area_length__;
+extern UINT32 __EX_system_area_end__;
 extern UINT32 __RO_system_area_start__;
-extern UINT32 __RO_system_area_length__;
+extern UINT32 __RO_system_area_end__;
 extern UINT32 __RW_system_area_start__;
-extern UINT32 __RW_system_area_length__;
+extern UINT32 __RW_system_area_end__;
 extern UINT32 __page_table_area_start__;
 extern UINT32 __page_table_area_length__;
 
@@ -144,42 +144,53 @@ static void _OS_InitFreeResources(void)
 }
 
 #if ENABLE_MMU
+
+#if KERNEL_PAGE_SIZE==1024
+#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l1_va_to_pa_map
+#elif KERNEL_PAGE_SIZE==64
+#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l2_large_page_va_to_pa_map
+#elif KERNEL_PAGE_SIZE==4
+#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l2_small_page_va_to_pa_map
+#else
+#error "KERNEL_PAGE_SIZE should be either 1024 / 64 / 4"
+#endif
+
 void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable)
 {
-	// TODO: In the future, create separate sections for below cases
-	// 1. for all Read / Write sections
-	// 2. for Read only sections
-
+	UINT32 length = (UINT32) ((UINT32)&__EX_system_area_end__ - (UINT32)&__EX_system_area_start__);
+	
 	// Create Map for Executable Kernel Sections
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) &__EX_system_area_start__, (PADDR) &__EX_system_area_start__, 
-			(UINT32) &__EX_system_area_length__, KERNEL_EX_USER_NA, TRUE, TRUE);
+			length, KERNEL_EX_USER_NA, TRUE, TRUE);
 
 	// Create Map for Read Only Kernel Sections
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	length = (UINT32) ((UINT32)&__RO_system_area_end__ - (UINT32)&__RO_system_area_start__);
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) &__RO_system_area_start__, (PADDR) &__RO_system_area_start__, 
-			(UINT32) &__RO_system_area_length__, KERNEL_RO_USER_NA, TRUE, TRUE);
-			
-	// Create Map for Read/Write Kernel Sections				
-	_MMU_add_l1_va_to_pa_map(ptable, 
+			length, KERNEL_RO_USER_NA, TRUE, TRUE);
+				
+	// Create Map for Read/Write Kernel Sections
+	length = (UINT32) ((UINT32)&__RW_system_area_end__ - (UINT32)&__RW_system_area_start__);
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) &__RW_system_area_start__, (PADDR) &__RW_system_area_start__, 
-			(UINT32) &__RW_system_area_length__, KERNEL_RW_USER_NA, TRUE, TRUE);
-
+			length, KERNEL_RW_USER_NA, TRUE, TRUE);
+	
 	// Create Map for Ramdisk space. Kernel will have read/write permissions
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) &__ramdisk_start__, (PADDR) &__ramdisk_start__, 
 			(UINT32) &__ramdisk_length__, KERNEL_RW_USER_NA, TRUE, TRUE);
 
 	// Create Map for Page Table space. Kernel will have read/write permissions
 	// This space should not be cacheable / buffer-able
-	_MMU_add_l1_va_to_pa_map(ptable,
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable,
 			(VADDR) &__page_table_area_start__, (PADDR) &__page_table_area_start__, 
 			(UINT32) &__page_table_area_length__, KERNEL_RW_USER_NA, FALSE, FALSE);	
 			
 	//------------------------- Timer ---------------------------------
 	// Create IO mappings for the kernel task before we access timer registers
 	// Disable caching and write buffer for this region
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_TIMER_BASE, (PADDR) ELFIN_TIMER_BASE, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
 
@@ -187,32 +198,31 @@ void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable)
 	//------------------------- UART ---------------------------------
 	// Create IO mappings for the kernel task before we access UART registers
 	// Disable caching and write buffer for this region
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_UART_BASE, (PADDR) ELFIN_UART_BASE, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
 
 	//------------------------- VIC ---------------------------------
 	// Create IO mappings for the kernel task before we access VIC registers
 	// Disable caching and write buffer for this region
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_VIC0_BASE_ADDR, (PADDR) ELFIN_VIC0_BASE_ADDR, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_VIC1_BASE_ADDR, (PADDR) ELFIN_VIC1_BASE_ADDR, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_VIC2_BASE_ADDR, (PADDR) ELFIN_VIC2_BASE_ADDR, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_VIC3_BASE_ADDR, (PADDR) ELFIN_VIC3_BASE_ADDR, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
 
 	//------------------------- GPIO ---------------------------------
 	// Create IO mappings for the kernel task before we access GPIO registers
 	// Disable caching and write buffer for this region
-	_MMU_add_l1_va_to_pa_map(ptable, 
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_GPIO_BASE, (PADDR) ELFIN_GPIO_BASE, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
-
 }
 #endif	// ENABLE_MMU

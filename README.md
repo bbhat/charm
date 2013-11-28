@@ -1,6 +1,6 @@
 chARM 
 =====
-chARM is a Realtime Operating System developed from scratch that runs on ARM platform. chARM implements Earliest Deadline First (EDF) scheduling algorithm. Its periodic threading model allows creating tasks with arbitrary period, budget, deadline and phase having granularity and accuracy of few microseconds. chARM currently runs on Mini210s development board which has Samsung S5PV210 SOC with Cortex-A8 core operating at 1GHz. It also runs on TQ2440 development board which has Samsung S3C2440 SOC. Each application in chARM is compiled and built independently from the kernel. A ramdisk File System image is prepared with all applications, data and loaded by the kernel when it starts. The main goal of this OS is to be able to use it in safety critical hard realtime applications. This repository is self contained and has all the tools and scripts necessary to build, run this OS and also debug using GDB. Work is in progress to add MMU support.
+chARM is a Realtime Operating System developed from scratch that runs on ARM platform. chARM implements Earliest Deadline First (EDF) scheduling algorithm. Its periodic threading model allows creating tasks with arbitrary period, budget, deadline and phase having granularity and accuracy of few microseconds. chARM currently runs on Mini210s development board which has Samsung S5PV210 SOC with Cortex-A8 core operating at 1GHz. It also runs on TQ2440 development board which has Samsung S3C2440 SOC. Each application in chARM is compiled and built independently from the kernel. A ramdisk File System image is prepared with all applications, data and loaded by the kernel when it starts. The main goal of this OS is to be able to use it in safety critical hard realtime applications. This repository is self contained and has all the tools and scripts necessary to build, run this OS and also debug using GDB. Each application and the kernel has its own address space and are protected from each other.
 
 Main Features of the RTOS
 =========================
@@ -25,7 +25,7 @@ Main Features of the RTOS
 
 * Usually when each applications have their own address space, switching between tasks of different applications incur high cost which includes flushing instruction / data caches / TLBs etc. This time can run into few milliseconds. But chARM does this in a different way to provide least context switch time. Basically the total of 4GB address space is allocated to different applications & the kernel at the design time. Each application has non-overlapping address range allocated to it from the total 4GB address space. The page tables are setup in such a way that each application can access only its address range. This implementation means, we don't have to flush the caches or the TLBs. The total of 4GB is not a limiting factor in Embedded systems !
 
-* MMU support is being added. This enables paging and memory protection.
+* MMU support available. The Kernel process can be configured to use page sizes of 1MB / 64KB / 4KB. User processes can be configured to use page sizes of 64K / 4K
 
 * Eventually I intend to add support for graphics using OpenGL
 

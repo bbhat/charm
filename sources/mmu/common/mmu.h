@@ -23,6 +23,7 @@
 #if ENABLE_MMU
 
 #define PAGE_SIZE			(4 * ONE_KB)
+#define LARGE_PAGE_SIZE		(16 * ONE_KB)
 #define SECTION_PAGE_SIZE	(ONE_MB)
 
 typedef enum
@@ -108,7 +109,11 @@ OS_Error _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa
 								BOOL cache_enable, BOOL write_buffer);
 
 // Function to create L2 VA to PA mapping for a given page table							
-OS_Error _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+OS_Error _MMU_add_l2_large_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+								UINT32 size, _MMU_PTE_AccessPermission access,
+								BOOL cache_enable, BOOL write_buffer);
+								
+OS_Error _MMU_add_l2_small_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
 								UINT32 size, _MMU_PTE_AccessPermission access,
 								BOOL cache_enable, BOOL write_buffer);
 

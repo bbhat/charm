@@ -143,11 +143,116 @@ OS_Error _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-// Function to create L2 VA to PA mapping for a given process
+// Function to create L2 VA to PA mapping in a given ptable using large pages (64K)
+// If we run out of page table space the function just returns with whatever 
+// area it could map before failing
+/////////////////////////////////////////////////////////////////////////////////
+OS_Error _MMU_add_l2_large_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+								UINT32 size, _MMU_PTE_AccessPermission access,
+								BOOL cache_enable, BOOL write_buffer)
+{
+#if _ARM_ARCH >= 6
+
+	_MMU_L2_PageTable * l2_ptable;
+	PADDR l2_pa;
+	
+	// If ptable is NULL, assume kernel process	
+	if(!ptable) {
+		ASSERT(g_kernel_process);
+		ptable = g_kernel_process->ptable;
+	}
+	
+	// Validate the inputs
+	ASSERT(ptable && size);
+
+	// Ensure that virtual and physical addresses are LARGE_PAGE_SIZE aligned
+	ASSERT((va & (LARGE_PAGE_SIZE - 1)) == 0);
+	ASSERT((pa & (LARGE_PAGE_SIZE - 1)) == 0);	
+		
+	// Convert size to multiples of PAGE_SIZE
+	size += (LARGE_PAGE_SIZE - 1);
+	size &= ~(LARGE_PAGE_SIZE - 1);
+	
+	// Extract access permissions
+	const UINT32 AP = (access & 0x03);
+	const UINT32 APX = (access & 0x04) >> 2;
+	const UINT32 XN = (~access & 0x08) >> 3;
+
+	// For L2 page tables, we should first have an L1 page table entry
+	// First level loop for the L1 page table	
+	while(size > 0)
+	{
+		// Extract the section_base_address. Since each section is 1MB in size, extract
+		// the top 12 bits of the virtual address
+		UINT32 section_base_address = (va >> 20) & 0xfff;
+		
+		// Check if there is already an L1 page table entry. 
+		// If not, then allocate an L2 page table and create an entry in the L1 page table to point 
+		// to this L2 table
+		if((ptable->pte[section_base_address] & 0x03) == PTE_FAULT)
+		{
+			// Allocate L2 course page table
+			l2_ptable = _MMU_allocate_l2_course_page_table();
+			
+			// Physical address of L2 table. We are using va == pa.
+			l2_pa = (PADDR) l2_ptable;
+			
+			if(!l2_ptable)
+			{
+				FAULT("Could not allocate L2 page table: No space in page table area\n");
+				return RESOURCE_EXHAUSTED;	
+			}
+			
+			// Update the L1 page table
+			ptable->pte[section_base_address] = 
+				((l2_pa & 0xfffffc00) | 			// Base physical address of the section
+				(KERNEL_DOMAIN << 5) |				// Domain
+				PTE_CORSE);							// Section Page Table Entry						
+		}
+		else
+		{
+			// There is already an L2 page table allocated. Get it's address. Since we are using va == pa,
+			// we can reconstruct it back from the l1 page table
+			l2_pa = (PADDR) ptable->pte[section_base_address] & 0xfffffc00;
+			l2_ptable = (_MMU_L2_PageTable *) l2_pa;			
+		}
+		
+		// The l2 index is contained in bits [19..12]
+		UINT32 l2_index = (va >> 12) & 0xff;
+		do
+		{
+			// Create l2 course page table entry
+			l2_ptable->pte[l2_index] = 
+				((pa & 0xffff0000) | 				// Base physical address of the section
+				(XN << 15) |						// Execute Never flag
+				(APX << 9) |						// APX: Extended Access permissions
+				(AP << 4) |							// Access permissions
+				(cache_enable ? (1 << 3) : 0) |		// Enable cache?
+				(write_buffer ? (1 << 2) : 0) |		// Enable write buffer?
+				L2PTE_LARGE);						// Small Page Table Entry
+			
+			// We need to repeat the large page table entry multiple times (16)
+			// Using PAGE_SIZE instead of LARGE_PAGE_SIZE below will accomplish this
+			l2_index = (l2_index + 1) & 0xff;
+			size -= PAGE_SIZE;
+			va += PAGE_SIZE;
+			pa += PAGE_SIZE;
+		}
+		while(l2_index && size);
+	}	
+	
+#else
+	#error "Not implemented Yet"
+#endif
+	return SUCCESS;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// Function to create L2 VA to PA mapping for a given ptable using small pages (4K)
 // This creates L2 Course Page table entries. If we run out of page table space
 // the function just returns with whatever area it could map before failing
 /////////////////////////////////////////////////////////////////////////////////
-OS_Error _MMU_add_l2_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+OS_Error _MMU_add_l2_small_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
 								UINT32 size, _MMU_PTE_AccessPermission access,
 								BOOL cache_enable, BOOL write_buffer)
 {

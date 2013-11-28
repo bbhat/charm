@@ -194,11 +194,20 @@ OS_Error OS_CreateProcessFromFile(
 					ap = KERNEL_NA_USER_NA;
 					break;				
 			}
-			
-			_MMU_add_l2_va_to_pa_map(pcb->ptable,
+
+#if USER_PAGE_SIZE==4
+			_MMU_add_l2_small_page_va_to_pa_map(pcb->ptable,
 									sections[i].vaddr, sections[i].vaddr,
 									sections[i].size, ap, 
 									TRUE, TRUE);
+#elif USER_PAGE_SIZE==64
+			_MMU_add_l2_large_page_va_to_pa_map(pcb->ptable,
+									sections[i].vaddr, sections[i].vaddr,
+									sections[i].size, ap, 
+									TRUE, TRUE);
+#else
+	#error "Supported values for USER_PAGE_SIZE is either 4 or 64"
+#endif
 		}
 #endif // ENABLE_MMU
 

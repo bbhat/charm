@@ -15,12 +15,10 @@ MEMORY
 	DRAM			: ORIGIN = 0x20000000,  LENGTH = 0x20000000	
 
 	/* 
-		Since we use only L1 page table for the kernel, each of the following sections
-		should be 1MB aligned
+		Note: Depending on the KERNEL_PAGE_SIZE used in os_config.h we need to have the
+		matching alignment in the below map
 	*/
-	OS_MEM_EX		: ORIGIN = 0x20000000,  LENGTH = 0x100000
-	OS_MEM_RO		: ORIGIN = 0x20100000,  LENGTH = 0x100000
-	OS_MEM_RW		: ORIGIN = 0x20200000,  LENGTH = 0x100000
+	OS_MEM		    : ORIGIN = 0x20000000,  LENGTH = 0x300000
 	PAGE_TABLES 	: ORIGIN = 0x20300000,  LENGTH = 0x100000
 	RAMDISK			: ORIGIN = 0x20400000,  LENGTH = 0x100000
 	APP_MEM			: ORIGIN = 0x20500000,  LENGTH = 0x1FC00000
@@ -34,15 +32,7 @@ PHDRS
 }
 
 SECTIONS
-{
-	/* OS System space for page tables */
-	__EX_system_area_start__  = 0x20000000;
-	__EX_system_area_length__ = 0x100000;
-	__RO_system_area_start__  = 0x20100000;
-	__RO_system_area_length__ = 0x100000;
-	__RW_system_area_start__  = 0x20200000;
-	__RW_system_area_length__ = 0x100000;
-	
+{	
 	/* Allocatine space for page tables */
 	__page_table_area_start__  = 0x20300000;
 	__page_table_area_length__ = 0x100000;
@@ -54,24 +44,29 @@ SECTIONS
 	/* Place other sections */
 	.text :
 	{
+		__EX_system_area_start__  = .;
 		*(.text.vectors)
 		*(.text)
 		*(.text.*)	
+		__EX_system_area_end__  = .;
 		
-	} > OS_MEM_EX : code_seg
+	} > OS_MEM : code_seg
 
-	.rodata : ALIGN(0x1000)
+	.rodata : ALIGN(0x10000)
 	{
+		__RO_system_area_start__ = .;
 		*(.rodata)
 		*(.rodata.*)
+		__RO_system_area_end__ = .;
 		
-	} > OS_MEM_RO : rodata_seg
+	} > OS_MEM : rodata_seg
 	
-	.data : ALIGN(0x1000)
+	.data : ALIGN(0x10000)
 	{
+		__RW_system_area_start__  = .;
 		*(.data)
 		
-	} > OS_MEM_RW : data_seg
+	} > OS_MEM : data_seg
 	
 	.bss :
 	{
@@ -82,12 +77,12 @@ SECTIONS
 		. = ALIGN(4);
 		__bss_end__ = .;
 		
-	} > OS_MEM_RW : data_seg
+	} > OS_MEM : data_seg
 	
 	.stack :
 	{
 		*(.stack)
-						
-	} > OS_MEM_RW : data_seg
-	
+		__RW_system_area_end__ = .;
+				
+	} > OS_MEM : data_seg	
 }
