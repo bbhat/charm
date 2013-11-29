@@ -40,6 +40,7 @@ typedef enum
 	KERNEL_RO_USER_NA = ((1 << 2) | 1),
 	KERNEL_RO_USER_RO = ((1 << 2) | 2),
 	KERNEL_EX_USER_NA = ((1 << 3) | (1 << 2) | 1),
+	KERNEL_RO_USER_EX = ((1 << 3) | (1 << 2) | 2),
 	KERNEL_RW_USER_EX = ((1 << 3) | 2)
 	
 } _MMU_PTE_AccessPermission;

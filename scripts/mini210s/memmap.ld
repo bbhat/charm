@@ -29,6 +29,7 @@ PHDRS
    code_seg		PT_LOAD;
    rodata_seg	PT_LOAD;
    data_seg		PT_LOAD;
+   user_seg		PT_LOAD;
 }
 
 SECTIONS
@@ -84,5 +85,14 @@ SECTIONS
 		*(.stack)
 		__RW_system_area_end__ = .;
 				
-	} > OS_MEM : data_seg	
+	} > OS_MEM : data_seg
+	
+	/* There are some user functions in the kernel binary. They should not share page with the kernel */
+	.user : ALIGN(0x10000)
+	{
+		__EX_user_area_start__  = .;
+		*(.user)
+		__EX_user_area_end__  = .;
+		
+	} > OS_MEM : user_seg
 }

@@ -30,6 +30,18 @@ void task_period(void * ptr)
 	PFM_SetUserLED(*(LED_Number *)ptr, LED_TOGGLE);
 }
 
+int count = 0;
+void task_data_abort(void * ptr)
+{
+	PFM_SetUserLED(*(LED_Number *)ptr, LED_TOGGLE);
+	
+	// Causes abort after 100 seconds
+	if(count++ == 10000)
+	{
+		count = *((volatile UINT32 *)0x20000000);
+	}
+}
+
 void task_TBE(void * ptr)
 {
 	while(1);

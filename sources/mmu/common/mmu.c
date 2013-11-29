@@ -134,8 +134,7 @@ OS_Error _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa
 		size -= SECTION_PAGE_SIZE;
 		pa += SECTION_PAGE_SIZE;
 		va += SECTION_PAGE_SIZE;
-	}	
-	
+	}
 #else
 	#error "Not implemented Yet"
 #endif
@@ -239,8 +238,7 @@ OS_Error _MMU_add_l2_large_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR v
 			pa += PAGE_SIZE;
 		}
 		while(l2_index && size);
-	}	
-	
+	}
 #else
 	#error "Not implemented Yet"
 #endif
@@ -342,8 +340,7 @@ OS_Error _MMU_add_l2_small_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR v
 			pa += PAGE_SIZE;
 		}
 		while(l2_index && size);
-	}	
-	
+	}
 #else
 	#error "Not implemented Yet"
 #endif

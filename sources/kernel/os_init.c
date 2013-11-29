@@ -30,6 +30,8 @@ extern UINT32 __ramdisk_start__;
 extern UINT32 __ramdisk_length__;
 extern UINT32 __EX_system_area_start__;
 extern UINT32 __EX_system_area_end__;
+extern UINT32 __EX_user_area_start__;
+extern UINT32 __EX_user_area_end__;
 extern UINT32 __RO_system_area_start__;
 extern UINT32 __RO_system_area_end__;
 extern UINT32 __RW_system_area_start__;
@@ -175,11 +177,19 @@ void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable)
 	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) &__RW_system_area_start__, (PADDR) &__RW_system_area_start__, 
 			length, KERNEL_RW_USER_NA, TRUE, TRUE);
+
+	// Create Map for user section. There are some user functions in the kernel binary. 
+	// They should not share page with the kernel
+	length = (UINT32) ((UINT32)&__EX_user_area_end__ - (UINT32)&__EX_user_area_start__);
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
+			(VADDR) &__EX_user_area_start__, (PADDR) &__EX_user_area_start__, 
+			length, KERNEL_RO_USER_EX, TRUE, TRUE);
 	
+	//------------------------- Ramdisk ---------------------------------
 	// Create Map for Ramdisk space. Kernel will have read/write permissions
 	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) &__ramdisk_start__, (PADDR) &__ramdisk_start__, 
-			(UINT32) &__ramdisk_length__, KERNEL_RW_USER_NA, TRUE, TRUE);
+			(UINT32) &__ramdisk_length__, KERNEL_RO_USER_NA, TRUE, TRUE);
 
 	// Create Map for Page Table space. Kernel will have read/write permissions
 	// This space should not be cacheable / buffer-able

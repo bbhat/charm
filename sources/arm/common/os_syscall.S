@@ -22,7 +22,12 @@ MODEMASK    = 0x1f
 SYSCALL_BASIC     = 0x0
 SYSCALL_SWITCHING = 0x1
 
-   	.section .text
+//----------------------------------------------------------------------
+// The following function is called by some user functions that are in the kernel
+// binary. So we should put it in a '.user' section which will be placed on a separate
+// physical page with user level access previleges
+//----------------------------------------------------------------------
+   	.section .user
    	.code 32
 
 //---------------------------------------------------------------------

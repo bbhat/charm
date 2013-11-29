@@ -10,13 +10,15 @@
 #include "../usr/includes/os_api.h"
 #include "../usr/includes/os_syscall.h"
 
-// Syscall Parameter structure for most used, non-varying syscalls
-_OS_Syscall_Args task_yield_params = {
-		.id = SYSCALL_TASK_YIELD,
-		.version = SYSCALL_VER_1_0,
-		.arg_bytes = 0,
-		.ret_bytes = 0
-	};
+///////////////////////////////////////////////////////////////////////////////
+// Following are the user mode functions that are in the kernel binary. 
+// Place them on a separate physical page so that we can give user level
+// permissions for that page
+///////////////////////////////////////////////////////////////////////////////
+void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata) 
+	__attribute__ ((section (".user")));
+void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata) 
+	__attribute__ ((section (".user")));
 
 ///////////////////////////////////////////////////////////////////////////////
 // This is the main entry function for all user periodic functions           //
@@ -24,6 +26,14 @@ _OS_Syscall_Args task_yield_params = {
 ///////////////////////////////////////////////////////////////////////////////
 void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata)
 {
+	// Syscall Parameter structure for most used, non-varying syscalls
+	_OS_Syscall_Args task_yield_params = {
+			.id = SYSCALL_TASK_YIELD,
+			.version = SYSCALL_VER_1_0,
+			.arg_bytes = 0,
+			.ret_bytes = 0
+		};
+
 	while(1)
 	{
 		// Call the thread handler function
@@ -35,6 +45,14 @@ void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata)
 
 void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata)
 {
+	// Syscall Parameter structure for most used, non-varying syscalls
+	_OS_Syscall_Args task_yield_params = {
+			.id = SYSCALL_TASK_YIELD,
+			.version = SYSCALL_VER_1_0,
+			.arg_bytes = 0,
+			.ret_bytes = 0
+		};
+
 	// Call the thread handler function
 	entry_function(pdata);
 		
@@ -51,6 +69,14 @@ void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata)
 ///////////////////////////////////////////////////////////////////////////////
 void OS_TaskYield()
 {	
+	// Syscall Parameter structure for most used, non-varying syscalls
+	_OS_Syscall_Args task_yield_params = {
+			.id = SYSCALL_TASK_YIELD,
+			.version = SYSCALL_VER_1_0,
+			.arg_bytes = 0,
+			.ret_bytes = 0
+		};
+
 	// This system call will result in context switch, so call advanced version
 	_OS_Syscall(&task_yield_params, NULL, NULL, SYSCALL_SWITCHING);	
 }

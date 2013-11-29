@@ -108,8 +108,9 @@ void _OS_Start()
 
 #if ENABLE_MMU		
 		// We need to set permissions in the domain access register before we enable MMU
+		// DOMAIN_ACCESS_CLIENT specifies that the permission bits should be used from the Page Tables
 		_sysctl_set_domain_rights(
-			(DOMAIN_ACCESS_MANAGER << KERNEL_DOMAIN), 
+			(DOMAIN_ACCESS_CLIENT << KERNEL_DOMAIN), 
 			(DOMAIN_ACCESS_MASK << KERNEL_DOMAIN));
 								  
 		// Before we enable MMU, we need to flush TLB
@@ -370,7 +371,7 @@ void _OS_Schedule()
         _OS_QueuePeek(&g_ap_ready_q, (void**) &task, 0);
     }
 
-    KlogStr(KLOG_CONTEXT_SWITCH, "ContextSW To - ", ((OS_AperiodicTask *)task)->name);
+    KlogStr(KLOG_CONTEXT_SWITCH, "ContextSW To - ", task->name);
 
     // For periodic task, set the next budget timeout we should use.
     if(IS_PERIODIC_TASK(task->attributes))
@@ -395,8 +396,11 @@ void _OS_Schedule()
     }
     
 #if ENABLE_MMU
+	// Before we change the ptable, we need to flush TLB so that older process's maps are discarded
+	_sysctl_flush_tlb();
+
 	// Set the page table address in SYSCTL register to the new task's process
-	_sysctl_set_ptable((PADDR)task->owner_process->ptable);
+	_sysctl_set_ptable((PADDR)(task->owner_process->ptable));
 #endif
     
 #if OS_ENABLE_CPU_STATS==1
