@@ -86,7 +86,7 @@ _MMU_L2_PageTable * _MMU_allocate_l2_course_page_table()
 }
 
 // Function to create L1 VA to PA mapping for a given process
-OS_Error _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+OS_Return _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
 								UINT32 size, _MMU_PTE_AccessPermission access, 
 								BOOL cache_enable, BOOL write_buffer)
 {
@@ -146,7 +146,7 @@ OS_Error _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa
 // If we run out of page table space the function just returns with whatever 
 // area it could map before failing
 /////////////////////////////////////////////////////////////////////////////////
-OS_Error _MMU_add_l2_large_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+OS_Return _MMU_add_l2_large_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
 								UINT32 size, _MMU_PTE_AccessPermission access,
 								BOOL cache_enable, BOOL write_buffer)
 {
@@ -250,7 +250,7 @@ OS_Error _MMU_add_l2_large_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR v
 // This creates L2 Course Page table entries. If we run out of page table space
 // the function just returns with whatever area it could map before failing
 /////////////////////////////////////////////////////////////////////////////////
-OS_Error _MMU_add_l2_small_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+OS_Return _MMU_add_l2_small_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
 								UINT32 size, _MMU_PTE_AccessPermission access,
 								BOOL cache_enable, BOOL write_buffer)
 {

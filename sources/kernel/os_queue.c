@@ -118,7 +118,7 @@ void _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key)
 	}
 }
 
-OS_Error _OS_QueuePeek(_OS_Queue * q, void ** item, UINT64 * key)
+OS_Return _OS_QueuePeek(_OS_Queue * q, void ** item, UINT64 * key)
 {
 	ASSERT(q);
 	

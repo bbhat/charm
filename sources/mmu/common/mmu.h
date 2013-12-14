@@ -105,16 +105,16 @@ _MMU_L1_PageTable * _MMU_allocate_l1_page_table();
 _MMU_L2_PageTable * _MMU_allocate_l2_course_page_table();
 
 // Function to create L1 VA to PA mapping for a given page table
-OS_Error _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+OS_Return _MMU_add_l1_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
 								UINT32 size, _MMU_PTE_AccessPermission access, 
 								BOOL cache_enable, BOOL write_buffer);
 
 // Function to create L2 VA to PA mapping for a given page table							
-OS_Error _MMU_add_l2_large_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+OS_Return _MMU_add_l2_large_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
 								UINT32 size, _MMU_PTE_AccessPermission access,
 								BOOL cache_enable, BOOL write_buffer);
 								
-OS_Error _MMU_add_l2_small_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
+OS_Return _MMU_add_l2_small_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR va, PADDR pa, 
 								UINT32 size, _MMU_PTE_AccessPermission access,
 								BOOL cache_enable, BOOL write_buffer);
 

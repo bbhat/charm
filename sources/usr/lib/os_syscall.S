@@ -15,7 +15,7 @@ SYSCALL_SWITCHING = 0x1
 
 //---------------------------------------------------------------------
 // Assembly routine that makes the system call which does not result in context switches
-// OS_Error _OS_Syscall(const _OS_Syscall_Args * param_info, 
+// OS_Return _OS_Syscall(const _OS_Syscall_Args * param_info, 
 //						const void * arg, void * ret, Syscall_type type)
 //---------------------------------------------------------------------
 	.global _OS_Syscall

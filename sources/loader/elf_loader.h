@@ -35,7 +35,7 @@ typedef struct {
 //		It will be updated with the actual number of sections updated in the 
 //		'sections' array.
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error elf_get_sections(void * elfdata, void ** start_address, 
+OS_Return elf_get_sections(void * elfdata, void ** start_address, 
 						Elf_SectionAttribute * sections, UINT32 * count);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,6 +43,6 @@ OS_Error elf_get_sections(void * elfdata, void ** start_address,
 // physical copying of code and data from the elf file to memory.
 // elfdata -> pointer to the beginning elf file in the memory
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error elf_load(void * elfdata);
+OS_Return elf_load(void * elfdata);
 
 #endif // _ELF_LOADER_H

@@ -59,7 +59,7 @@ void _OS_Schedule();
 ///////////////////////////////////////////////////////////////////////////////
 // OS_CreatePeriodicTask - API to create periodic tasks
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error OS_CreatePeriodicTask(
+OS_Return OS_CreatePeriodicTask(
 	UINT32 period_in_us,
 	UINT32 deadline_in_us,
 	UINT32 budget_in_us,
@@ -89,7 +89,7 @@ OS_Error OS_CreatePeriodicTask(
 // OS_CreatePeriodicTask - API to create periodic tasks
 //		OS Internal function with more arguments
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error _OS_CreatePeriodicTask(
+OS_Return _OS_CreatePeriodicTask(
 	UINT32 period_in_us,
 	UINT32 deadline_in_us,
 	UINT32 budget_in_us,
@@ -249,7 +249,7 @@ OS_Error _OS_CreatePeriodicTask(
 // OS_CreateAperiodicTask
 // 		OS API for creating Aperiodic task
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error OS_CreateAperiodicTask(UINT16 priority, 
+OS_Return OS_CreateAperiodicTask(UINT16 priority, 
 	UINT32 * stack, UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
 	OS_Task * task,
@@ -276,7 +276,7 @@ OS_Error OS_CreateAperiodicTask(UINT16 priority,
 // The task creation routine for Aperiodic tasks
 //		OS Internal function with more arguments
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error _OS_CreateAperiodicTask(UINT16 priority, 
+OS_Return _OS_CreateAperiodicTask(UINT16 priority, 
 	UINT32 * stack, UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
 	UINT16 options,
@@ -461,7 +461,7 @@ UINT64 OS_GetThreadElapsedTime()
 // Get global Task allocation mask. This function can be called only from Admin process
 // Non-admin tasks will get NOT_ADMINISTRATOR error
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task)
+OS_Return _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task)
 {
 	const UINT32 MAX_INDEX = (MAX_TASK_COUNT + 31) >> 5;
 	int i;

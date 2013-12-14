@@ -11,9 +11,9 @@
 #define _RTC_H_
 
 #include "os_config.h"
-#include "os_types.h"
+#include "os_driver.h"
 
-#if ENABLE_RTC==1
+#if ENABLE_RTC
 
 // Structure for Date and Time
 typedef struct
@@ -33,6 +33,7 @@ typedef struct
 	UINT8	hour;	// BCD format
 	UINT8	min;	// BCD format
 	UINT8	sec;	// BCD format
+	
 } OS_Time;
 
 enum
@@ -44,9 +45,27 @@ enum
 	THURSDAY,
 	FIRDAY,
 	SATURDAY
-} ;
+	
+} OS_Weekday;
 
-// RTC functions are defined in os_core.h
+///////////////////////////////////////////////////////////////////////////////
+// Driver functions
+///////////////////////////////////////////////////////////////////////////////
+OS_Return _RTC_DriverInit(void);
+
+///////////////////////////////////////////////////////////////////////////////
+// Date and Time functions
+///////////////////////////////////////////////////////////////////////////////
+OS_Return _OS_SetDateAndTime(const OS_DateAndTime *date_and_time);
+OS_Return _OS_GetDateAndTime(OS_DateAndTime *date_and_time);
+OS_Return _OS_GetTime(OS_Time *time);
+
+#if ENABLE_RTC_ALARM
+
+OS_Return _OS_SetAlarm(const OS_DateAndTime *date_and_time);
+OS_Return _OS_GetAlarm(OS_DateAndTime *date_and_time);
+
+#endif // ENABLE_RTC_ALARM
 
 #endif // ENABLE_RTC
 

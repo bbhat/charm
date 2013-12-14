@@ -156,7 +156,7 @@ typedef union OS_GenericTask
 
 } OS_GenericTask;
 
-OS_Error _OS_CreatePeriodicTask(
+OS_Return _OS_CreatePeriodicTask(
 	UINT32 period_in_us,
 	UINT32 deadline_in_us,
 	UINT32 budget_in_us,
@@ -169,7 +169,7 @@ OS_Error _OS_CreatePeriodicTask(
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata);
 
-OS_Error _OS_CreateAperiodicTask(UINT16 priority, 
+OS_Return _OS_CreateAperiodicTask(UINT16 priority, 
 	UINT32 * stack, 
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
@@ -178,7 +178,7 @@ OS_Error _OS_CreateAperiodicTask(UINT16 priority,
 	void(* task_entry_function)(void * pdata),
 	void * pdata);
 
-OS_Error _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
+OS_Return _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
 
 // Placeholders for all the process control blocks
 extern OS_GenericTask	g_task_pool[MAX_TASK_COUNT];

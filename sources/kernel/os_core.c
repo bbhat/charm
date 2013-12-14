@@ -101,9 +101,9 @@ void Syslog64(const INT8 * str, UINT64 value)
 // The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
 // the options provided
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error _PFM_SetUserLED(LED_Number led, LED_Options options)
+OS_Return _PFM_SetUserLED(LED_Number led, LED_Options options)
 {
-	OS_Error status = SUCCESS;
+	OS_Return status = SUCCESS;
 
 	switch(options)
 	{

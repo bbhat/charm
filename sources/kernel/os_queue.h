@@ -21,7 +21,7 @@
 // Necessary Include Files
 ///////////////////////////////////////////////////////////////////////////////
 #include "os_types.h"	// Include common data types being used
-#include "os_core.h"  // For OS_Error definition
+#include "os_core.h"  // For OS_Return definition
 
 // Typedef for Queue node
 typedef struct _OS_QueueNode _OS_QueueNode;
@@ -60,6 +60,6 @@ void _OS_QueueDelete(_OS_Queue * q, void * item);
 void _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key);
 
 // Function to peek the first element from the Queue. 
-OS_Error _OS_QueuePeek(_OS_Queue * q, void ** item, UINT64 * key);
+OS_Return _OS_QueuePeek(_OS_Queue * q, void ** item, UINT64 * key);
 
 #endif // _OS_QUEUE_H

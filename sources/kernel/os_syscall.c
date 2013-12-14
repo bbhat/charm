@@ -36,9 +36,9 @@ static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const 
 // Other function prototypes
 //////////////////////////////////////////////////////////////////////////////
 void _OS_TaskYield(void);
-OS_Error _PFM_SetUserLED(LED_Number led, LED_Options options);
+OS_Return _PFM_SetUserLED(LED_Number led, LED_Options options);
 UINT32 _PFM_SerialLog(const INT8 * str, UINT32 size);
-OS_Error _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
+OS_Return _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
 
 OS_GenericTask * g_current_task;
 
@@ -92,7 +92,7 @@ static void syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, cons
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if(((param_info->arg_bytes >> 2) >= 9) && ((param_info->ret_bytes >> 2) >= 2))
 	{	
@@ -121,7 +121,7 @@ static void syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, con
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if(((param_info->arg_bytes >> 2) >= 6) && ((param_info->ret_bytes >> 2) >= 2))
 	{
@@ -152,7 +152,7 @@ static void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * a
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 2))
 	{
@@ -165,7 +165,7 @@ static void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * a
 static void syscall_SemWait(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if((param_info->arg_bytes >> 2) >= 1)
 	{		
@@ -178,7 +178,7 @@ static void syscall_SemWait(const _OS_Syscall_Args * param_info, const void * ar
 static void syscall_SemPost(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if((param_info->arg_bytes >> 2) >= 1)
 	{
@@ -191,7 +191,7 @@ static void syscall_SemPost(const _OS_Syscall_Args * param_info, const void * ar
 static void syscall_SemFree(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if((param_info->arg_bytes >> 2) >= 1)
 	{
@@ -205,7 +205,7 @@ static void syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void 
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 2))
 	{
@@ -261,7 +261,7 @@ static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * 
 	
 #if OS_ENABLE_CPU_STATS==1	
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 
 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
 	{
@@ -279,7 +279,7 @@ static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void 
 	UINT32 * uint_ret = (UINT32 *)ret;
 #if OS_ENABLE_CPU_STATS==1
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if(((param_info->arg_bytes >> 2) >= 2) && ((param_info->ret_bytes >> 2) >= 1))
 	{
@@ -297,7 +297,7 @@ static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const 
 	UINT32 * uint_ret = (UINT32 *)ret;
 #if OS_ENABLE_CPU_STATS==1
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Error result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ERROR;
 	
 	if(((param_info->arg_bytes >> 2) >= 3) && ((param_info->ret_bytes >> 2) >= 1))
 	{

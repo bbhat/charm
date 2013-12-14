@@ -18,7 +18,7 @@
 // External functions used in here
 extern void _OS_InitTimer();
 extern void _OS_PlatformInit();
-extern OS_Error ramdisk_init(void * addr);
+extern OS_Return ramdisk_init(void * addr);
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;

@@ -18,7 +18,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // The following function reads elf program section attributes.
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error elf_get_sections(void * elfdata, void ** start_address, 
+OS_Return elf_get_sections(void * elfdata, void ** start_address, 
 							Elf_SectionAttribute * sections, UINT32 * count)
 {	
 	UINT32 scount = 0;
@@ -104,7 +104,7 @@ OS_Error elf_get_sections(void * elfdata, void ** start_address,
 ///////////////////////////////////////////////////////////////////////////////
 // The following function loads elf program sections into memory.
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error elf_load(void * elfdata)
+OS_Return elf_load(void * elfdata)
 {	
 	UINT32 i;
 	

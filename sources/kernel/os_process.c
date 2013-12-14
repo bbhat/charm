@@ -37,7 +37,7 @@ UINT32 g_rdfile_usage_mask[(MAX_OPEN_FILES + 31) >> 5];
 
 #define MAX_LOADABLE_SECTIONS	16
 
-OS_Error OS_CreateProcess(
+OS_Return OS_CreateProcess(
 	OS_Process *process,
 	const INT8 *process_name,
 	UINT16 attributes,
@@ -115,7 +115,7 @@ OS_Error OS_CreateProcess(
 	return SUCCESS; 
 }
 
-OS_Error OS_CreateProcessFromFile(
+OS_Return OS_CreateProcessFromFile(
 		OS_Process *process,
 		const INT8 * process_name,
 		UINT16 attributes,
@@ -162,7 +162,7 @@ OS_Error OS_CreateProcessFromFile(
 	}
 	
 	// All sections can be loaded. 
-	OS_Error status = OS_CreateProcess(process, process_name, attributes, start_address, pdata);
+	OS_Return status = OS_CreateProcess(process, process_name, attributes, start_address, pdata);
 	if(status == SUCCESS)
 	{
 		// Get a pointer to actual PCB

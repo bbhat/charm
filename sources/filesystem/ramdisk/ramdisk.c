@@ -12,7 +12,7 @@
 #include "util.h"
 #include "os_process.h"
 
-OS_Error ramdisk_init(void * addr);
+OS_Return ramdisk_init(void * addr);
 
 static INT32 getToken(INT8 * dst, const INT8 * path);
 
@@ -30,7 +30,7 @@ static BOOL ramdisk_assert_open(INT32 fd);
 static BOOL ramdisk_assert_ownership(INT32 fd);
 static INT32 getToken(INT8 * dst, const INT8 * path);
 
-OS_Error ramdisk_init(void * addr)
+OS_Return ramdisk_init(void * addr)
 {
 	if(!addr) {
 		FAULT("ramdisk_init failed: address argument is NULL\n");

@@ -10,7 +10,7 @@
 #include "os_api.h"
 #include "os_syscall.h"
 
-OS_Error OS_CreatePeriodicTask(
+OS_Return OS_CreatePeriodicTask(
 	UINT32 period_in_us,
 	UINT32 deadline_in_us,
 	UINT32 budget_in_us,
@@ -47,10 +47,10 @@ OS_Error OS_CreatePeriodicTask(
 	// Store the return value
 	*task = (OS_Task) ret[1];
 	
-	return (OS_Error) ret[0];
+	return (OS_Return) ret[0];
 }
 
-OS_Error OS_CreateAperiodicTask(
+OS_Return OS_CreateAperiodicTask(
 	UINT16 priority,				// Smaller the number, higher the priority
 	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
@@ -81,7 +81,7 @@ OS_Error OS_CreateAperiodicTask(
 	// Store the return value
 	*task = (OS_Task) ret[1];
 	
-	return (OS_Error) ret[0];
+	return (OS_Return) ret[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -96,7 +96,7 @@ OS_Error OS_CreateAperiodicTask(
 //		process_entry_function: This is the pointer to the process entry function.
 //			The process_entry_function should initialize all process wide data structures
 //			and create all tasks
-OS_Error OS_CreateProcess(
+OS_Return OS_CreateProcess(
 		OS_Process *process,
 		const INT8 * process_name,
 		UINT16 attributes,
@@ -173,7 +173,7 @@ void OS_TaskYield()
 ///////////////////////////////////////////////////////////////////////////////
 // Semaphore Functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value)
+OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -191,10 +191,10 @@ OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value)
 	// Store the return value
 	*sem = (OS_Sem) ret[1];
 		
-	return (OS_Error) ret[0];	
+	return (OS_Return) ret[0];	
 }
 
-OS_Error OS_SemWait(OS_Sem sem)
+OS_Return OS_SemWait(OS_Sem sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -209,10 +209,10 @@ OS_Error OS_SemWait(OS_Sem sem)
 	arg[0] = sem;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
 	
-	return (OS_Error) ret;
+	return (OS_Return) ret;
 }
 
-OS_Error OS_SemPost(OS_Sem sem)
+OS_Return OS_SemPost(OS_Sem sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -227,10 +227,10 @@ OS_Error OS_SemPost(OS_Sem sem)
 	arg[0] = sem;
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
 	
-	return (OS_Error) ret;
+	return (OS_Return) ret;
 }
 
-OS_Error OS_SemFree(OS_Sem sem)
+OS_Return OS_SemFree(OS_Sem sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -245,10 +245,10 @@ OS_Error OS_SemFree(OS_Sem sem)
 	arg[0] = sem;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
 	
-	return (OS_Error) ret;
+	return (OS_Return) ret;
 }
 
-OS_Error OS_SemGetValue(OS_Sem sem, INT32 *val)
+OS_Return OS_SemGetValue(OS_Sem sem, INT32 *val)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -268,13 +268,13 @@ OS_Error OS_SemGetValue(OS_Sem sem, INT32 *val)
 		*val = ret[1];
 	}
 		
-	return (OS_Error) ret[0];
+	return (OS_Return) ret[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Statistics Functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error OS_GetStatCounters(OS_StatCounters * ptr)
+OS_Return OS_GetStatCounters(OS_StatCounters * ptr)
 {
 	_OS_Syscall_Args param_info;
 	void * arg[1];
@@ -289,10 +289,10 @@ OS_Error OS_GetStatCounters(OS_StatCounters * ptr)
 	arg[0] = (void *)ptr;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 			
-	return (OS_Error) ret[0];
+	return (OS_Return) ret[0];
 }
 
-OS_Error OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
+OS_Return OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
 {
 	_OS_Syscall_Args param_info;
 	void * arg[2];
@@ -308,10 +308,10 @@ OS_Error OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
 	arg[1] = (void *)ptr;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 			
-	return (OS_Error) ret[0];	
+	return (OS_Return) ret[0];	
 }
 
-OS_Error OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task)
+OS_Return OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task)
 {
 	_OS_Syscall_Args param_info;
 	void * arg[3];
@@ -329,5 +329,5 @@ OS_Error OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_
 
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 		
-	return (OS_Error) ret[0];	
+	return (OS_Return) ret[0];	
 }

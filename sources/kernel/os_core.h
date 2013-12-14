@@ -57,7 +57,7 @@ typedef enum
 	
 	UNKNOWN = 99	
 
-} OS_Error;
+} OS_Return;
 
 #include "os_process.h"
 #include "os_task.h"
@@ -97,7 +97,7 @@ extern OS_GenericTask * g_current_task;
 // The period and phase parameters should be multiple of SMALLEST_TASK_PERIOD
 // Deadline and Budget can be anything valid (in microseconds)
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error OS_CreatePeriodicTask(
+OS_Return OS_CreatePeriodicTask(
 	UINT32 period_in_us,
 	UINT32 deadline_in_us,
 	UINT32 budget_in_us,
@@ -109,7 +109,7 @@ OS_Error OS_CreatePeriodicTask(
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata);
 
-OS_Error OS_CreateAperiodicTask(
+OS_Return OS_CreateAperiodicTask(
 	UINT16 priority,				// Smaller the number, higher the priority
 	UINT32 * stack,
 	UINT32 stack_size_in_bytes,
@@ -131,7 +131,7 @@ OS_Error OS_CreateAperiodicTask(
 //		process_entry_function: This is the pointer to the process entry function.
 //			The process_entry_function should initialize all process wide data structures
 //			and create all tasks
-OS_Error OS_CreateProcess(
+OS_Return OS_CreateProcess(
 		OS_Process *process,
 		const INT8 * process_name,
 		UINT16 attributes,
@@ -145,7 +145,7 @@ OS_Error OS_CreateProcess(
 //		process_name: pointer to the process name
 //		exec_path: Path to the process executable file. 
 //			The exec file should be in ELF format
-OS_Error OS_CreateProcessFromFile(
+OS_Return OS_CreateProcessFromFile(
 		OS_Process *process,
 		const INT8 * process_name,
 		UINT16 attributes,
@@ -175,29 +175,13 @@ UINT64 OS_GetElapsedTime();
 UINT64 OS_GetThreadElapsedTime();
 
 ///////////////////////////////////////////////////////////////////////////////
-// Date and Time functions
-///////////////////////////////////////////////////////////////////////////////
-#if ENABLE_RTC==1
-
-#include "rtc.h"
-
-OS_Error OS_GetDateAndTime(OS_DateAndTime *date_and_time);
-OS_Error OS_SetDateAndTime(const OS_DateAndTime *date_and_time);
-OS_Error OS_GetTime(OS_Time *time);
-#if ENABLE_RTC_ALARM==1
-OS_Error OS_SetAlarm(const OS_DateAndTime *date_and_time);
-OS_Error OS_GetAlarm(OS_DateAndTime *date_and_time);
-#endif // ENABLE_RTC_ALARM
-#endif // ENABLE_RTC
-
-///////////////////////////////////////////////////////////////////////////////
 // Semaphore functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Error OS_SemAlloc(OS_Sem *sem, UINT32 value);
-OS_Error OS_SemWait(OS_Sem sem);
-OS_Error OS_SemPost(OS_Sem sem);
-OS_Error OS_SemFree(OS_Sem sem);
-OS_Error OS_SemGetValue(OS_Sem sem, INT32 *val);
+OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value);
+OS_Return OS_SemWait(OS_Sem sem);
+OS_Return OS_SemPost(OS_Sem sem);
+OS_Return OS_SemFree(OS_Sem sem);
+OS_Return OS_SemGetValue(OS_Sem sem, INT32 *val);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Function to get the currently running thread. It returns a void pointer 
@@ -239,11 +223,11 @@ typedef struct
 
 // Get global OS statistics. This function can be called only from Admin process
 // Non-admin tasks will get NOT_ADMINISTRATOR error
-OS_Error OS_GetStatCounters(OS_StatCounters * ptr);
+OS_Return OS_GetStatCounters(OS_StatCounters * ptr);
 
 // Get Task specific statistics. This function can be called only from Admin process
 // Non-admin tasks will get NOT_ADMINISTRATOR error
-OS_Error OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr);
+OS_Return OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr);
 
 // Get global Task allocation mask. This function can be called only from Admin process
 // Non-admin tasks will get NOT_ADMINISTRATOR error
@@ -254,7 +238,7 @@ OS_Error OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr);
 // For example, if starting_task=32 and count = 1, then we will get the task_usage_mask 
 // from 32 - 63. If starting_task < 32, it will be truncated to 0. 
 // If (starting_task >=32 && starting_task < 64), it will be truncated to 32
-OS_Error OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
+OS_Return OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Get Task Budget Exceeded count
@@ -287,7 +271,7 @@ typedef enum
 
 // The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
 // the options provided
-OS_Error PFM_SetUserLED(LED_Number led, LED_Options options);
+OS_Return PFM_SetUserLED(LED_Number led, LED_Options options);
 
 // Serial logging functions
 // Returns the number of bytes actually written

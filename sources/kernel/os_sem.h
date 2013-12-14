@@ -23,10 +23,10 @@ typedef struct
     
 } OS_SemaphoreCB;
 
-OS_Error _OS_SemAlloc(OS_Sem *sem, UINT32 value);
-OS_Error _OS_SemWait(OS_Sem sem);
-OS_Error _OS_SemPost(OS_Sem sem);
-OS_Error _OS_SemFree(OS_Sem sem);
-OS_Error _OS_SemGetValue(OS_Sem sem, UINT32 *val);
+OS_Return _OS_SemAlloc(OS_Sem *sem, UINT32 value);
+OS_Return _OS_SemWait(OS_Sem sem);
+OS_Return _OS_SemPost(OS_Sem sem);
+OS_Return _OS_SemFree(OS_Sem sem);
+OS_Return _OS_SemGetValue(OS_Sem sem, UINT32 *val);
 
 #endif //_OS_SEM_H

@@ -78,7 +78,7 @@ void ShowTaskStatistics()
 	int i;
 	UINT32 mask;
 	OS_TaskStatCounters stat;
-	OS_Error status;
+	OS_Return status;
 
 	if(!initialized)
 	{
@@ -134,7 +134,6 @@ void ShowTaskStatistics()
 		}
 	}
 }
-
 
 int main(int argc, char *argv[])
 {

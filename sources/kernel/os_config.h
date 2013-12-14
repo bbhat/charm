@@ -15,7 +15,7 @@
 
 // Drivers to include
 #define ENABLE_RTC                        1
-#define ENABLE_RTC_ALARM                  1
+#define ENABLE_RTC_ALARM                  0
 
 // Instruction and Data Cache related
 #define ENABLE_INSTRUCTION_CACHE          1
@@ -33,11 +33,11 @@
 
 // Do we use Ramdisk? If we want processes to be separate entities, 
 // then keeping them in the ramdisk is the only way
-#define    ENABLE_RAMDISK                 1
+#define ENABLE_RAMDISK                    1
 
 // Task related configuration parameters
 #define MIN_PRIORITY                      255
-#define OS_IDLE_TASK_STACK_SIZE           64        // In Words
+#define OS_IDLE_TASK_STACK_SIZE           64          // In Words
 #define OS_TASK_NAME_SIZE                 16
 #define OS_MIN_USER_STACK_SIZE            256         // Minimum stack size in bytes
 
@@ -55,6 +55,9 @@
 #define MAX_OPEN_FILES                    16         // This number is used to preallocate FILE strctures
 #define MAX_SEMAPHORE_COUNT               64         // This number is used to preallocate Semaphore structures
 #define MAX_MUTEX_COUNT                   64         // This number is used to preallocate Mutex structures
+
+// Kernel drivers
+#define MAX_KERNEL_DRIVERS                16         // Preallocate few driver structures
 
 // MMU related
 #define ENABLE_MMU						  1			 // Support for Virtual memory and memory protection

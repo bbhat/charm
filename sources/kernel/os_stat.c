@@ -27,7 +27,7 @@ void _OS_StatInit(void)
 	g_budget_timer_intr_counter = 0;
 }
 
-OS_Error _OS_GetStatCounters(OS_StatCounters * ptr)
+OS_Return _OS_GetStatCounters(OS_StatCounters * ptr)
 {
 	if(!ptr)
 		return INVALID_ARG;
@@ -47,7 +47,7 @@ OS_Error _OS_GetStatCounters(OS_StatCounters * ptr)
 	return SUCCESS;
 }
 
-OS_Error _OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
+OS_Return _OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
 {
 	if(!ptr)
 		return INVALID_ARG;

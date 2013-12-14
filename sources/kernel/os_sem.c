@@ -29,9 +29,9 @@ extern void _OS_Schedule();
 
 static BOOL assert_open(OS_Sem sem);
 
-OS_Error _OS_SemAlloc(OS_Sem *sem, UINT32 value)
+OS_Return _OS_SemAlloc(OS_Sem *sem, UINT32 value)
 {
-	OS_Error status;
+	OS_Return status;
 	
 	if(!sem) {
 		status = ARGUMENT_ERROR;
@@ -68,9 +68,9 @@ exit:
 	return status;
 }
 
-OS_Error _OS_SemWait(OS_Sem sem)
+OS_Return _OS_SemWait(OS_Sem sem)
 {
-	OS_Error status;
+	OS_Return status;
 	
 #if OS_ENABLE_CPU_STATS==1
     g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);
@@ -144,10 +144,10 @@ exit:
 	return status;
 }
 
-OS_Error _OS_SemPost(OS_Sem sem)
+OS_Return _OS_SemPost(OS_Sem sem)
 {
 	OS_GenericTask* task = NULL;
-	OS_Error status;
+	OS_Return status;
 	UINT64 key = 0;
 	
 #if OS_ENABLE_CPU_STATS==1
@@ -222,9 +222,9 @@ exit:
 	return status;
 }
 
-OS_Error _OS_SemFree(OS_Sem sem)
+OS_Return _OS_SemFree(OS_Sem sem)
 {
-	OS_Error status;
+	OS_Return status;
 	OS_GenericTask* task = NULL;
 	UINT64 key = 0;
 	
@@ -299,9 +299,9 @@ exit:
 	return status;
 }
 
-OS_Error _OS_SemGetValue(OS_Sem sem, UINT32* val)
+OS_Return _OS_SemGetValue(OS_Sem sem, UINT32* val)
 {
-	OS_Error status;
+	OS_Return status;
 		
 	if((status = assert_open(sem)) != SUCCESS) {
 		goto exit;
@@ -324,7 +324,7 @@ exit:
 	return status;
 }
 
-static OS_Error assert_open(OS_Sem sem)
+static OS_Return assert_open(OS_Sem sem)
 {
 	if(sem < 0 || sem >= MAX_SEMAPHORE_COUNT)
 	{
