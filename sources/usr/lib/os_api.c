@@ -28,7 +28,7 @@ OS_Return OS_CreatePeriodicTask(
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_PERIODIC_TASK_CREATE;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -65,7 +65,7 @@ OS_Return OS_CreateAperiodicTask(
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_APERIODIC_TASK_CREATE;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -120,7 +120,7 @@ void PFM_SetUserLED(LED_Number led, LED_Options options)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_PFM_LED_SET;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = 0;
 	
@@ -141,7 +141,7 @@ UINT32 PFM_SerialLog(const INT8 * str, UINT32 size)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_PFM_SERIAL_LOG;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -162,7 +162,7 @@ void OS_TaskYield()
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_TASK_YIELD;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = 0;
 	param_info.ret_bytes = 0;
 	
@@ -181,7 +181,7 @@ OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_ALLOC;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -202,7 +202,7 @@ OS_Return OS_SemWait(OS_Sem sem)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_WAIT;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -220,7 +220,7 @@ OS_Return OS_SemPost(OS_Sem sem)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_POST;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -238,7 +238,7 @@ OS_Return OS_SemFree(OS_Sem sem)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_FREE;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -256,7 +256,7 @@ OS_Return OS_SemGetValue(OS_Sem sem, INT32 *val)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_GET_VALUE;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -282,7 +282,7 @@ OS_Return OS_GetStatCounters(OS_StatCounters * ptr)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_OS_GET_STAT;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -300,7 +300,7 @@ OS_Return OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_TASK_GET_STAT;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -319,7 +319,7 @@ OS_Return OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_GET_TASK_ALLOC_MASK;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -330,4 +330,80 @@ OS_Return OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 		
 	return (OS_Return) ret[0];	
+}
+
+OS_Return OS_DriverLookup(const INT8 * driver_name, OS_Driver * driver)
+{
+	_OS_Syscall_Args param_info;
+	void * arg[1];
+	UINT32 ret[2];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
+	param_info.sub_id = SUBCALL_DRIVER_LOOKUP;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)driver_name;
+
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	
+	if(driver) {
+	    *driver = ret[1];
+	}
+	
+	return (OS_Return) ret[0];	
+}
+
+OS_Return OS_DriverOpen(OS_Driver driver)
+{
+	_OS_Syscall_Args param_info;
+	void * arg[1];
+	UINT32 ret[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
+	param_info.sub_id = SUBCALL_DRIVER_OPEN;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)driver;
+
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	
+	return (OS_Return) ret[0];	
+}
+
+OS_Return OS_DriverClose(OS_Driver driver)
+{
+	_OS_Syscall_Args param_info;
+	void * arg[1];
+	UINT32 ret[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
+	param_info.sub_id = SUBCALL_DRIVER_CLOSE;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)driver;
+
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	
+	return (OS_Return) ret[0];	
+}
+
+OS_Return OS_DriverRead(OS_Driver driver)
+{
+    return NOT_IMPLEMENTED;
+}
+
+OS_Return OS_DriverWrite(OS_Driver driver)
+{
+    return NOT_IMPLEMENTED;
+}
+
+OS_Return OS_DriverConfigure(OS_Driver driver)
+{
+    return NOT_IMPLEMENTED;
 }

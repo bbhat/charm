@@ -29,7 +29,7 @@ void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata)
 	// Syscall Parameter structure for most used, non-varying syscalls
 	_OS_Syscall_Args task_yield_params = {
 			.id = SYSCALL_TASK_YIELD,
-			.version = SYSCALL_VER_1_0,
+			.sub_id = 0,
 			.arg_bytes = 0,
 			.ret_bytes = 0
 		};
@@ -48,7 +48,7 @@ void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata)
 	// Syscall Parameter structure for most used, non-varying syscalls
 	_OS_Syscall_Args task_yield_params = {
 			.id = SYSCALL_TASK_YIELD,
-			.version = SYSCALL_VER_1_0,
+			.sub_id = 0,
 			.arg_bytes = 0,
 			.ret_bytes = 0
 		};
@@ -72,7 +72,7 @@ void OS_TaskYield()
 	// Syscall Parameter structure for most used, non-varying syscalls
 	_OS_Syscall_Args task_yield_params = {
 			.id = SYSCALL_TASK_YIELD,
-			.version = SYSCALL_VER_1_0,
+			.sub_id = 0,
 			.arg_bytes = 0,
 			.ret_bytes = 0
 		};
@@ -92,7 +92,7 @@ OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_ALLOC;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -113,7 +113,7 @@ OS_Return OS_SemWait(OS_Sem sem)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_WAIT;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -131,7 +131,7 @@ OS_Return OS_SemPost(OS_Sem sem)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_POST;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -149,7 +149,7 @@ OS_Return OS_SemFree(OS_Sem sem)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_FREE;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -167,7 +167,7 @@ OS_Return OS_SemGetValue(OS_Sem sem, INT32 *val)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_GET_VALUE;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -189,7 +189,7 @@ void PFM_SetUserLED(LED_Number led, LED_Options options)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_PFM_LED_SET;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = 0;
 	
@@ -210,7 +210,7 @@ UINT32 PFM_SerialLog(const INT8 * str, UINT32 size)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_PFM_SERIAL_LOG;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -232,7 +232,7 @@ OS_Return OS_GetStatCounters(OS_StatCounters * ptr)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_OS_GET_STAT;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -251,7 +251,7 @@ OS_Return OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_TASK_GET_STAT;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	
@@ -270,7 +270,7 @@ OS_Return OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_GET_TASK_ALLOC_MASK;
-	param_info.version = SYSCALL_VER_1_0;
+	param_info.sub_id = 0;
 	param_info.arg_bytes = sizeof(arg);
 	param_info.ret_bytes = sizeof(ret);
 	

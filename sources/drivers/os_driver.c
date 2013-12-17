@@ -33,8 +33,7 @@ static UINT32 g_kernel_driver_count = 0;
 // This is because we use the first 4 characters as a number so that we can easily search
 // for a diver using its name without using expensive string search operations.
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)(OS_Driver *), 
-							DriverFunction functions[], UINT32 functions_count)
+OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)(OS_Driver *))
 {
 	// Validate the arguments
 	ASSERT(driver && init);
@@ -62,17 +61,12 @@ OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)
 	driver->configure = NULL;
 	driver->primary_int_handler = NULL;
 	driver->secondary_int_handler = NULL;
-	
+	driver->driver_functions = NULL;
+	driver->driver_functions_count = 0;
+
+    // Copy the driver name	
 	strncpy(driver->name, name, DRIVER_NAME_SIZE - 1);
 	driver->name[DRIVER_NAME_SIZE - 1] = '\0';
-
-	if(functions_count > 0)
-	{
-		ASSERT(functions);
-		driver->driver_functions = functions;
-	}
-	
-	driver->driver_functions_count = functions_count;
 	
 	// Call the driver 'init' function. This function should initialize all
 	// other function pointers in the driver obect

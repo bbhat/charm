@@ -28,6 +28,10 @@ enum
 	SYSCALL_PFM_SERIAL_LOG,
 	SYSCALL_GET_TASK_ALLOC_MASK,
 	
+	// Functions provided Kernel Drivers
+	SYSCALL_DRIVER_STANDARD_CALL,           // Calling standard functions such as open/close/read/write
+	SYCALL_DRIVER_CUSTOM_CALL,              // Calling custom functions. The sub_id indicates the custom function id
+	
 	// Reserved space for other syscall
 	
 	SYSCALL_PFM_LED_SET = 32,	
@@ -35,13 +39,15 @@ enum
 	SYSCALL_MAX_COUNT
 };
 
-enum
+
+enum    // Sub IDs for SYSCALL_DRIVER_STANDARD_CALL
 {
-	SYSCALL_VER_1_0,
-	SYSCALL_VER_1_1,
-	SYSCALL_VER_1_2,
-	SYSCALL_VER_1_3,
-	SYSCALL_VER_1_4,
+    SUBCALL_DRIVER_LOOKUP = 0,
+    SUBCALL_DRIVER_OPEN = 1,
+    SUBCALL_DRIVER_CLOSE = 2,
+    SUBCALL_DRIVER_READ = 3,
+    SUBCALL_DRIVER_WRITE = 4,
+    SUBCALL_DRIVER_CONFIGURE = 5
 };
 
 typedef enum 
@@ -57,7 +63,7 @@ typedef enum
 typedef struct
 {
 	UINT16	id;
-	UINT16	version;
+	UINT16	sub_id;
 	UINT16	arg_bytes;
 	UINT16	ret_bytes;
 	UINT16	reserved[4];

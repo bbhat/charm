@@ -10,6 +10,7 @@
 #include "os_core.h"
 #include "os_sem.h"
 #include "os_stat.h"
+#include "os_driver.h"
 #include "../usr/includes/os_syscall.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -31,6 +32,8 @@ static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * 
 static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_SerialLog(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_DriverCustomCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 //////////////////////////////////////////////////////////////////////////////
 // Other function prototypes
@@ -308,4 +311,41 @@ static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const 
 #else
 	if(uint_ret) uint_ret[0] = NOT_CONFIGURED;	
 #endif
+}
+
+static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+//     const INT8 * str_args = (const INT8 *)arg;
+//     const UINT32 * int_args = (const UINT32 *)arg;
+// 	UINT32 * uint_ret = (UINT32 *)ret;
+// 	OS_Return result = SYSCALL_ERROR;
+// 	
+// 	switch(param_info->sub_id)
+// 	{
+//     case SUBCALL_DRIVER_LOOKUP:
+//     	OS_Driver *_OS_DriverLookup(const INT8 name[])
+//     
+//     case SUBCALL_DRIVER_OPEN:
+//     
+//     case SUBCALL_DRIVER_CLOSE:
+//     
+//     case SUBCALL_DRIVER_READ:
+//     
+//     case SUBCALL_DRIVER_WRITE:
+//     
+//     case SUBCALL_DRIVER_CONFIGURE:
+//     
+// 	}
+// 	
+// 	
+// 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 2))
+// 	{
+// 		result = _OS_SemAlloc((OS_Sem *)(uint_ret+1), uint_args[0]);
+// 	}
+// 	
+// 	if(uint_ret) uint_ret[0] = result;
+}
+
+static void syscall_DriverCustomCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
 }

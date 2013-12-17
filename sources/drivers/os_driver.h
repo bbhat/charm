@@ -54,8 +54,7 @@ typedef struct OS_Driver
 // The name should be at least 4 characters and those 4 characters should be unique.
 // This is because we use the first 4 characters as a number so that we can easily search
 // for a diver using its name without using expensive string search operations.
-OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)(OS_Driver *), 
-							DriverFunction functions[], UINT32 functions_count);
+OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)(OS_Driver *));
 
 // Functions to start and stop the driver
 OS_Return _OS_DriverStart(OS_Driver *driver);
