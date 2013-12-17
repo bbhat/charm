@@ -16,13 +16,13 @@
 
 UINT16 g_process_id_counter;
 
-OS_ProcessCB * g_process_list_head;
-OS_ProcessCB * g_process_list_tail;
+OS_Process * g_process_list_head;
+OS_Process * g_process_list_tail;
 
-OS_ProcessCB * g_current_process;
+OS_Process * g_current_process;
 
 // Placeholders for all the process control blocks
-OS_ProcessCB	g_process_pool[MAX_PROCESS_COUNT];
+OS_Process	g_process_pool[MAX_PROCESS_COUNT];
 UINT32 			g_process_usage_mask[(MAX_PROCESS_COUNT + 31) >> 5];
 
 // Placeholders for Ramdisk file structures
@@ -38,13 +38,13 @@ UINT32 g_rdfile_usage_mask[(MAX_OPEN_FILES + 31) >> 5];
 #define MAX_LOADABLE_SECTIONS	16
 
 OS_Return OS_CreateProcess(
-	OS_Process *process,
+	OS_Process_t *process,
 	const INT8 *process_name,
 	UINT16 attributes,
 	void (*process_entry_function)(void *pdata),
 	void *pdata)
 {
-	OS_ProcessCB *pcb;
+	OS_Process *pcb;
 	
 	if(!process)
 	{
@@ -59,7 +59,7 @@ OS_Return OS_CreateProcess(
 	}
 	
 	// Now get a free PCB resource from the pool
-	*process = (OS_Process) GetFreeResIndex(g_process_usage_mask, MAX_PROCESS_COUNT);
+	*process = (OS_Process_t) GetFreeResIndex(g_process_usage_mask, MAX_PROCESS_COUNT);
 	if(*process < 0) 
 	{
 		FAULT("OS_CreateProcess failed for '%s': Exhausted all resources\n", g_current_process->name);
@@ -70,7 +70,7 @@ OS_Return OS_CreateProcess(
 	pcb = &g_process_pool[*process];
 	
 	// Clear the process structure
-	memset(pcb, 0, sizeof(OS_ProcessCB));
+	memset(pcb, 0, sizeof(OS_Process));
 	
 	// Copy process name
 	strncpy(pcb->name, process_name, OS_PROCESS_NAME_SIZE - 1);
@@ -116,7 +116,7 @@ OS_Return OS_CreateProcess(
 }
 
 OS_Return OS_CreateProcessFromFile(
-		OS_Process *process,
+		OS_Process_t *process,
 		const INT8 * process_name,
 		UINT16 attributes,
 		const INT8 * exec_path,
@@ -166,7 +166,7 @@ OS_Return OS_CreateProcessFromFile(
 	if(status == SUCCESS)
 	{
 		// Get a pointer to actual PCB
-		OS_ProcessCB *pcb = &g_process_pool[*process];
+		OS_Process *pcb = &g_process_pool[*process];
 	
 #if ENABLE_MMU
 		// Create Memory Map for all sections in this program.

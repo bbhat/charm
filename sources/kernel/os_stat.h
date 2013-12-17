@@ -21,7 +21,7 @@ extern UINT32 g_budget_timer_intr_counter;
 
 void _OS_StatInit(void);
 OS_Return _OS_GetStatCounters(OS_StatCounters * ptr);
-OS_Return _OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr);
+OS_Return _OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr);
 
 #endif
 

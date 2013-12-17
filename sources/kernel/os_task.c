@@ -67,7 +67,7 @@ OS_Return OS_CreatePeriodicTask(
 	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
-	OS_Task *task,
+	OS_Task_t *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata)
 {	
@@ -98,7 +98,7 @@ OS_Return _OS_CreatePeriodicTask(
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
 	UINT16 options,
-	OS_Task *task,
+	OS_Task_t *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata)
 {
@@ -155,7 +155,7 @@ OS_Return _OS_CreatePeriodicTask(
 	}
 
 	// Now get a free TCB resource from the pool
-	*task = (OS_Task) GetFreeResIndex(g_task_usage_mask, MAX_TASK_COUNT);
+	*task = (OS_Task_t) GetFreeResIndex(g_task_usage_mask, MAX_TASK_COUNT);
 	if(*task < 0) 
 	{
 		FAULT("_OS_CreateAperiodicTask failed for process %s: Exhausted all resources\n", g_current_process->name);
@@ -252,7 +252,7 @@ OS_Return _OS_CreatePeriodicTask(
 OS_Return OS_CreateAperiodicTask(UINT16 priority, 
 	UINT32 * stack, UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
-	OS_Task * task,
+	OS_Task_t * task,
 	void(* task_entry_function)(void * pdata),
 	void * pdata)
 {
@@ -280,7 +280,7 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	UINT32 * stack, UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
 	UINT16 options,
-	OS_Task * task,
+	OS_Task_t * task,
 	void(* task_entry_function)(void * pdata),
 	void * pdata)
 {
@@ -308,7 +308,7 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	}	
 	
 	// Now get a free TCB resource from the pool
-	*task = (OS_Task) GetFreeResIndex(g_task_usage_mask, MAX_TASK_COUNT);
+	*task = (OS_Task_t) GetFreeResIndex(g_task_usage_mask, MAX_TASK_COUNT);
 	if(*task < 0) 
 	{
 		FAULT("_OS_CreatePeriodicTask failed for process %s: Exhausted all resources\n", g_current_process->name);

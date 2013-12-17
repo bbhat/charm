@@ -50,7 +50,7 @@ static char os_name_string [] = { OS_NAME_STRING };
 OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
 static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
 
-extern OS_ProcessCB	* g_kernel_process;	// Kernel process
+extern OS_Process	* g_kernel_process;	// Kernel process
 
 // Periodic timer ISR
 void _OS_PeriodicTimerISR(void *arg);
@@ -145,7 +145,7 @@ void _OS_Start()
 ///////////////////////////////////////////////////////////////////////////////
 void kernel_process_entry(void * pdata)
 {
-    OS_Task idle_tcb;
+    OS_Task_t idle_tcb;
     
     // Create all kernel tasks. Currently there are:
     // - Idle task

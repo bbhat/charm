@@ -17,11 +17,11 @@
 //#define TEST_SRT
 //#define TEST_APERIODIC
 
-OS_Process test_proc;
-OS_Process test_proc1;
-OS_Process test_proc2;
+OS_Process_t test_proc;
+OS_Process_t test_proc1;
+OS_Process_t test_proc2;
 
-OS_Task task1, task2, task3, task4;
+OS_Task_t task1, task2, task3, task4;
 
 UINT32 stack1 [0x400];
 UINT32 stack2 [0x400];

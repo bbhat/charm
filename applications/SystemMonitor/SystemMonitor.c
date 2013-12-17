@@ -14,7 +14,7 @@
 #define STAT_TASK_PERIOD                  5000000     // 5 sec
 #define MAX_TASK_COUNT					  64
 
-static OS_Task  g_stat_task;
+static OS_Task_t  g_stat_task;
 static UINT32 	g_stat_task_stack [OS_STAT_TASK_STACK_SIZE];
 static UINT64 	g_previous_idle_time;
 static UINT64 	g_previous_timestamp;
@@ -96,7 +96,7 @@ void ShowTaskStatistics()
 		{
 			UINT32 item = (i << 5) + (31 - clz(mask));
 			mask &= ~(1 << (item & 0x1f));
-			OS_Task task = (OS_Task)item;
+			OS_Task_t task = (OS_Task_t)item;
 			status = OS_GetTaskStatCounters(task, &stat);
 			
 			if(status == SUCCESS)

@@ -39,7 +39,7 @@ enum
 ///////////////////////////////////////////////////////////////////////////////
 // Task TCB 
 ///////////////////////////////////////////////////////////////////////////////
-struct OS_ProcessCB;
+struct OS_Process;
 
 typedef struct OS_PeriodicTask OS_PeriodicTask;
 struct OS_PeriodicTask
@@ -53,7 +53,7 @@ struct OS_PeriodicTask
 	UINT64 alarm_time;	// To be used for maintaining a queue ordered based on this key value
 
 	UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN ASSEMBLY
-	struct OS_ProcessCB *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
+	struct OS_Process *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
 
 	UINT32 *stack;
 	UINT32 stack_size;
@@ -101,7 +101,7 @@ struct OS_AperiodicTask
 
 	// Folliwing attributes are common in both type of tasks. They should be in the same order
 	UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN Assembly
-	struct OS_ProcessCB *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
+	struct OS_Process *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
 
 	UINT32 *stack;
 	UINT32 stack_size;
@@ -133,7 +133,7 @@ typedef union OS_GenericTask
 
 		// Folliwing attributes are common in both type of tasks. They should be in the same order
 		UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN Assembly
-		struct OS_ProcessCB *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
+		struct OS_Process *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
 
 		UINT32 *stack;
 		UINT32 stack_size;
@@ -165,7 +165,7 @@ OS_Return _OS_CreatePeriodicTask(
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
 	UINT16 options,
-	OS_Task *task,
+	OS_Task_t *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata);
 
@@ -174,7 +174,7 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
 	UINT16 options,
-	OS_Task * task,
+	OS_Task_t * task,
 	void(* task_entry_function)(void * pdata),
 	void * pdata);
 

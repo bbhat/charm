@@ -19,8 +19,8 @@ int b = 1;
 int c = 2;
 int d = 3;
 
-OS_Task task1, task2, task3, task4;
-OS_Sem sem1, sem2, sem3;
+OS_Task_t task1, task2, task3, task4;
+OS_Sem_t sem1, sem2, sem3;
 
 void task_ap1(void * ptr)
 {

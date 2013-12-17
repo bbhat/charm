@@ -10,10 +10,10 @@
 
 #include "os_api.h"
 
-OS_Task task1;
-OS_Task task2;
-OS_Task task3;
-OS_Task task4;
+OS_Task_t task1;
+OS_Task_t task2;
+OS_Task_t task3;
+OS_Task_t task4;
 
 UINT32 stack1 [0x100];
 UINT32 stack2 [0x100];

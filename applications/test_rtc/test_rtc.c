@@ -15,7 +15,7 @@ OS_PeriodicTask task1;
 OS_PeriodicTask task2;
 OS_PeriodicTask task3;
 OS_AperiodicTask task4;
-OS_Sem input_ready;
+OS_Sem_t input_ready;
 char input_str[48];
 
 char weekdays[7][12] = { 

@@ -49,14 +49,14 @@ enum
 	SEEK_END = 2
 };
 
-struct OS_ProcessCB;
+struct OS_Process;
 
 typedef struct
 {
 	void * data;
 	UINT32 cur_offset;
 	UINT32 length;
-	struct OS_ProcessCB * owner;	// Owner process
+	struct OS_Process * owner;	// Owner process
 	
 } FILE;
 

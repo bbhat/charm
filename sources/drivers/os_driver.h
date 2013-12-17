@@ -15,6 +15,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_core.h"
+#include "os_types.h"
 
 // Max name size for kernel drivers. This should be at least 4
 #define DRIVER_NAME_SIZE           16   
@@ -47,6 +48,10 @@ typedef struct OS_Driver
 	
     // Driver Name
     INT8 name[DRIVER_NAME_SIZE];
+    OS_Process *owner_process;          // Process that has currently opened this driver in exclusive mode
+    UINT8 user_access_mask;
+    UINT8 admin_access_mask;
+    UINT16 usage_mask;
 	
 } OS_Driver;
 
@@ -60,7 +65,12 @@ OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)
 OS_Return _OS_DriverStart(OS_Driver *driver);
 OS_Return _OS_DriverStop(OS_Driver *driver);
 
-// Lookup for a driver given its name
-OS_Driver *_OS_DriverLookup(const INT8 name[]);
+// Client interfacing functions
+OS_Return _OS_DriverLookup(const INT8 * name, OS_Driver_t * driver);
+OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode);
+OS_Return _OS_DriverClose(OS_Driver_t driver);
+OS_Return _OS_DriverRead(OS_Driver_t driver);
+OS_Return _OS_DriverWrite(OS_Driver_t driver);
+OS_Return _OS_DriverConfigure(OS_Driver_t driver);
 
 #endif // _OS_DRIVER_H

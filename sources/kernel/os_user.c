@@ -84,7 +84,7 @@ void OS_TaskYield()
 ///////////////////////////////////////////////////////////////////////////////
 // Semaphore Functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value)
+OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -100,12 +100,12 @@ OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value)
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	// Store the return value
-	*sem = (OS_Sem) ret[1];
+	*sem = (OS_Sem_t) ret[1];
 		
 	return (OS_Return) ret[0];
 }
 
-OS_Return OS_SemWait(OS_Sem sem)
+OS_Return OS_SemWait(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -123,7 +123,7 @@ OS_Return OS_SemWait(OS_Sem sem)
 	return (OS_Return) ret;
 }
 
-OS_Return OS_SemPost(OS_Sem sem)
+OS_Return OS_SemPost(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -141,7 +141,7 @@ OS_Return OS_SemPost(OS_Sem sem)
 	return (OS_Return) ret;
 }
 
-OS_Return OS_SemFree(OS_Sem sem)
+OS_Return OS_SemFree(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -159,7 +159,7 @@ OS_Return OS_SemFree(OS_Sem sem)
 	return (OS_Return) ret;
 }
 
-OS_Return OS_SemGetValue(OS_Sem sem, INT32 *val)
+OS_Return OS_SemGetValue(OS_Sem_t sem, INT32 *val)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -243,7 +243,7 @@ OS_Return OS_GetStatCounters(OS_StatCounters * ptr)
 }
 
 
-OS_Return OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
+OS_Return OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr)
 {
 	_OS_Syscall_Args param_info;
 	void * arg[2];

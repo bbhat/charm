@@ -50,10 +50,11 @@ typedef double FP64; // 64 bit Floating point data
 
 typedef INT32 _OS_KernelObj_Handle;
 
-typedef _OS_KernelObj_Handle 	OS_Task;
-typedef _OS_KernelObj_Handle 	OS_Process;
-typedef _OS_KernelObj_Handle	OS_Sem;
-typedef _OS_KernelObj_Handle	OS_Mutex;
+typedef _OS_KernelObj_Handle 	OS_Task_t;
+typedef _OS_KernelObj_Handle 	OS_Process_t;
+typedef _OS_KernelObj_Handle	OS_Sem_t;
+typedef _OS_KernelObj_Handle	OS_Mutex_t;
+typedef _OS_KernelObj_Handle	OS_Driver_t;
 
 // An unsigned integer type which is guaranteed to be able to hold a pointer for the given platform
 typedef unsigned long UINTPTR;	

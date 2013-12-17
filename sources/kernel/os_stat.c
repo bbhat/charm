@@ -47,7 +47,7 @@ OS_Return _OS_GetStatCounters(OS_StatCounters * ptr)
 	return SUCCESS;
 }
 
-OS_Return _OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
+OS_Return _OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr)
 {
 	if(!ptr)
 		return INVALID_ARG;

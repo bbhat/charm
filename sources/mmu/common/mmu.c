@@ -29,7 +29,7 @@ static UINTPTR g_l2_page_table_alloc_head = (UINTPTR)&__page_table_area_start__ 
 // Space available for L2 page tables
 static INT32 g_l2_page_table_space_available = ((UINT32)&__page_table_area_length__ - (MAX_PROCESS_COUNT * sizeof(_MMU_L1_PageTable)));
 
-extern OS_ProcessCB	* g_kernel_process;	// Kernel process
+extern OS_Process	* g_kernel_process;	// Kernel process
 
 #ifdef _USE_STD_LIBS
 	#define FAULT(x, ...) printf(x, ...);

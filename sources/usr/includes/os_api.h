@@ -47,25 +47,37 @@ typedef enum
 	RESOURCE_NOT_OPEN = 33,
 	RESOURCE_NOT_OWNED = 34,
 	RESOURCE_DELETED = 35,
-	INVALID_PHASE = 36,
+	RESOURCE_NOT_FOUND = 36,
 	NOT_ADMINISTRATOR = 37,
 	NOT_IMPLEMENTED = 38,
 	NOT_CONFIGURED = 39,
+	EXCEEDED_MAX_SECTIONS = 40,
+	INVALID_PHASE = 41,
+    EXCLUSIVE_ACCESS = 42,
+	ACCESS_DENIED = 43,
 	
 	UNKNOWN = 99	
 
 } OS_Return;
+
+typedef enum
+{
+    ACCESS_READ = 1,
+    ACCESS_WRITE = 2,
+    ACCESS_EXCLUSIVE = 3
+    
+} OS_DriverAccessMode;
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                  OS Data types
 ///////////////////////////////////////////////////////////////////////////////
 typedef INT32 _OS_KernelObj_Handle;
 
-typedef _OS_KernelObj_Handle 	OS_Task;
-typedef _OS_KernelObj_Handle 	OS_Process;
-typedef _OS_KernelObj_Handle	OS_Sem;
-typedef _OS_KernelObj_Handle	OS_Mutex;
-typedef _OS_KernelObj_Handle	OS_Driver;
+typedef _OS_KernelObj_Handle 	OS_Task_t;
+typedef _OS_KernelObj_Handle 	OS_Process_t;
+typedef _OS_KernelObj_Handle	OS_Sem_t;
+typedef _OS_KernelObj_Handle	OS_Mutex_t;
+typedef _OS_KernelObj_Handle	OS_Driver_t;
 
 ///////////////////////////////////////////////////////////////////////////////
 //                              Task creation APIs
@@ -80,7 +92,7 @@ OS_Return OS_CreatePeriodicTask(
 	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
-	OS_Task *task,
+	OS_Task_t *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata);
 
@@ -89,7 +101,7 @@ OS_Return OS_CreateAperiodicTask(
 	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
-	OS_Task *task,
+	OS_Task_t *task,
 	void (*task_entry_function)(void *pdata),
 	void *pdata);
 
@@ -106,7 +118,7 @@ OS_Return OS_CreateAperiodicTask(
 //			The process_entry_function should initialize all process wide data structures
 //			and create all tasks
 OS_Return OS_CreateProcess(
-		OS_Process *process,
+		OS_Process_t *process,
 		const INT8 * process_name,
 		UINT16 attributes,
 		void (*process_entry_function)(void *pdata),
@@ -120,7 +132,7 @@ OS_Return OS_CreateProcess(
 //		exec_path: Path to the process executable file. 
 //			The exec file should be in ELF format
 OS_Return OS_CreateProcessFromFile(
-		OS_Process *process,
+		OS_Process_t *process,
 		const INT8 * process_name,
 		UINT16 attributes,
 		const INT8 * exec_path,
@@ -133,11 +145,11 @@ OS_Return OS_CreateProcessFromFile(
 ///////////////////////////////////////////////////////////////////////////////
 //                              Semaphore functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value);
-OS_Return OS_SemWait(OS_Sem sem);
-OS_Return OS_SemPost(OS_Sem sem);
-OS_Return OS_SemFree(OS_Sem sem);
-OS_Return OS_SemGetValue(OS_Sem sem, INT32 *val);
+OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value);
+OS_Return OS_SemWait(OS_Sem_t sem);
+OS_Return OS_SemPost(OS_Sem_t sem);
+OS_Return OS_SemFree(OS_Sem_t sem);
+OS_Return OS_SemGetValue(OS_Sem_t sem, INT32 *val);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Function to get the currently running thread. It returns a void pointer 
@@ -158,12 +170,12 @@ void OS_TaskYield();
 ///////////////////////////////////////////////////////////////////////////////
 // Invoking standard kernel driver functions such as open/close/read/write etc
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return OS_DriverLookup(const INT8 * driver_name, OS_Driver * driver);
-OS_Return OS_DriverOpen(OS_Driver driver);
-OS_Return OS_DriverClose(OS_Driver driver);
-OS_Return OS_DriverRead(OS_Driver driver);
-OS_Return OS_DriverWrite(OS_Driver driver);
-OS_Return OS_DriverConfigure(OS_Driver driver);
+OS_Return OS_DriverLookup(const INT8 * name, OS_Driver_t * driver);
+OS_Return OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode);
+OS_Return OS_DriverClose(OS_Driver_t driver);
+OS_Return OS_DriverRead(OS_Driver_t driver);
+OS_Return OS_DriverWrite(OS_Driver_t driver);
+OS_Return OS_DriverConfigure(OS_Driver_t driver);
 
 /*
 ///////////////////////////////////////////////////////////////////////////////
@@ -225,7 +237,7 @@ OS_Return OS_GetStatCounters(OS_StatCounters * ptr);
 
 // Get Task specific statistics. This function can be called only from Admin process
 // Non-admin tasks will get NOT_ADMINISTRATOR error
-OS_Return OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr);
+OS_Return OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr);
 
 // Get global Task allocation mask. This function can be called only from Admin process
 // Non-admin tasks will get NOT_ADMINISTRATOR error

@@ -18,7 +18,7 @@ OS_Return OS_CreatePeriodicTask(
 	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
-	OS_Task *task,
+	OS_Task_t *task,
 	void (*periodic_entry_function)(void *pdata),
 	void *pdata)
 {
@@ -45,7 +45,7 @@ OS_Return OS_CreatePeriodicTask(
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	// Store the return value
-	*task = (OS_Task) ret[1];
+	*task = (OS_Task_t) ret[1];
 	
 	return (OS_Return) ret[0];
 }
@@ -55,7 +55,7 @@ OS_Return OS_CreateAperiodicTask(
 	UINT32 *stack,
 	UINT32 stack_size_in_bytes,
 	const INT8 * task_name,
-	OS_Task *task,
+	OS_Task_t *task,
 	void (*task_entry_function)(void *pdata),
 	void *pdata)
 {
@@ -79,7 +79,7 @@ OS_Return OS_CreateAperiodicTask(
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	// Store the return value
-	*task = (OS_Task) ret[1];
+	*task = (OS_Task_t) ret[1];
 	
 	return (OS_Return) ret[0];
 }
@@ -97,7 +97,7 @@ OS_Return OS_CreateAperiodicTask(
 //			The process_entry_function should initialize all process wide data structures
 //			and create all tasks
 OS_Return OS_CreateProcess(
-		OS_Process *process,
+		OS_Process_t *process,
 		const INT8 * process_name,
 		UINT16 attributes,
 		void (*process_entry_function)(void *pdata),
@@ -173,7 +173,7 @@ void OS_TaskYield()
 ///////////////////////////////////////////////////////////////////////////////
 // Semaphore Functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value)
+OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -189,12 +189,12 @@ OS_Return OS_SemAlloc(OS_Sem *sem, UINT32 value)
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	// Store the return value
-	*sem = (OS_Sem) ret[1];
+	*sem = (OS_Sem_t) ret[1];
 		
 	return (OS_Return) ret[0];	
 }
 
-OS_Return OS_SemWait(OS_Sem sem)
+OS_Return OS_SemWait(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -212,7 +212,7 @@ OS_Return OS_SemWait(OS_Sem sem)
 	return (OS_Return) ret;
 }
 
-OS_Return OS_SemPost(OS_Sem sem)
+OS_Return OS_SemPost(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -230,7 +230,7 @@ OS_Return OS_SemPost(OS_Sem sem)
 	return (OS_Return) ret;
 }
 
-OS_Return OS_SemFree(OS_Sem sem)
+OS_Return OS_SemFree(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -248,7 +248,7 @@ OS_Return OS_SemFree(OS_Sem sem)
 	return (OS_Return) ret;
 }
 
-OS_Return OS_SemGetValue(OS_Sem sem, INT32 *val)
+OS_Return OS_SemGetValue(OS_Sem_t sem, INT32 *val)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
@@ -292,7 +292,7 @@ OS_Return OS_GetStatCounters(OS_StatCounters * ptr)
 	return (OS_Return) ret[0];
 }
 
-OS_Return OS_GetTaskStatCounters(OS_Task task, OS_TaskStatCounters * ptr)
+OS_Return OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr)
 {
 	_OS_Syscall_Args param_info;
 	void * arg[2];
@@ -332,7 +332,7 @@ OS_Return OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting
 	return (OS_Return) ret[0];	
 }
 
-OS_Return OS_DriverLookup(const INT8 * driver_name, OS_Driver * driver)
+OS_Return OS_DriverLookup(const INT8 * driver_name, OS_Driver_t * driver)
 {
 	_OS_Syscall_Args param_info;
 	void * arg[1];
@@ -355,10 +355,10 @@ OS_Return OS_DriverLookup(const INT8 * driver_name, OS_Driver * driver)
 	return (OS_Return) ret[0];	
 }
 
-OS_Return OS_DriverOpen(OS_Driver driver)
+OS_Return OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode)
 {
 	_OS_Syscall_Args param_info;
-	void * arg[1];
+	void * arg[2];
 	UINT32 ret[1];
 	
 	// Prepare the argument info structure
@@ -368,13 +368,14 @@ OS_Return OS_DriverOpen(OS_Driver driver)
 	param_info.ret_bytes = sizeof(ret);
 	
 	arg[0] = (void *)driver;
+	arg[1] = (void *)mode;
 
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	return (OS_Return) ret[0];	
 }
 
-OS_Return OS_DriverClose(OS_Driver driver)
+OS_Return OS_DriverClose(OS_Driver_t driver)
 {
 	_OS_Syscall_Args param_info;
 	void * arg[1];
@@ -393,17 +394,17 @@ OS_Return OS_DriverClose(OS_Driver driver)
 	return (OS_Return) ret[0];	
 }
 
-OS_Return OS_DriverRead(OS_Driver driver)
+OS_Return OS_DriverRead(OS_Driver_t driver)
 {
     return NOT_IMPLEMENTED;
 }
 
-OS_Return OS_DriverWrite(OS_Driver driver)
+OS_Return OS_DriverWrite(OS_Driver_t driver)
 {
     return NOT_IMPLEMENTED;
 }
 
-OS_Return OS_DriverConfigure(OS_Driver driver)
+OS_Return OS_DriverConfigure(OS_Driver_t driver)
 {
     return NOT_IMPLEMENTED;
 }

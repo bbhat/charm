@@ -19,7 +19,7 @@ static INT8 g_serial_log_buffer[SERIAL_LOG_BUFFER_SIZE];
 static UINT32 g_serial_log_write_index;
 static UINT32 g_serial_log_read_index;
 
-static OS_Task g_serial_task;  // A TCB for the serial task
+static OS_Task_t g_serial_task;  // A TCB for the serial task
 static UINT32 g_serial_task_stack [SERIAL_TASK_STACK_SIZE];
 static void SerialTaskFn(void * ptr);
 

@@ -39,7 +39,7 @@ extern UINT32 __RW_system_area_end__;
 extern UINT32 __page_table_area_start__;
 extern UINT32 __page_table_area_length__;
 
-OS_ProcessCB	* g_kernel_process;	// Kernel process
+OS_Process	* g_kernel_process;	// Kernel process
 
 void _OS_Init(void);
 void _OS_Start(void);
@@ -52,7 +52,7 @@ void kernel_process_entry(void * pdata);
 ///////////////////////////////////////////////////////////////////////////////
 void _OS_Init()
 {
-	OS_Process kernel_pcb;
+	OS_Process_t kernel_pcb;
 	
 	// Call system initialization routine
 	_OS_PlatformInit();

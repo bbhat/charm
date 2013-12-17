@@ -25,7 +25,7 @@ typedef enum
 	SYSTEM_PROCESS = 2
 } OS_ProcessAttr;
 
-typedef struct OS_ProcessCB
+typedef struct OS_Process
 {
 	INT8 name[OS_PROCESS_NAME_SIZE];
 	void (*process_entry_function)(void *pdata);
@@ -38,19 +38,19 @@ typedef struct OS_ProcessCB
 #endif
 
 	// Pointer to next process in the list
-	struct OS_ProcessCB *next;	
-} OS_ProcessCB;
+	struct OS_Process *next;	
+} OS_Process;
 
-extern OS_ProcessCB * g_process_list_head;
-extern OS_ProcessCB * g_process_list_tail;
+extern OS_Process * g_process_list_head;
+extern OS_Process * g_process_list_tail;
 
-extern OS_ProcessCB * g_current_process;
+extern OS_Process * g_current_process;
 extern UINT16 g_process_id_counter;
 
-extern OS_ProcessCB	* g_kernel_process;	// Kernel process
+extern OS_Process	* g_kernel_process;	// Kernel process
 
 // Placeholders for all the process control blocks
-extern OS_ProcessCB	g_process_pool[MAX_PROCESS_COUNT];
+extern OS_Process	g_process_pool[MAX_PROCESS_COUNT];
 extern UINT32 g_process_usage_mask[];
 
 extern FILE g_rdfile_pool[MAX_OPEN_FILES];

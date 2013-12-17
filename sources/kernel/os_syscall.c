@@ -107,7 +107,7 @@ static void syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, cons
 									(UINT32)uint_args[5],
 									(INT8 *)uint_args[6],
 									USER_TASK,
-									(OS_Task *)(uint_ret+1),
+									(OS_Task_t *)(uint_ret+1),
 									(void *)uint_args[7],
 									(void *)uint_args[8]);
 	}
@@ -133,7 +133,7 @@ static void syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, con
 								(UINT32)uint_args[2],
 								(INT8 *)uint_args[3],
 								USER_TASK,
-								(OS_Task *)(uint_ret+1),
+								(OS_Task_t *)(uint_ret+1),
 								(void *)uint_args[4],
 								(void *)uint_args[5]);
 	}
@@ -159,7 +159,7 @@ static void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * a
 	
 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 2))
 	{
-		result = _OS_SemAlloc((OS_Sem *)(uint_ret+1), uint_args[0]);
+		result = _OS_SemAlloc((OS_Sem_t *)(uint_ret+1), uint_args[0]);
 	}
 	
 	if(uint_ret) uint_ret[0] = result;
@@ -286,7 +286,7 @@ static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void 
 	
 	if(((param_info->arg_bytes >> 2) >= 2) && ((param_info->ret_bytes >> 2) >= 1))
 	{
-		result = _OS_GetTaskStatCounters((OS_Task )uint_args[0], (OS_TaskStatCounters *)uint_args[1]);
+		result = _OS_GetTaskStatCounters((OS_Task_t )uint_args[0], (OS_TaskStatCounters *)uint_args[1]);
 	}
 	
 	if(uint_ret) uint_ret[0] = result;
@@ -315,35 +315,48 @@ static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const 
 
 static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-//     const INT8 * str_args = (const INT8 *)arg;
-//     const UINT32 * int_args = (const UINT32 *)arg;
-// 	UINT32 * uint_ret = (UINT32 *)ret;
-// 	OS_Return result = SYSCALL_ERROR;
-// 	
-// 	switch(param_info->sub_id)
-// 	{
-//     case SUBCALL_DRIVER_LOOKUP:
-//     	OS_Driver *_OS_DriverLookup(const INT8 name[])
-//     
-//     case SUBCALL_DRIVER_OPEN:
-//     
-//     case SUBCALL_DRIVER_CLOSE:
-//     
-//     case SUBCALL_DRIVER_READ:
-//     
-//     case SUBCALL_DRIVER_WRITE:
-//     
-//     case SUBCALL_DRIVER_CONFIGURE:
-//     
-// 	}
-// 	
-// 	
-// 	if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 2))
-// 	{
-// 		result = _OS_SemAlloc((OS_Sem *)(uint_ret+1), uint_args[0]);
-// 	}
-// 	
-// 	if(uint_ret) uint_ret[0] = result;
+    const INT8 * str_args = (const INT8 *)arg;
+    const UINT32 * uint_args = (const UINT32 *)arg;
+	UINT32 * uint_ret = (UINT32 *)ret;
+	OS_Return result = SYSCALL_ERROR;
+	
+	switch(param_info->sub_id)
+	{
+    case SUBCALL_DRIVER_LOOKUP:
+        if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 2))
+        {
+        	result = _OS_DriverLookup(str_args[0], (OS_Driver_t *)(uint_ret+1));
+        }
+        break;
+        
+    case SUBCALL_DRIVER_OPEN:
+        if(((param_info->arg_bytes >> 2) >= 2) && ((param_info->ret_bytes >> 2) >= 1))
+        {
+        	result = _OS_DriverOpen((OS_Driver_t) uint_args[0], (OS_DriverAccessMode) uint_args[1]);
+        }
+        break;
+            
+    case SUBCALL_DRIVER_CLOSE:
+        if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 1))
+        {
+        	result = _OS_DriverClose((OS_Driver_t) uint_args[0]);
+        }
+        break;
+            
+    case SUBCALL_DRIVER_READ:
+        
+        break;
+        
+    case SUBCALL_DRIVER_WRITE:
+        
+        break;
+        
+    case SUBCALL_DRIVER_CONFIGURE:
+    
+        break;
+	}
+	
+	if(uint_ret) uint_ret[0] = result;
 }
 
 static void syscall_DriverCustomCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)

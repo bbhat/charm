@@ -20,8 +20,8 @@ int c = 2;
 int d = 3;
 
 OS_PeriodicTask task1, task2, task3;
-OS_Sem sem1;
-OS_Sem sem2;
+OS_Sem_t sem1;
+OS_Sem_t sem2;
 
 void task_fn1(void * ptr)
 {
