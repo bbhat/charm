@@ -7,8 +7,11 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "os_core.h"
+#include "os_config.h"
 #include "os_driver.h"
 #include "os_config.h"
+#include "os_memory.h"
 #include "util.h"
 
 typedef struct 
@@ -20,6 +23,9 @@ typedef struct
 
 static KernelDriverEntry g_kernel_drivers[MAX_KERNEL_DRIVERS];
 static UINT32 g_kernel_driver_count = 0;
+
+static void _Driver_FreeIORequest(OS_Driver * driver, IO_Request * req);
+static IO_Request * _Driver_GetFreeIORequest(OS_Driver * driver);
 
 extern OS_Process * g_current_process;
 
@@ -34,10 +40,13 @@ extern OS_Process * g_current_process;
 // The name should be at least 4 characters and those 4 characters should be unique.
 // This is because we use the first 4 characters as a number so that we can easily search
 // for a diver using its name without using expensive string search operations.
+// The 'max_io_count' corresponds to the maximum number of IOs that can be pending in this driver
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)(OS_Driver *))
+OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)(OS_Driver *), UINT32 max_io_count)
 {
 	OS_Driver_t drv;
+	UINT32 i;
+	UINT32 intsts;
 
 	// Validate the arguments
 	ASSERT(driver && init);
@@ -46,8 +55,7 @@ OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)
 	ASSERT(g_kernel_driver_count < MAX_KERNEL_DRIVERS);
 	
 	// Now ensure that there are no duplicates by the ID (first 4 characters of the driver name)
-	if(_OS_DriverLookup(name, &drv) == SUCCESS)
-	{
+	if(_OS_DriverLookup(name, &drv) == SUCCESS) {
 	    FAULT("Duplicate driver name(%s). Only first 4 characters are considered.", name);
 		return INVALID_ARG;	
 	}
@@ -75,45 +83,62 @@ OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)
 	driver->owner_process = NULL;
 	driver->user_access_mask = ACCESS_EXCLUSIVE;
 	driver->admin_access_mask = ACCESS_EXCLUSIVE;
-	driver->usage_mask = 0;
+	driver->usage_mode = 0;
+	driver->open_readers_count = 0;
+
+	// IO Handler task
+	driver->io_task = NULL;
+
+	// Allocate Free IO Requests queue
+	for(i = 0; i < max_io_count; i++) {
+		IO_Request * req = (IO_Request *) kmalloc(sizeof(IO_Request));
+		_Driver_FreeIORequest(driver, req);
+	}
 	
 	// Call the driver 'init' function. This function should initialize all
 	// other function pointers in the driver obect
 	OS_Return result = driver->init(driver);
-	
-	if(result == SUCCESS)
-	{
+
+	OS_ENTER_CRITICAL(intsts);	
+	if(result == SUCCESS) {
 	    // Copy the driver id by converting the first 4 characters of the driver name
 	    g_kernel_drivers[g_kernel_driver_count].id = *(UINT32 *)driver->name;
 	    g_kernel_drivers[g_kernel_driver_count].driver = driver;
 	    g_kernel_driver_count++;
 	}
+	OS_EXIT_CRITICAL(intsts);	
 	
 	return result;
 }
 
 OS_Return _OS_DriverStart(OS_Driver *driver)
 {
+	OS_Return result = SUCCESS;
+	
 	// Validate the arguments
 	ASSERT(driver);
 	
-	// Also ensure that the 'start' method is provided
-	ASSERT(driver->start);
-	
 	// Call the driver start method
-	return driver->start(driver);
+	if(driver->start) {
+		result =  driver->start(driver);
+	}
+	
+	return result;
 }
 
 OS_Return _OS_DriverStop(OS_Driver *driver)
 {
+	OS_Return result = SUCCESS;
+	
 	// Validate the arguments
 	ASSERT(driver);
 	
-	// Also ensure that the 'stop' method is provided
-	ASSERT(driver->stop);
-	
 	// Call the driver start method
-	return driver->stop(driver);
+	if(driver->stop) {	
+		result = driver->stop(driver);
+	}
+	
+	return result;
 }
 
 OS_Return _OS_DriverLookup(const INT8 * name, OS_Driver_t * driver)
@@ -123,8 +148,7 @@ OS_Return _OS_DriverLookup(const INT8 * name, OS_Driver_t * driver)
     INT8 name_copy[4];
     OS_Return result = RESOURCE_NOT_FOUND;
     
-    if(!name || !driver) 
-    {
+    if(!name || !driver)  {
         return INVALID_ARG;
     }
     
@@ -138,10 +162,8 @@ OS_Return _OS_DriverLookup(const INT8 * name, OS_Driver_t * driver)
     
     // Now look up for the driver by this id
     // Since we have a small number of Kernel drivers, it is OK to search linearly
-    for(i = 0; i < g_kernel_driver_count; i++)
-    {
-        if(g_kernel_drivers[i].id == id)
-        {
+    for(i = 0; i < g_kernel_driver_count; i++) {
+        if(g_kernel_drivers[i].id == id) {
             *driver = i;
             result = SUCCESS;
             break;
@@ -153,53 +175,57 @@ OS_Return _OS_DriverLookup(const INT8 * name, OS_Driver_t * driver)
 
 OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode)
 {
-    if(driver < 0 || driver >= g_kernel_driver_count)
-    {
+    if(driver < 0 || driver >= g_kernel_driver_count) {
         return ARGUMENT_ERROR;
     }
 
-    OS_Driver * driver_inst = &g_kernel_drivers[driver];
+    OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
     
     // First check if the process has permissions to open this driver
-	if(g_current_process->attributes & ADMIN_PROCESS)
-	{
-	    if((driver_inst->admin_access_mask & mode) != mode)
-	    {
+	if(g_current_process->attributes & ADMIN_PROCESS) {
+	    if((driver_inst->admin_access_mask & mode) != mode) {
 	        return ACCESS_DENIED;
 	    }
 	}
-	else
-	{
-	    if((driver_inst->user_access_mask & mode) != mode)
-	    {
+	else {
+	    if((driver_inst->user_access_mask & mode) != mode) {
 	        return ACCESS_DENIED;
 	    }
 	}
     
     // If someone has opened this driver in write mode, then we cannot let
     // other clients to open this
-    if(driver_inst->usage_mask & ACCESS_WRITE)
-    {
+    if(driver_inst->usage_mode & ACCESS_WRITE) {
         return EXCLUSIVE_ACCESS;
     }
     
     // If someone has opened this in Read mode but we are now requesting write
     // mode, then also we should fail
-    if((driver_inst->usage_mask & ACCESS_READ) && (mode & ACCESS_WRITE))
-    {
+    if((driver_inst->usage_mode & ACCESS_READ) && (mode & ACCESS_WRITE)) {
         return EXCLUSIVE_ACCESS;
-    }    
+    }
     
+    // If we are requesting READ access ensure that number of readers do not exceed 255
+    ASSERT(driver_inst->open_readers_count < 0xFF);
+	    
     // Call the open function on the driver
-    OS_Return status = driver_inst->open(driver_inst);
+    OS_Return status = SUCCESS;
+    
+    // If the driver has provided an open function, call it
+    if(driver_inst->open) {
+    	status = driver_inst->open(driver_inst);
+    }
     
     // Update the usage mask and owner_process
-    if(status == SUCCESS)
-    {
-        driver_inst->usage_mask |= mode;
-        if(driver_inst->usage_mask & ACCESS_WRITE)
-        {
+    if(status == SUCCESS) {
+        driver_inst->usage_mode |= mode;
+        
+        // If we are opening in write mode, then store the owner process
+        if(driver_inst->usage_mode & ACCESS_WRITE) {
             driver_inst->owner_process = g_current_process;
+        }
+        if(driver_inst->usage_mode & ACCESS_READ) {
+            driver_inst->open_readers_count++;
         }
     }
     
@@ -208,16 +234,112 @@ OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode)
 
 OS_Return _OS_DriverClose(OS_Driver_t driver)
 {
+    if(driver < 0 || driver >= g_kernel_driver_count) {
+        return ARGUMENT_ERROR;
+    }
+
+    OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
+    
+    if(driver_inst->usage_mode & ACCESS_WRITE) {
+    	// Ensure that this is the process which has opened the driver
+    	if(driver_inst->owner_process == g_current_process) {
+    		driver_inst->owner_process = NULL;
+    		driver_inst->usage_mode &= ~ACCESS_WRITE;
+    	}
+    	else {
+    		return RESOURCE_NOT_OWNED;
+    	}
+    }
+    
+	if(driver_inst->usage_mode & ACCESS_READ) {
+		if(driver_inst->open_readers_count > 0) {
+			driver_inst->open_readers_count--;
+			
+			// If the last reader is closed, then clear the usage_mode flag
+			if(driver_inst->open_readers_count == 0) {
+				driver_inst->usage_mode &= ~ACCESS_READ;
+			}
+		}
+		else {
+			return RESOURCE_NOT_OWNED;
+		}
+	}
+		
+	return SUCCESS;
 }
 
-OS_Return _OS_DriverRead(OS_Driver_t driver)
+OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 size)
 {
+	// If the driver provided 'read' function returns DEFER_IO_REQUEST or
+	// if the driver did not provide 'read' function, then queue the IO for later
+	// processing and return immediately
+	return SUCCESS;
 }
 
-OS_Return _OS_DriverWrite(OS_Driver_t driver)
+OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size)
 {
+	// If the driver provided 'write' function returns DEFER_IO_REQUEST or
+	// if the driver did not provide 'write' function, then queue the IO for later
+	// processing and return immediately
+	return SUCCESS;
 }
 
 OS_Return _OS_DriverConfigure(OS_Driver_t driver)
 {
+	return SUCCESS;
 }
+
+// Functions called by the IO Task of the driver. This function gets one
+// IO request from the pending IO queue.
+IO_Request * _IO_GetNextIORequest(OS_Driver * driver, BOOL wait)
+{
+	UINT32 intsts;
+	IO_Request * req = NULL;
+	ASSERT(driver);
+	
+	OS_ENTER_CRITICAL(intsts);
+	if(driver->io_queue) {
+		req = driver->io_queue;
+		driver->io_queue = req->next;
+		req->next = NULL;
+	}
+	OS_EXIT_CRITICAL(intsts);	
+
+	return req;
+}
+
+void _Driver_FreeIORequest(OS_Driver * driver, IO_Request * req)
+{
+	UINT32 intsts;
+	ASSERT(driver && req);
+	
+	req->next = NULL;
+	
+	OS_ENTER_CRITICAL(intsts);
+	if(driver->free_io_queue) {
+		req->next = driver->free_io_queue;
+	}
+	driver->free_io_queue = req;
+	OS_EXIT_CRITICAL(intsts);
+}
+
+IO_Request * _Driver_GetFreeIORequest(OS_Driver * driver)
+{
+	UINT32 intsts;
+	IO_Request * req = NULL;
+	
+	ASSERT(driver);
+	
+	OS_ENTER_CRITICAL(intsts);
+	
+	if(driver->free_io_queue) {
+		req = driver->free_io_queue;
+		driver->free_io_queue = req->next;
+		req->next = NULL;
+	}
+	
+	OS_EXIT_CRITICAL(intsts);
+	
+	return req;
+}
+

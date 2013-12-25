@@ -15,10 +15,11 @@
 //  4K pages for applications
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "os_core.h"
-
 #ifndef _MMU_H
 #define _MMU_H
+
+#include "os_core.h"
+#include "os_config.h"
 
 #if ENABLE_MMU
 
@@ -120,6 +121,16 @@ OS_Return _MMU_add_l2_small_page_va_to_pa_map(_MMU_L1_PageTable * ptable, VADDR 
 
 // Function to create Kernel VA to PA mapping
 void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable);
+
+#if KERNEL_PAGE_SIZE==1024
+#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l1_va_to_pa_map
+#elif KERNEL_PAGE_SIZE==64
+#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l2_large_page_va_to_pa_map
+#elif KERNEL_PAGE_SIZE==4
+#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l2_small_page_va_to_pa_map
+#else
+#error "KERNEL_PAGE_SIZE should be either 1024 / 64 / 4"
+#endif
 
 #endif // ENABLE_MMU
 #endif // _MMU_H

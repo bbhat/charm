@@ -56,6 +56,7 @@ typedef enum
 	INVALID_PHASE = 41,
     EXCLUSIVE_ACCESS = 42,
     ACCESS_DENIED = 43,
+    DEFER_IO_REQUEST = 44, 
 	
 	
 	UNKNOWN = 99	

@@ -18,7 +18,9 @@ MEMORY
 		Note: Depending on the KERNEL_PAGE_SIZE used in os_config.h we need to have the
 		matching alignment in the below map
 	*/
-	OS_MEM		    : ORIGIN = 0x20000000,  LENGTH = 0x300000
+	OS_MEM		    : ORIGIN = 0x20000000,  LENGTH = 0x80000
+	OS_HEAP		    : ORIGIN = 0x20080000,  LENGTH = 0x80000
+	USER_HEAP		: ORIGIN = 0x20100000,  LENGTH = 0x200000
 	PAGE_TABLES 	: ORIGIN = 0x20300000,  LENGTH = 0x100000
 	RAMDISK			: ORIGIN = 0x20400000,  LENGTH = 0x100000
 	APP_MEM			: ORIGIN = 0x20500000,  LENGTH = 0x1FC00000
@@ -34,7 +36,15 @@ PHDRS
 
 SECTIONS
 {	
-	/* Allocatine space for page tables */
+	/* Allocate space for kernel heap */
+	__kernel_heap_start__  	   = 0x20080000;
+	__kernel_heap_length__     = 0x8000;
+
+	/* Allocate space for kernel heap */
+	__user_heap_start__  	   = 0x20100000;
+	__user_heap_length__       = 0x200000;
+
+	/* Allocate space for page tables */
 	__page_table_area_start__  = 0x20300000;
 	__page_table_area_length__ = 0x100000;
 	

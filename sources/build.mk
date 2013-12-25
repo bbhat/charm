@@ -26,6 +26,7 @@ SOURCE_DIRS	+=	sources/filesystem
 SOURCE_DIRS	+=	sources/filesystem/ramdisk
 SOURCE_DIRS	+=	sources/utilities
 SOURCE_DIRS	+=	sources/loader
+SOURCE_DIRS	+=	sources/memmgr
 
 ## Build a list of Include directories
 
@@ -53,6 +54,7 @@ INCLUDES	+=	sources/filesystem
 INCLUDES	+=	sources/filesystem/ramdisk
 INCLUDES	+=	sources/utilities
 INCLUDES	+=	sources/loader
+INCLUDES	+=	sources/memmgr
 
 ## Build a list of Source files
 

@@ -10,6 +10,7 @@
 #include "os_core.h"
 #include "os_queue.h"
 #include "os_process.h"
+#include "os_memory.h"
 #include "target.h"
 #include "cache.h"
 #include "uart.h"
@@ -146,17 +147,6 @@ static void _OS_InitFreeResources(void)
 }
 
 #if ENABLE_MMU
-
-#if KERNEL_PAGE_SIZE==1024
-#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l1_va_to_pa_map
-#elif KERNEL_PAGE_SIZE==64
-#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l2_large_page_va_to_pa_map
-#elif KERNEL_PAGE_SIZE==4
-#define KERNEL_VA_TO_PA_MAP_FUNCTION	_MMU_add_l2_small_page_va_to_pa_map
-#else
-#error "KERNEL_PAGE_SIZE should be either 1024 / 64 / 4"
-#endif
-
 void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable)
 {
 	UINT32 length = (UINT32) ((UINT32)&__EX_system_area_end__ - (UINT32)&__EX_system_area_start__);
@@ -234,5 +224,9 @@ void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable)
 	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_GPIO_BASE, (PADDR) ELFIN_GPIO_BASE, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
+			
+	//------------------------- HEAP ---------------------------------
+	// Create map for the kernel and user heap space
+	_OS_MapHeapMemory(ptable);
 }
 #endif	// ENABLE_MMU

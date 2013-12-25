@@ -58,6 +58,7 @@
 
 // Kernel drivers
 #define MAX_KERNEL_DRIVERS                16         // Preallocate few driver structures
+#define MAX_OUTSTANDING_IO_REQUESTS		  8			 // For limiting the kernel resources allocated to outstanding requests
 
 // MMU related
 #define ENABLE_MMU						  1			 // Support for Virtual memory and memory protection

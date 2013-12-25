@@ -7,6 +7,8 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "os_core.h"
+#include "os_config.h"
 #include "mmu.h"
 #include "target.h"
 #include "util.h"

@@ -16,13 +16,28 @@
 
 #include "os_core.h"
 #include "os_types.h"
+#include "os_task.h"
 
 // Max name size for kernel drivers. This should be at least 4
 #define DRIVER_NAME_SIZE           16   
 
 struct OS_Driver;
-typedef OS_Return (*DriverFunction)(struct OS_Driver * driver, const void * argv[], UINT32 argc, 
-                                    void * retv[], UINT32 retc);
+typedef OS_Return (*DriverFunction)(struct OS_Driver * driver, const void * argv[], 
+									UINT32 argc, void * retv[], UINT32 retc);
+
+// Following structure encapsulates an IO Request from the client. If there are multiple
+// outstanding IO requests, they will be queued and processed in the order in which they arrive
+typedef struct IO_Request
+{
+	struct IO_Request * next;	
+	void * buffer;
+	UINT32 attribute;	// Bits 30..0 indicate the size of the IO
+						// The bit 31 indicates if this is a read (0) or write (1)
+} IO_Request;
+
+#define IO_TYPE_MASK			   0x80000000
+#define WRITE_IO			       0x80000000
+#define READ_IO			   		   0x00000000
 
 typedef struct OS_Driver
 {
@@ -46,12 +61,22 @@ typedef struct OS_Driver
 	DriverFunction *driver_functions;
 	UINT32 driver_functions_count;
 	
+	// IO task
+	OS_GenericTask * io_task;
+	
+	// Queue for outstanding IOs
+	IO_Request *io_queue;
+	
+	// Queue for free IO requests
+	IO_Request *free_io_queue;
+	
     // Driver Name
     INT8 name[DRIVER_NAME_SIZE];
     OS_Process *owner_process;          // Process that has currently opened this driver in exclusive mode
     UINT8 user_access_mask;
     UINT8 admin_access_mask;
-    UINT16 usage_mask;
+    UINT8 usage_mode;
+    UINT8 open_readers_count;			// Number of clients who has opened this driver in read mode
 	
 } OS_Driver;
 
@@ -59,7 +84,8 @@ typedef struct OS_Driver
 // The name should be at least 4 characters and those 4 characters should be unique.
 // This is because we use the first 4 characters as a number so that we can easily search
 // for a diver using its name without using expensive string search operations.
-OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)(OS_Driver *));
+// The 'max_io_count' corresponds to the maximum number of IOs that can be pending in this driver
+OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)(OS_Driver *), UINT32 max_io_count);
 
 // Functions to start and stop the driver
 OS_Return _OS_DriverStart(OS_Driver *driver);
@@ -69,8 +95,11 @@ OS_Return _OS_DriverStop(OS_Driver *driver);
 OS_Return _OS_DriverLookup(const INT8 * name, OS_Driver_t * driver);
 OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode);
 OS_Return _OS_DriverClose(OS_Driver_t driver);
-OS_Return _OS_DriverRead(OS_Driver_t driver);
-OS_Return _OS_DriverWrite(OS_Driver_t driver);
+OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 size);
+OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size);
 OS_Return _OS_DriverConfigure(OS_Driver_t driver);
+
+// Functions called by the IO Task of the driver
+IO_Request * _IO_GetNextIORequest(OS_Driver * driver, BOOL wait);
 
 #endif // _OS_DRIVER_H
