@@ -26,6 +26,7 @@ static UINT32 g_kernel_driver_count = 0;
 
 static void _Driver_FreeIORequest(OS_Driver * driver, IO_Request * req);
 static IO_Request * _Driver_GetFreeIORequest(OS_Driver * driver);
+static IO_Request * _Driver_EnqueueIORequest(OS_Driver * driver, IO_Request * req);
 
 extern OS_Process * g_current_process;
 
@@ -85,6 +86,8 @@ OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)
 	driver->admin_access_mask = ACCESS_EXCLUSIVE;
 	driver->usage_mode = 0;
 	driver->open_readers_count = 0;
+	driver->io_queue_head = NULL;
+	driver->io_queue_tail = NULL;
 
 	// IO Handler task
 	driver->io_task = NULL;
@@ -240,6 +243,11 @@ OS_Return _OS_DriverClose(OS_Driver_t driver)
 
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
     
+    // If there are any outstanding requests, return error
+    if(driver_inst->io_queue_head != NULL) {
+    	return RESOURCE_BUSY;
+    }
+    
     if(driver_inst->usage_mode & ACCESS_WRITE) {
     	// Ensure that this is the process which has opened the driver
     	if(driver_inst->owner_process == g_current_process) {
@@ -264,44 +272,167 @@ OS_Return _OS_DriverClose(OS_Driver_t driver)
 			return RESOURCE_NOT_OWNED;
 		}
 	}
-		
-	return SUCCESS;
+	
+	// If the driver has provided a close function, call it		
+	return (driver_inst->close) ? driver_inst->close(driver_inst) : SUCCESS;
 }
 
 OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 size)
-{
+{	
+	// Validate the inputs
+    if(driver < 0 || driver >= g_kernel_driver_count) {
+        return ARGUMENT_ERROR;
+    }
+    
+    if(!buffer || !size) {
+    	return ARGUMENT_ERROR;
+    }
+
+	// Max IO Size
+    if(size > 0x7FFFFFFF) {
+    	return ARGUMENT_ERROR;
+    }
+
+    OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
+	OS_Return status = DEFER_IO_REQUEST;
+    
+	if(driver_inst->read) {
+		status = driver_inst->read(driver_inst, buffer, size);
+	}
+	
 	// If the driver provided 'read' function returns DEFER_IO_REQUEST or
 	// if the driver did not provide 'read' function, then queue the IO for later
 	// processing and return immediately
-	return SUCCESS;
+	if(status == DEFER_IO_REQUEST) {
+		IO_Request * io_request = _Driver_GetFreeIORequest(driver_inst);
+		
+		if(!io_request) {
+			return RESOURCE_EXHAUSTED;
+		}
+		
+		io_request->buffer = buffer;
+		io_request->attribute == (READ_IO | size);
+
+		// Enqueue the IO Request
+		_Driver_EnqueueIORequest(driver_inst, io_request);
+		
+		// TODO: If the request is a blocking request, then block this thread
+		// Also we may have to send an asynchronous signal to the client when
+		// we are done.
+	}
+	
+	return status;
 }
 
 OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size)
 {
+	// Validate the inputs
+    if(driver < 0 || driver >= g_kernel_driver_count) {
+        return ARGUMENT_ERROR;
+    }
+    
+    if(!buffer || !size) {
+    	return ARGUMENT_ERROR;
+    }
+
+	// Max IO Size
+    if(size > 0x7FFFFFFF) {
+    	return ARGUMENT_ERROR;
+    }
+
+    OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
+	OS_Return status = DEFER_IO_REQUEST;
+    
+	if(driver_inst->write) {
+		status = driver_inst->write(driver_inst, buffer, size);
+	}
+	
 	// If the driver provided 'write' function returns DEFER_IO_REQUEST or
 	// if the driver did not provide 'write' function, then queue the IO for later
 	// processing and return immediately
-	return SUCCESS;
+	if(status == DEFER_IO_REQUEST) {
+		IO_Request * io_request = _Driver_GetFreeIORequest(driver_inst);
+		
+		if(!io_request) {
+			return RESOURCE_EXHAUSTED;
+		}
+		
+		io_request->buffer = buffer;
+		io_request->attribute = (WRITE_IO | size);
+
+		// Enqueue the IO Request
+		_Driver_EnqueueIORequest(driver_inst, io_request);
+		
+		// TODO: If the request is a blocking request, then block this thread
+		// Also we may have to send an asynchronous signal to the client when
+		// we are done.
+	}
+	
+	return status;
 }
 
-OS_Return _OS_DriverConfigure(OS_Driver_t driver)
+OS_Return _OS_DriverConfigure(OS_Driver_t driver, void * buffer, UINT32 size)
 {
-	return SUCCESS;
+	// Validate the inputs
+    if(driver < 0 || driver >= g_kernel_driver_count) {
+        return ARGUMENT_ERROR;
+    }
+    
+    if(!buffer || !size) {
+    	return ARGUMENT_ERROR;
+    }
+
+	// Max IO Size
+    if(size > 0x7FFFFFFF) {
+    	return ARGUMENT_ERROR;
+    }
+
+    OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
+    OS_Return status = NOT_SUPPORTED;
+    
+	if(driver_inst->configure) {
+		status = driver_inst->configure(driver_inst, buffer, size);
+	}
+	
+	return status;
+}
+
+IO_Request * _Driver_EnqueueIORequest(OS_Driver * driver, IO_Request * req)
+{
+	UINT32 intsts;
+	ASSERT(driver);
+	
+	OS_ENTER_CRITICAL(intsts);
+	if(driver->io_queue_tail) {
+		req->next = NULL;
+		driver->io_queue_tail->next = req;
+	}
+	else {
+		driver->io_queue_head = req;
+	}
+	driver->io_queue_tail = req;
+	OS_EXIT_CRITICAL(intsts);	
+
+	return req;
 }
 
 // Functions called by the IO Task of the driver. This function gets one
 // IO request from the pending IO queue.
-IO_Request * _IO_GetNextIORequest(OS_Driver * driver, BOOL wait)
+IO_Request * _Driver_GetNextIORequest(OS_Driver * driver, BOOL wait)
 {
 	UINT32 intsts;
 	IO_Request * req = NULL;
 	ASSERT(driver);
 	
 	OS_ENTER_CRITICAL(intsts);
-	if(driver->io_queue) {
-		req = driver->io_queue;
-		driver->io_queue = req->next;
+	if(driver->io_queue_head) {
+		req = driver->io_queue_head;
+		driver->io_queue_head = req->next;
 		req->next = NULL;
+		
+		if(!driver->io_queue_head) {
+			driver->io_queue_tail = NULL;
+		}
 	}
 	OS_EXIT_CRITICAL(intsts);	
 
@@ -342,4 +473,3 @@ IO_Request * _Driver_GetFreeIORequest(OS_Driver * driver)
 	
 	return req;
 }
-

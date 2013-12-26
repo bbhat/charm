@@ -49,9 +49,9 @@ typedef struct OS_Driver
 	// Routines called by driver clients	
 	OS_Return (*open)(struct OS_Driver * driver);
 	OS_Return (*close)(struct OS_Driver * driver);
-	OS_Return (*read)(struct OS_Driver * driver);
-	OS_Return (*write)(struct OS_Driver * driver);
-	OS_Return (*configure)(struct OS_Driver * driver);
+	OS_Return (*read)(struct OS_Driver * driver, void * buffer, UINT32 size);
+	OS_Return (*write)(struct OS_Driver * driver, void * buffer, UINT32 size);
+	OS_Return (*configure)(struct OS_Driver * driver, void * buffer, UINT32 size);
 	
 	// Interrupt Routines
 	void (*primary_int_handler)(struct OS_Driver * driver);
@@ -65,7 +65,8 @@ typedef struct OS_Driver
 	OS_GenericTask * io_task;
 	
 	// Queue for outstanding IOs
-	IO_Request *io_queue;
+	IO_Request *io_queue_head;
+	IO_Request *io_queue_tail;
 	
 	// Queue for free IO requests
 	IO_Request *free_io_queue;
@@ -95,11 +96,18 @@ OS_Return _OS_DriverStop(OS_Driver *driver);
 OS_Return _OS_DriverLookup(const INT8 * name, OS_Driver_t * driver);
 OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode);
 OS_Return _OS_DriverClose(OS_Driver_t driver);
+
+// Driver Read/Write routines. The framework supports only non-blocking calls (for now).
+// The call always returns immediately. If the driver is busy / needs more time,
+// the IO request will be automatically queued. The driver picks up each pending request 
+// and completes them one by one.
+// The objective is to encourage non-blocking design as much as possible.
+// Blocking read/writes interferes with corresponding task's periodic behavior
 OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 size);
 OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size);
-OS_Return _OS_DriverConfigure(OS_Driver_t driver);
+OS_Return _OS_DriverConfigure(OS_Driver_t driver, void * buffer, UINT32 size);
 
 // Functions called by the IO Task of the driver
-IO_Request * _IO_GetNextIORequest(OS_Driver * driver, BOOL wait);
+IO_Request * _Driver_GetNextIORequest(OS_Driver * driver, BOOL wait);
 
 #endif // _OS_DRIVER_H

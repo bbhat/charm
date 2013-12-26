@@ -25,9 +25,9 @@ Main Features of the RTOS
 
 * Usually when each applications have their own address space, switching between tasks of different applications incur high cost which includes flushing instruction / data caches / TLBs etc. This time can run into few milliseconds. But chARM does this in a different way to provide least context switch time. Basically the total of 4GB address space is allocated to different applications & the kernel at the design time. Each application has non-overlapping address range allocated to it from the total 4GB address space. The page tables are setup in such a way that each application can access only its address range. This implementation means, we don't have to flush the caches or the TLBs. The total of 4GB is not a limiting factor in Embedded systems !
 
-* MMU support available. The Kernel process can be configured to use page sizes of 1MB / 64KB / 4KB. User processes can be configured to use page sizes of 64K / 4K
+* Full MMU support and memory protection is available. The Kernel process can be configured to use page sizes of 1MB / 64KB / 4KB. User processes can be configured to use page sizes of 64K / 4K
 
-* Eventually I intend to add support for graphics using OpenGL
+* A comprehensive and flexible device driver framework is provided. This framework makes it easy to write new kernel drivers that can be easily and accessed from other kernel drivers or user applications. Many common tasks such as queuing IOs, blocking, mechanisms for calling from user space etc are automatically handled by the driver framework.
 
 * Currently this RTOS runs on Mini210s & TQ2440 development boards. The timing and accuracy of the scheduled has been excellent.
 

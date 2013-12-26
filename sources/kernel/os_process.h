@@ -47,7 +47,7 @@ extern OS_Process * g_process_list_tail;
 extern OS_Process * g_current_process;
 extern UINT16 g_process_id_counter;
 
-extern OS_Process	* g_kernel_process;	// Kernel process
+extern OS_Process * g_kernel_process;	// Kernel process
 
 // Placeholders for all the process control blocks
 extern OS_Process	g_process_pool[MAX_PROCESS_COUNT];
