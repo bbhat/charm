@@ -34,7 +34,7 @@ OS_Return ramdisk_init(void * addr)
 {
 	if(!addr) {
 		FAULT("ramdisk_init failed: address argument is NULL\n");
-		return ARGUMENT_ERROR;
+		return BAD_ARGUMENT;
 	}
 		
 	ramdisk = (FS_RamdiskHdr *)addr;

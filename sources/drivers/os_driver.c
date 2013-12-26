@@ -82,8 +82,8 @@ OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)
 	driver->name[DRIVER_NAME_SIZE - 1] = '\0';
 	
 	driver->owner_process = NULL;
-	driver->user_access_mask = ACCESS_EXCLUSIVE;
-	driver->admin_access_mask = ACCESS_EXCLUSIVE;
+	driver->user_access_mask = ACCESS_READ | ACCESS_WRITE;
+	driver->admin_access_mask = ACCESS_READ | ACCESS_WRITE;
 	driver->usage_mode = 0;
 	driver->open_readers_count = 0;
 	driver->io_queue_head = NULL;
@@ -179,7 +179,7 @@ OS_Return _OS_DriverLookup(const INT8 * name, OS_Driver_t * driver)
 OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode)
 {
     if(driver < 0 || driver >= g_kernel_driver_count) {
-        return ARGUMENT_ERROR;
+        return BAD_ARGUMENT;
     }
 
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
@@ -238,7 +238,7 @@ OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode)
 OS_Return _OS_DriverClose(OS_Driver_t driver)
 {
     if(driver < 0 || driver >= g_kernel_driver_count) {
-        return ARGUMENT_ERROR;
+        return BAD_ARGUMENT;
     }
 
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
@@ -281,19 +281,29 @@ OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 size)
 {	
 	// Validate the inputs
     if(driver < 0 || driver >= g_kernel_driver_count) {
-        return ARGUMENT_ERROR;
+        return BAD_ARGUMENT;
     }
     
     if(!buffer || !size) {
-    	return ARGUMENT_ERROR;
+    	return BAD_ARGUMENT;
     }
 
 	// Max IO Size
     if(size > 0x7FFFFFFF) {
-    	return ARGUMENT_ERROR;
+    	return BAD_ARGUMENT;
     }
 
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
+    
+    // Ensure that the driver is opened in READ mode. Otherwise it is an error.
+    // Note the currently the driver framework does not guarantee that the current client
+    // has opened the driver in read mode as we do not store the ownership info for reads.
+    // This is done in order to support multiple readers and yet to save space & time 
+    // in implementation
+    if(!(driver_inst->usage_mode & ACCESS_READ)) {
+    	return RESOURCE_NOT_OPEN;
+    }
+    
 	OS_Return status = DEFER_IO_REQUEST;
     
 	if(driver_inst->read) {
@@ -328,19 +338,27 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size)
 {
 	// Validate the inputs
     if(driver < 0 || driver >= g_kernel_driver_count) {
-        return ARGUMENT_ERROR;
+        return BAD_ARGUMENT;
     }
     
     if(!buffer || !size) {
-    	return ARGUMENT_ERROR;
+    	return BAD_ARGUMENT;
     }
 
 	// Max IO Size
     if(size > 0x7FFFFFFF) {
-    	return ARGUMENT_ERROR;
+    	return BAD_ARGUMENT;
     }
 
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
+    
+    // Ensure that the driver is opened in WRITE mode.
+    // Also ensure the ownership of access
+    if((driver_inst->owner_process != g_current_process) || 
+    	(!(driver_inst->usage_mode & ACCESS_WRITE))) {
+    	return RESOURCE_NOT_OPEN;
+    }
+    
 	OS_Return status = DEFER_IO_REQUEST;
     
 	if(driver_inst->write) {
@@ -375,19 +393,27 @@ OS_Return _OS_DriverConfigure(OS_Driver_t driver, void * buffer, UINT32 size)
 {
 	// Validate the inputs
     if(driver < 0 || driver >= g_kernel_driver_count) {
-        return ARGUMENT_ERROR;
+        return BAD_ARGUMENT;
     }
     
     if(!buffer || !size) {
-    	return ARGUMENT_ERROR;
+    	return BAD_ARGUMENT;
     }
 
 	// Max IO Size
     if(size > 0x7FFFFFFF) {
-    	return ARGUMENT_ERROR;
+    	return BAD_ARGUMENT;
     }
 
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
+    
+    // Ensure that the driver is opened in WRITE mode in order to perform configure.
+    // Also ensure the ownership of access
+    if((driver_inst->owner_process != g_current_process) || 
+    	(!(driver_inst->usage_mode & ACCESS_WRITE))) {
+    	return RESOURCE_NOT_OPEN;
+    }
+
     OS_Return status = NOT_SUPPORTED;
     
 	if(driver_inst->configure) {

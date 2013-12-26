@@ -7,8 +7,10 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "os_config.h"
 #include "target.h"
 #include "soc.h"
+#include "rtc.h"
 
 void _OS_TargetInit(void)
 {
@@ -17,6 +19,11 @@ void _OS_TargetInit(void)
 	configure_user_led(1);
 	configure_user_led(2);
 	configure_user_led(3);
+
+#if ENABLE_RTC	
+	// Initialize the RTC driver
+	_OS_DriverInit(&g_rtc_driver, "RTC Driver", _RTC_DriverInit, 0);	
+#endif
 }
 
 // The LED0-3 are connected to GPB5..8

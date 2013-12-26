@@ -18,18 +18,11 @@
 typedef OS_Driver RTC_Driver;
 
 // Create a global instance of the RTC driver
-RTC_Driver g_rtc_driver;
+OS_Driver g_rtc_driver;
 
-// Driver basic functions
-static OS_Return _RTC_Start(void);
-static OS_Return _RTC_Stop(void);
-
-// Routines called by driver clients	
-static OS_Return _RTC_Open(void);
-static OS_Return _RTC_Close(void);
-
-static OS_Return _RTC_Read(void);
-static OS_Return _RTC_Write(void);
+// Driver functions
+static OS_Return _RTC_DriverRead(OS_Driver * driver, void * buffer, UINT32 size);
+static OS_Return _RTC_DriverWrite(OS_Driver * driver, void * buffer, UINT32 size);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Basic driver functions
@@ -39,45 +32,45 @@ OS_Return _RTC_DriverInit(OS_Driver * driver)
     // Validate the input
     ASSERT(driver);
     
-    // Set the basic driver function pointers
-    driver->start = _RTC_Start;
-    driver->stop = _RTC_Stop;
-    driver->open = _RTC_Open;
-    driver->close = _RTC_Close;
-    driver->read = _RTC_Read;
-    driver->write = _RTC_Write;    
+    // Override the necessary functions
+    driver->read = _RTC_DriverRead;
+    driver->write = _RTC_DriverWrite;
+    
+    // Set Access permissions. User processes can only read date / time
+    // The driver framework guarantees that access permissions are enforced
+    driver->user_access_mask = ACCESS_READ;
+	driver->admin_access_mask = ACCESS_READ | ACCESS_WRITE;
     
     return SUCCESS;
 }
 
-OS_Return _RTC_Start(OS_Driver * driver)
+OS_Return _RTC_DriverRead(OS_Driver * driver, void * buffer, UINT32 size)
 {
-    return SUCCESS;
+	OS_Return status = BAD_ARGUMENT;
+	
+	ASSERT(driver && buffer);
+
+	if(size >= sizeof(OS_DateAndTime)) {
+		status = _OS_GetDateAndTime((OS_DateAndTime *) buffer);
+	}
+	else if(size >= sizeof(OS_Time)) {
+		status = _OS_GetTime((OS_Time *) buffer);		
+	}
+	
+    return status;
 }
 
-OS_Return _RTC_Stop(OS_Driver * driver)
+OS_Return _RTC_DriverWrite(OS_Driver * driver, void * buffer, UINT32 size)
 {
-    return SUCCESS;
-}
+	OS_Return status = BAD_ARGUMENT;
+	
+	ASSERT(driver && buffer);
 
-OS_Return _RTC_Read(OS_Driver * driver)
-{
-    return SUCCESS;
-}
-
-OS_Return _RTC_Write(OS_Driver * driver)
-{
-    return SUCCESS;
-}
-
-OS_Return _RTC_Open(OS_Driver * driver)
-{
-    return SUCCESS;
-}
-
-OS_Return _RTC_Close(OS_Driver * driver)
-{
-    return SUCCESS;
+	if(size >= sizeof(OS_DateAndTime)) {
+		status = _OS_SetDateAndTime((OS_DateAndTime *) buffer);
+	}
+		
+    return status;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -157,7 +150,7 @@ OS_Return _OS_SetDateAndTime(const OS_DateAndTime *date_and_time)
 	|| (date_and_time->min < 0 || date_and_time->min > 59)
 	|| (date_and_time->sec < 0 || date_and_time->sec > 59))
 	{
-		return ARGUMENT_ERROR;
+		return BAD_ARGUMENT;
 	}
 	
 	// RTC Control enable

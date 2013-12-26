@@ -126,7 +126,7 @@ INT8 *itoa(UINT32 value, INT8 *str)
 // The input string and output number are in bcd format
 INT8 bcda2bcdi(const INT8 *str, UINT32 *value)
 {
-	if(!str || !value) return ARGUMENT_ERROR;
+	if(!str || !value) return BAD_ARGUMENT;
 
 	INT8 ch;
 	*value = 0;
@@ -150,7 +150,7 @@ INT8 bcda2bcdi(const INT8 *str, UINT32 *value)
 // The input number and output string are in bcd format
 INT8 bcdi2bcda(UINT32 value, INT8 *str)
 {
-	if(!str || !value) return ARGUMENT_ERROR;
+	if(!str || !value) return BAD_ARGUMENT;
 	int len = 0;
 	int i;
 

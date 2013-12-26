@@ -34,7 +34,7 @@ OS_Return _OS_SemAlloc(OS_Sem_t *sem, UINT32 value)
 	OS_Return status;
 	
 	if(!sem) {
-		status = ARGUMENT_ERROR;
+		status = BAD_ARGUMENT;
 		goto exit;
 	}
 		
@@ -328,7 +328,7 @@ static OS_Return assert_open(OS_Sem_t sem)
 {
 	if(sem < 0 || sem >= MAX_SEMAPHORE_COUNT)
 	{
-		return ARGUMENT_ERROR;
+		return BAD_ARGUMENT;
 	}
 	
 	if(!IsResourceBusy(g_semaphore_usage_mask, sem))

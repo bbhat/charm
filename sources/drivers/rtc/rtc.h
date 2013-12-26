@@ -13,8 +13,6 @@
 #include "os_config.h"
 #include "os_driver.h"
 
-#if ENABLE_RTC
-
 // Structure for Date and Time
 typedef struct
 {
@@ -48,10 +46,21 @@ enum
 	
 } OS_Weekday;
 
+#if ENABLE_RTC
+///////////////////////////////////////////////////////////////////////////////
+// Design
+//	This is a simple driver which just implements read and write routines
+//	The reads can be performed by any client. But the for 'write' the client process
+//	need to have admin privileges
+///////////////////////////////////////////////////////////////////////////////
+
+// Global instance of the RTC driver
+extern OS_Driver g_rtc_driver;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Driver functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return _RTC_DriverInit(void);
+OS_Return _RTC_DriverInit(OS_Driver * driver);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Date and Time functions
@@ -68,5 +77,4 @@ OS_Return _OS_GetAlarm(OS_DateAndTime *date_and_time);
 #endif // ENABLE_RTC_ALARM
 
 #endif // ENABLE_RTC
-
 #endif // _RTC_H_

@@ -117,7 +117,7 @@ OS_Return _PFM_SetUserLED(LED_Number led, LED_Options options)
 		user_led_toggle(led);
 		break;
 	default:
-		status = ARGUMENT_ERROR;
+		status = BAD_ARGUMENT;
 		break;
 	}
 

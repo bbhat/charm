@@ -28,14 +28,14 @@ OS_Return elf_get_sections(void * elfdata, void ** start_address,
 	if(!elfdata) 
 	{
 		FAULT("elf_get_sections failed: address cannot be NULL\n");
-		return ARGUMENT_ERROR;
+		return BAD_ARGUMENT;
 	}
 	
 	// If 'sections' argument is provided without the count, it is an error.
 	if(sections && !count)
 	{
 		FAULT("elf_get_sections failed: count cannot be NULL\n");
-		return ARGUMENT_ERROR;
+		return BAD_ARGUMENT;
 	}
 
 	Elf32_Ehdr *elf_hdr = (Elf32_Ehdr *) elfdata;
@@ -112,7 +112,7 @@ OS_Return elf_load(void * elfdata)
 	if(!elfdata) 
 	{
 		FAULT("elf_load failed: address cannot be NULL\n");
-		return ARGUMENT_ERROR;
+		return BAD_ARGUMENT;
 	}
 	
 	Elf32_Ehdr *elf_hdr = (Elf32_Ehdr *) elfdata;

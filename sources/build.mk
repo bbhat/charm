@@ -6,7 +6,6 @@ SOURCE_DIRS	+=	sources/kernel
 SOURCE_DIRS	+=	sources/arm/$(CORE)
 SOURCE_DIRS	+=	sources/arm/common
 
-SOURCE_DIRS	+=	sources/soc/common/drivers/rtc
 SOURCE_DIRS	+=	sources/soc/common/drivers/timer
 
 SOURCE_DIRS	+=	sources/soc/$(SOC)/drivers/uart
@@ -22,6 +21,7 @@ SOURCE_DIRS	+=	sources/mmu/$(CORE)
 SOURCE_DIRS	+=	sources/mmu/$(CORE)
 
 SOURCE_DIRS	+=	sources/drivers
+SOURCE_DIRS	+=	sources/drivers/rtc
 SOURCE_DIRS	+=	sources/filesystem
 SOURCE_DIRS	+=	sources/filesystem/ramdisk
 SOURCE_DIRS	+=	sources/utilities
@@ -35,7 +35,6 @@ INCLUDES	+=	sources/kernel
 INCLUDES	+=	sources/arm/$(CORE)
 INCLUDES	+=	sources/arm/common
 
-INCLUDES	+=	sources/soc/common/drivers/rtc
 INCLUDES	+=	sources/soc/common/drivers/timer
 INCLUDES	+=	sources/soc/common/drivers/uart
 INCLUDES	+=	sources/soc/$(SOC)
@@ -50,6 +49,7 @@ INCLUDES	+=	sources/mmu/$(CORE)
 INCLUDES	+=	sources/mmu/$(CORE)
 
 INCLUDES	+=	sources/drivers
+INCLUDES	+=	sources/drivers/rtc
 INCLUDES	+=	sources/filesystem
 INCLUDES	+=	sources/filesystem/ramdisk
 INCLUDES	+=	sources/utilities
