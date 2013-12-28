@@ -19,57 +19,57 @@
 typedef enum
 {
 	SUCCESS = 0,
-	FAILED = 1,
+	FAILED = -1,
 
-	INSUFFICIENT_STACK = 10,
-	INVALID_PERIOD = 11,
-	INVALID_BUDGET = 12,
-	INVALID_TASK = 13,
-	EXCEEDS_MAX_CPU = 14,
-	NOT_SUPPORTED = 15,
-	BAD_ARGUMENT = 16,
-	OUT_OF_SPACE = 17,
-	NO_DATA = 18,
-	INVALID_PRIORITY = 19,
-	OUT_OF_BOUNDS = 20,
-	CHKPT_NOT_ENABLED = 21,
-	CHKPT_FAIL = 22,
-	INVALID_ARG = 23, 
-	INVALID_DEADLINE = 24,
-	FORMAT_ERROR = 25,
-	RAMDISK_INVALID = 26,
-	CONFIGURATION_ERROR = 27,
-	INVALID_ELF_FILE = 28,
-	FILE_ERROR = 29,
-	SYSCALL_ERROR = 30,
-	INVALID_SWI_ERROR = 30,
-	RESOURCE_EXHAUSTED = 31,
-	PROCESS_INVALID = 32,			// Certain functions can only be called from a valid process
-	RESOURCE_NOT_OPEN = 33,
-	RESOURCE_NOT_OWNED = 34,
-	RESOURCE_DELETED = 35,
-	RESOURCE_NOT_FOUND = 36,
-	NOT_ADMINISTRATOR = 37,
-	NOT_IMPLEMENTED = 38,
-	NOT_CONFIGURED = 39,
-	EXCEEDED_MAX_SECTIONS = 40,
-	INVALID_PHASE = 41,
-    EXCLUSIVE_ACCESS = 42,
-    ACCESS_DENIED = 43,
-    DEFER_IO_REQUEST = 44,
-    RESOURCE_BUSY = 45,
+	INSUFFICIENT_STACK = -10,
+	INVALID_PERIOD = -11,
+	INVALID_BUDGET = -12,
+	INVALID_TASK = -13,
+	EXCEEDS_MAX_CPU = -14,
+	NOT_SUPPORTED = -15,
+	BAD_ARGUMENT = -16,
+	OUT_OF_SPACE = -17,
+	NO_DATA = -18,
+	INVALID_PRIORITY = -19,
+	OUT_OF_BOUNDS = -20,
+	CHKPT_NOT_ENABLED = -21,
+	CHKPT_FAIL = -22,
+	INVALID_ARG = -23, 
+	INVALID_DEADLINE = -24,
+	FORMAT_ERROR = -25,
+	RAMDISK_INVALID = -26,
+	CONFIGURATION_ERROR = -27,
+	INVALID_ELF_FILE = -28,
+	FILE_ERROR = -29,
+	SYSCALL_ERROR = -30,
+	INVALID_SWI_ERROR = -30,
+	RESOURCE_EXHAUSTED = -31,
+	PROCESS_INVALID = -32,			// Certain functions can only be called from a valid process
+	RESOURCE_NOT_OPEN = -33,
+	RESOURCE_NOT_OWNED = -34,
+	RESOURCE_DELETED = -35,
+	RESOURCE_NOT_FOUND = -36,
+	NOT_ADMINISTRATOR = -37,
+	NOT_IMPLEMENTED = -38,
+	NOT_CONFIGURED = -39,
+	EXCEEDED_MAX_SECTIONS = -40,
+	INVALID_PHASE = -41,
+    EXCLUSIVE_ACCESS = -42,
+    ACCESS_DENIED = -43,
+    DEFER_IO_REQUEST = -44,
+    RESOURCE_BUSY = -45,
 	
 	
-	UNKNOWN = 99	
+	UNKNOWN = -99	
 
 } OS_Return;
 
 
 typedef enum
 {
-    ACCESS_READ = 1,
-    ACCESS_WRITE = 2,
-    ACCESS_EXCLUSIVE = 3
+    ACCESS_READ = 1,		// Allow Reading
+    ACCESS_WRITE = 2,		// Allow writing
+    ACCESS_EXCLUSIVE = 4	// Allow exclusive access for one client. The type of access (Read / Write) should be specified separately
     
 } OS_DriverAccessMode;
 
@@ -286,10 +286,6 @@ typedef enum
 // The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 
 // the options provided
 OS_Return PFM_SetUserLED(LED_Number led, LED_Options options);
-
-// Serial logging functions
-// Returns the number of bytes actually written
-UINT32 PFM_SerialLog(const INT8 * str, UINT32 size);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility functions & Macros

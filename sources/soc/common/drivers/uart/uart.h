@@ -35,9 +35,6 @@ UINT32 Uart_DebugWriteNB(const INT8 *buf, UINT32 count);	// Non blocking write t
 void Uart_ReadB(UART_Channel ch, INT8 *buf, UINT32 count);	// Blocking read
 void Uart_ReadNB(UART_Channel ch, INT8 *buf, UINT32 * count);	// Non Blocking Read
 
-// Platform support functions
-UINT32 _PFM_SerialLog(const INT8 *buf, UINT32 count);
-
 // Non Blocking single ASCII character read
 INT8 Uart_GetChar(UART_Channel ch);	
 

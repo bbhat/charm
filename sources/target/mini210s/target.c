@@ -11,6 +11,7 @@
 #include "target.h"
 #include "soc.h"
 #include "rtc.h"
+#include "serial.h"
 
 void _OS_TargetInit(void)
 {
@@ -19,6 +20,11 @@ void _OS_TargetInit(void)
 	configure_user_led(1);
 	configure_user_led(2);
 	configure_user_led(3);
+
+#if SERIAL_DRIVER_ENABLE	
+	// Initialize the RTC driver
+	_OS_DriverInit(&g_serial_driver, "Serial", _Serial_DriverInit, 16);
+#endif
 
 #if ENABLE_RTC	
 	// Initialize the RTC driver

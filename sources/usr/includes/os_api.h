@@ -62,9 +62,9 @@ typedef enum
 
 typedef enum
 {
-    ACCESS_READ = 1,
-    ACCESS_WRITE = 2,
-    ACCESS_EXCLUSIVE = 3
+    ACCESS_READ = 1,		// Allow Reading
+    ACCESS_WRITE = 2,		// Allow writing
+    ACCESS_EXCLUSIVE = 4	// Allow exclusive access for one client. The type of access (Read / Write) should be specified separately
     
 } OS_DriverAccessMode;
 
@@ -173,9 +173,9 @@ void OS_TaskYield();
 OS_Return OS_DriverLookup(const INT8 * name, OS_Driver_t * driver);
 OS_Return OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode);
 OS_Return OS_DriverClose(OS_Driver_t driver);
-OS_Return OS_DriverRead(OS_Driver_t driver);
-OS_Return OS_DriverWrite(OS_Driver_t driver);
-OS_Return OS_DriverConfigure(OS_Driver_t driver);
+OS_Return OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size);
+OS_Return OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size);
+OS_Return OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 size);
 
 /*
 ///////////////////////////////////////////////////////////////////////////////

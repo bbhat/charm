@@ -131,28 +131,6 @@ void PFM_SetUserLED(LED_Number led, LED_Options options)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Function: PFM_SerialLog
-///////////////////////////////////////////////////////////////////////////////
-UINT32 PFM_SerialLog(const INT8 * str, UINT32 size)
-{
-	_OS_Syscall_Args param_info;
-	void * arg[2];
-	UINT32 ret[1];
-	
-	// Prepare the argument info structure
-	param_info.id = SYSCALL_PFM_SERIAL_LOG;
-	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
-	
-	arg[0] = (void *)str;
-	arg[1] = (void *)size;	
-	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
-			
-	return ret[0];	
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Function to yield
 // Can be used with both Periodic / Aperiodic Tasks
 ///////////////////////////////////////////////////////////////////////////////
@@ -394,17 +372,73 @@ OS_Return OS_DriverClose(OS_Driver_t driver)
 	return (OS_Return) ret[0];	
 }
 
-OS_Return OS_DriverRead(OS_Driver_t driver)
+OS_Return OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size)
 {
-    return NOT_IMPLEMENTED;
+	_OS_Syscall_Args param_info;
+	void * arg[3];
+	UINT32 ret[2];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
+	param_info.sub_id = SUBCALL_DRIVER_READ;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)driver;
+	arg[1] = (void *)buffer;
+	arg[2] = (void *)size;
+
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
+	
+	if(size) {
+		*size = ret[1];
+	}
+	
+	return (OS_Return) ret[0];	
 }
 
-OS_Return OS_DriverWrite(OS_Driver_t driver)
+OS_Return OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size)
 {
-    return NOT_IMPLEMENTED;
+	_OS_Syscall_Args param_info;
+	void * arg[3];
+	UINT32 ret[2];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
+	param_info.sub_id = SUBCALL_DRIVER_WRITE;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)driver;
+	arg[1] = (void *)buffer;
+	arg[2] = (void *)size;
+
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
+	
+	if(size) {
+		*size = ret[1];
+	}
+	
+	return (OS_Return) ret[0];	
 }
 
-OS_Return OS_DriverConfigure(OS_Driver_t driver)
+OS_Return OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 size)
 {
-    return NOT_IMPLEMENTED;
+	_OS_Syscall_Args param_info;
+	void * arg[3];
+	UINT32 ret[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
+	param_info.sub_id = SUBCALL_DRIVER_CONFIGURE;
+	param_info.arg_bytes = sizeof(arg);
+	param_info.ret_bytes = sizeof(ret);
+	
+	arg[0] = (void *)driver;
+	arg[1] = (void *)buffer;
+	arg[2] = (void *)size;
+
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
+	
+	return (OS_Return) ret[0];	
 }

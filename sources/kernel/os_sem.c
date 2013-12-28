@@ -27,7 +27,7 @@ extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_ap_wait_q;
 extern void _OS_Schedule();
 
-static BOOL assert_open(OS_Sem_t sem);
+static OS_Return assert_open(OS_Sem_t sem);
 
 OS_Return _OS_SemAlloc(OS_Sem_t *sem, UINT32 value)
 {

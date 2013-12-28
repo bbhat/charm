@@ -200,28 +200,6 @@ void PFM_SetUserLED(LED_Number led, LED_Options options)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Function: PFM_SerialLog
-///////////////////////////////////////////////////////////////////////////////
-UINT32 PFM_SerialLog(const INT8 * str, UINT32 size)
-{
-	_OS_Syscall_Args param_info;
-	void * arg[2];
-	UINT32 ret[1];
-	
-	// Prepare the argument info structure
-	param_info.id = SYSCALL_PFM_SERIAL_LOG;
-	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
-	
-	arg[0] = (void *)str;
-	arg[1] = (void *)size;
-	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
-			
-	return ret[0];	
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // Statistics Functions
 ///////////////////////////////////////////////////////////////////////////////
 OS_Return OS_GetStatCounters(OS_StatCounters * ptr)

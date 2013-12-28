@@ -7,14 +7,23 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "os_core.h"
-#include "target.h"
-#include "util.h"
+#include "os_api.h"
 
-OS_PeriodicTask task1;
-OS_PeriodicTask task2;
-OS_PeriodicTask task3;
-OS_AperiodicTask task4;
+OS_Task_t task1;
+OS_Task_t task2;
+OS_Task_t task3;
+OS_Task_t task4;
+
+UINT32 stack1 [0x100];
+UINT32 stack2 [0x100];
+UINT32 stack3 [0x100];
+UINT32 stack4 [0x100];
+
+int a = 0;
+int b = 1;
+int c = 2;
+int d = 3;
+
 OS_Sem_t input_ready;
 char input_str[48];
 

@@ -22,6 +22,7 @@ SOURCE_DIRS	+=	sources/mmu/$(CORE)
 
 SOURCE_DIRS	+=	sources/drivers
 SOURCE_DIRS	+=	sources/drivers/rtc
+SOURCE_DIRS	+=	sources/drivers/serial
 SOURCE_DIRS	+=	sources/filesystem
 SOURCE_DIRS	+=	sources/filesystem/ramdisk
 SOURCE_DIRS	+=	sources/utilities
@@ -50,6 +51,7 @@ INCLUDES	+=	sources/mmu/$(CORE)
 
 INCLUDES	+=	sources/drivers
 INCLUDES	+=	sources/drivers/rtc
+INCLUDES	+=	sources/drivers/serial
 INCLUDES	+=	sources/filesystem
 INCLUDES	+=	sources/filesystem/ramdisk
 INCLUDES	+=	sources/utilities

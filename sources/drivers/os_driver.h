@@ -31,8 +31,10 @@ typedef struct IO_Request
 {
 	struct IO_Request * next;	
 	void * buffer;
-	UINT32 attribute;	// Bits 30..0 indicate the size of the IO
-						// The bit 31 indicates if this is a read (0) or write (1)
+	UINT32 size;
+	UINT32 completed;				// Number of bytes completed transfer
+	UINT32 attributes;
+	
 } IO_Request;
 
 #define IO_TYPE_MASK			   0x80000000
@@ -49,9 +51,9 @@ typedef struct OS_Driver
 	// Routines called by driver clients	
 	OS_Return (*open)(struct OS_Driver * driver);
 	OS_Return (*close)(struct OS_Driver * driver);
-	OS_Return (*read)(struct OS_Driver * driver, void * buffer, UINT32 size);
-	OS_Return (*write)(struct OS_Driver * driver, void * buffer, UINT32 size);
-	OS_Return (*configure)(struct OS_Driver * driver, void * buffer, UINT32 size);
+	OS_Return (*read)(struct OS_Driver * driver, IO_Request * req);
+	OS_Return (*write)(struct OS_Driver * driver, IO_Request * req);
+	OS_Return (*configure)(struct OS_Driver * driver, const void * buffer, UINT32 size);
 	
 	// Interrupt Routines
 	void (*primary_int_handler)(struct OS_Driver * driver);
@@ -77,7 +79,7 @@ typedef struct OS_Driver
     UINT8 user_access_mask;
     UINT8 admin_access_mask;
     UINT8 usage_mode;
-    UINT8 open_readers_count;			// Number of clients who has opened this driver in read mode
+    UINT8 open_clients;					// Number of clients who has opened this driver
 	
 } OS_Driver;
 
@@ -103,11 +105,11 @@ OS_Return _OS_DriverClose(OS_Driver_t driver);
 // and completes them one by one.
 // The objective is to encourage non-blocking design as much as possible.
 // Blocking read/writes interferes with corresponding task's periodic behavior
-OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 size);
-OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size);
-OS_Return _OS_DriverConfigure(OS_Driver_t driver, void * buffer, UINT32 size);
+OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size);
+OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size);
+OS_Return _OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 size);
 
 // Functions called by the IO Task of the driver
-IO_Request * _Driver_GetNextIORequest(OS_Driver * driver, BOOL wait);
+void _Driver_ProcessNextIORequest(OS_Driver * driver);
 
 #endif // _OS_DRIVER_H

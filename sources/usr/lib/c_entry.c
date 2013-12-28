@@ -7,12 +7,15 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "os_api.h"
 
 extern int __bss_start__;
 extern int __bss_end__;
 
 int _start(int argc, char *argv[]) __attribute__ ((section (".text.startup")));
 extern int main(int argc, char *argv[]);
+
+OS_Driver_t __console_serial_driver__;
 
 int _start(int argc, char *argv[])
 {
@@ -26,6 +29,16 @@ int _start(int argc, char *argv[])
 		data_ptr++;
 	}
 	
+	// Get a handle to serial driver used for console output
+	if(OS_DriverLookup("Serial", &__console_serial_driver__) != SUCCESS) {
+		return -1;
+	}
+	
+	// Open the driver in write mode
+	if(OS_DriverOpen(__console_serial_driver__, ACCESS_READ | ACCESS_WRITE) != SUCCESS) {
+		return -1;
+	}
+		
 	// Invoke main
 	return main(argc, argv);
 }

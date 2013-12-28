@@ -36,6 +36,8 @@ extern OS_Process * g_current_process;
 	#define FAULT(x, ...)
 #endif
 
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 ///////////////////////////////////////////////////////////////////////////////
 // The following function is called to register a driver the the OS. 
 // The name should be at least 4 characters and those 4 characters should be unique.
@@ -85,13 +87,16 @@ OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)
 	driver->user_access_mask = ACCESS_READ | ACCESS_WRITE;
 	driver->admin_access_mask = ACCESS_READ | ACCESS_WRITE;
 	driver->usage_mode = 0;
-	driver->open_readers_count = 0;
+	driver->open_clients = 0;
 	driver->io_queue_head = NULL;
 	driver->io_queue_tail = NULL;
 
 	// IO Handler task
 	driver->io_task = NULL;
 
+	// The max_io_count should be at least 1
+	max_io_count = MAX(1, max_io_count);
+	
 	// Allocate Free IO Requests queue
 	for(i = 0; i < max_io_count; i++) {
 		IO_Request * req = (IO_Request *) kmalloc(sizeof(IO_Request));
@@ -196,20 +201,14 @@ OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode)
 	    }
 	}
     
-    // If someone has opened this driver in write mode, then we cannot let
+    // If someone has opened this driver in exclusive mode, then we cannot let
     // other clients to open this
-    if(driver_inst->usage_mode & ACCESS_WRITE) {
+    if(driver_inst->usage_mode & ACCESS_EXCLUSIVE) {
         return EXCLUSIVE_ACCESS;
     }
-    
-    // If someone has opened this in Read mode but we are now requesting write
-    // mode, then also we should fail
-    if((driver_inst->usage_mode & ACCESS_READ) && (mode & ACCESS_WRITE)) {
-        return EXCLUSIVE_ACCESS;
-    }
-    
-    // If we are requesting READ access ensure that number of readers do not exceed 255
-    ASSERT(driver_inst->open_readers_count < 0xFF);
+        
+    // Ensure that number of clients opening this driver do not exceed 255
+    ASSERT(driver_inst->open_clients < 0xFF);
 	    
     // Call the open function on the driver
     OS_Return status = SUCCESS;
@@ -223,12 +222,14 @@ OS_Return _OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode)
     if(status == SUCCESS) {
         driver_inst->usage_mode |= mode;
         
-        // If we are opening in write mode, then store the owner process
-        if(driver_inst->usage_mode & ACCESS_WRITE) {
+        // If we are opening in exclusive mode, then store the owner process
+        // Else if we are opening the driver in read / write mode, then count them
+        if(driver_inst->usage_mode & ACCESS_EXCLUSIVE) {
             driver_inst->owner_process = g_current_process;
+            driver_inst->open_clients++;
         }
-        if(driver_inst->usage_mode & ACCESS_READ) {
-            driver_inst->open_readers_count++;
+		else if(driver_inst->usage_mode & (ACCESS_READ | ACCESS_WRITE)) {
+            driver_inst->open_clients++;
         }
     }
     
@@ -248,24 +249,24 @@ OS_Return _OS_DriverClose(OS_Driver_t driver)
     	return RESOURCE_BUSY;
     }
     
-    if(driver_inst->usage_mode & ACCESS_WRITE) {
+    if(driver_inst->usage_mode & ACCESS_EXCLUSIVE) {
     	// Ensure that this is the process which has opened the driver
     	if(driver_inst->owner_process == g_current_process) {
     		driver_inst->owner_process = NULL;
-    		driver_inst->usage_mode &= ~ACCESS_WRITE;
+    		driver_inst->open_clients = 0;
+    		driver_inst->usage_mode = 0;
     	}
     	else {
     		return RESOURCE_NOT_OWNED;
     	}
     }
-    
-	if(driver_inst->usage_mode & ACCESS_READ) {
-		if(driver_inst->open_readers_count > 0) {
-			driver_inst->open_readers_count--;
+    else if(driver_inst->usage_mode & (ACCESS_READ | ACCESS_WRITE)) {
+		if(driver_inst->open_clients > 0) {
+			driver_inst->open_clients--;
 			
-			// If the last reader is closed, then clear the usage_mode flag
-			if(driver_inst->open_readers_count == 0) {
-				driver_inst->usage_mode &= ~ACCESS_READ;
+			// If the last reader/writer is closed, then clear the usage_mode flag
+			if(driver_inst->open_clients == 0) {
+				driver_inst->usage_mode = 0;
 			}
 		}
 		else {
@@ -277,7 +278,7 @@ OS_Return _OS_DriverClose(OS_Driver_t driver)
 	return (driver_inst->close) ? driver_inst->close(driver_inst) : SUCCESS;
 }
 
-OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 size)
+OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size)
 {	
 	// Validate the inputs
     if(driver < 0 || driver >= g_kernel_driver_count) {
@@ -288,53 +289,76 @@ OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 size)
     	return BAD_ARGUMENT;
     }
 
-	// Max IO Size
-    if(size > 0x7FFFFFFF) {
-    	return BAD_ARGUMENT;
-    }
-
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
     
     // Ensure that the driver is opened in READ mode. Otherwise it is an error.
     // Note the currently the driver framework does not guarantee that the current client
-    // has opened the driver in read mode as we do not store the ownership info for reads.
-    // This is done in order to support multiple readers and yet to save space & time 
-    // in implementation
+    // has opened the driver in read mode as we store the ownership info 
+    // only in exclusive access mode
+    // This is done in order to support multiple readers/writes (without exclusive access) 
+    // and yet to save space & time in implementation
     if(!(driver_inst->usage_mode & ACCESS_READ)) {
     	return RESOURCE_NOT_OPEN;
     }
     
+    // If the driver is opened in exclusive mode, then ensure that the current process owns it
+    if((driver_inst->usage_mode & ACCESS_EXCLUSIVE) && (driver_inst->owner_process != g_current_process)) {
+		return EXCLUSIVE_ACCESS;
+    }
+    
+    // We just know that some client has opened this driver in read mode
+    // but not sure if it is this client. So check for access rights of the process again
+    // just to increase the protection.
+	if(g_current_process->attributes & ADMIN_PROCESS) {
+	    if(!(driver_inst->admin_access_mask & ACCESS_READ)) {
+	        return ACCESS_DENIED;
+	    }
+	}
+	else {
+	    if(!(driver_inst->user_access_mask & ACCESS_READ)) {
+	        return ACCESS_DENIED;
+	    }
+	}
+
+	// Create an IO_Request instance for this request
+	IO_Request * io_request = _Driver_GetFreeIORequest(driver_inst);
+	if(!io_request) {
+		return RESOURCE_EXHAUSTED;
+	}
+	
+	io_request->buffer = buffer;
+	io_request->size = * size;
+	io_request->completed = 0;
+	io_request->attributes = READ_IO;
+
 	OS_Return status = DEFER_IO_REQUEST;
     
 	if(driver_inst->read) {
-		status = driver_inst->read(driver_inst, buffer, size);
+		status = driver_inst->read(driver_inst, io_request);
+		*size = io_request->completed;
 	}
 	
 	// If the driver provided 'read' function returns DEFER_IO_REQUEST or
 	// if the driver did not provide 'read' function, then queue the IO for later
 	// processing and return immediately
 	if(status == DEFER_IO_REQUEST) {
-		IO_Request * io_request = _Driver_GetFreeIORequest(driver_inst);
-		
-		if(!io_request) {
-			return RESOURCE_EXHAUSTED;
-		}
-		
-		io_request->buffer = buffer;
-		io_request->attribute == (READ_IO | size);
 
-		// Enqueue the IO Request
+		// This IO Request is pending
 		_Driver_EnqueueIORequest(driver_inst, io_request);
 		
 		// TODO: If the request is a blocking request, then block this thread
 		// Also we may have to send an asynchronous signal to the client when
 		// we are done.
 	}
+	else {
+		// We are done with this IO Request. Free it.
+		_Driver_FreeIORequest(driver_inst, io_request);
+	}
 	
 	return status;
 }
 
-OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size)
+OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size)
 {
 	// Validate the inputs
     if(driver < 0 || driver >= g_kernel_driver_count) {
@@ -345,38 +369,59 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size)
     	return BAD_ARGUMENT;
     }
 
-	// Max IO Size
-    if(size > 0x7FFFFFFF) {
-    	return BAD_ARGUMENT;
-    }
-
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
-    
-    // Ensure that the driver is opened in WRITE mode.
-    // Also ensure the ownership of access
-    if((driver_inst->owner_process != g_current_process) || 
-    	(!(driver_inst->usage_mode & ACCESS_WRITE))) {
+
+    // Ensure that the driver is opened in WRITE mode. Otherwise it is an error.
+    // Note the currently the driver framework does not guarantee that the current client
+    // has opened the driver in write mode as we store the ownership info 
+    // only in exclusive access mode
+    // This is done in order to support multiple readers/writes (without exclusive access) 
+    // and yet to save space & time in implementation
+    if(!(driver_inst->usage_mode & ACCESS_WRITE)) {
     	return RESOURCE_NOT_OPEN;
     }
     
+    // If the driver is opened in exclusive mode, then ensure that the current process owns it
+    if((driver_inst->usage_mode & ACCESS_EXCLUSIVE) && (driver_inst->owner_process != g_current_process)) {
+		return EXCLUSIVE_ACCESS;
+    }
+    
+    // We just know that some client has opened this driver in write mode
+    // but not sure if it is this client. So check for access rights of the process again
+    // just to increase the protection.
+	if(g_current_process->attributes & ADMIN_PROCESS) {
+	    if(!(driver_inst->admin_access_mask & ACCESS_WRITE)) {
+	        return ACCESS_DENIED;
+	    }
+	}
+	else {
+	    if(!(driver_inst->user_access_mask & ACCESS_WRITE)) {
+	        return ACCESS_DENIED;
+	    }
+	}
+
+	// Create an IO_Request instance for this request
+	IO_Request * io_request = _Driver_GetFreeIORequest(driver_inst);
+	if(!io_request) {
+		return RESOURCE_EXHAUSTED;
+	}
+
 	OS_Return status = DEFER_IO_REQUEST;
     
+    io_request->buffer = (void *) buffer;
+	io_request->size = * size;
+	io_request->completed = 0;
+	io_request->attributes = WRITE_IO;
+
 	if(driver_inst->write) {
-		status = driver_inst->write(driver_inst, buffer, size);
+		status = driver_inst->write(driver_inst, io_request);
+		*size = io_request->completed;
 	}
 	
 	// If the driver provided 'write' function returns DEFER_IO_REQUEST or
 	// if the driver did not provide 'write' function, then queue the IO for later
 	// processing and return immediately
 	if(status == DEFER_IO_REQUEST) {
-		IO_Request * io_request = _Driver_GetFreeIORequest(driver_inst);
-		
-		if(!io_request) {
-			return RESOURCE_EXHAUSTED;
-		}
-		
-		io_request->buffer = buffer;
-		io_request->attribute = (WRITE_IO | size);
 
 		// Enqueue the IO Request
 		_Driver_EnqueueIORequest(driver_inst, io_request);
@@ -385,11 +430,15 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, void * buffer, UINT32 size)
 		// Also we may have to send an asynchronous signal to the client when
 		// we are done.
 	}
+	else {		
+		// We are done with this IO Request. Free it.
+		_Driver_FreeIORequest(driver_inst, io_request);
+	}
 	
 	return status;
 }
 
-OS_Return _OS_DriverConfigure(OS_Driver_t driver, void * buffer, UINT32 size)
+OS_Return _OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 size)
 {
 	// Validate the inputs
     if(driver < 0 || driver >= g_kernel_driver_count) {
@@ -400,19 +449,31 @@ OS_Return _OS_DriverConfigure(OS_Driver_t driver, void * buffer, UINT32 size)
     	return BAD_ARGUMENT;
     }
 
-	// Max IO Size
-    if(size > 0x7FFFFFFF) {
-    	return BAD_ARGUMENT;
-    }
-
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
     
-    // Ensure that the driver is opened in WRITE mode in order to perform configure.
-    // Also ensure the ownership of access
-    if((driver_inst->owner_process != g_current_process) || 
-    	(!(driver_inst->usage_mode & ACCESS_WRITE))) {
+    // Ensure that the driver is opened in WRITE mode for configure function
+    if(!(driver_inst->usage_mode & ACCESS_WRITE)) {
     	return RESOURCE_NOT_OPEN;
     }
+    
+    // If the driver is opened in exclusive mode, then ensure that the current process owns it
+    if((driver_inst->usage_mode & ACCESS_EXCLUSIVE) && (driver_inst->owner_process != g_current_process)) {
+		return EXCLUSIVE_ACCESS;
+    }
+    
+    // We just know that some client has opened this driver in write mode
+    // but not sure if it is this client. So check for access rights of the process again
+    // just to increase the protection.
+	if(g_current_process->attributes & ADMIN_PROCESS) {
+	    if(!(driver_inst->admin_access_mask & ACCESS_WRITE)) {
+	        return ACCESS_DENIED;
+	    }
+	}
+	else {
+	    if(!(driver_inst->user_access_mask & ACCESS_WRITE)) {
+	        return ACCESS_DENIED;
+	    }
+	}
 
     OS_Return status = NOT_SUPPORTED;
     
@@ -443,8 +504,8 @@ IO_Request * _Driver_EnqueueIORequest(OS_Driver * driver, IO_Request * req)
 }
 
 // Functions called by the IO Task of the driver. This function gets one
-// IO request from the pending IO queue.
-IO_Request * _Driver_GetNextIORequest(OS_Driver * driver, BOOL wait)
+// IO request from the pending IO queue and processes the same
+void _Driver_ProcessNextIORequest(OS_Driver * driver)
 {
 	UINT32 intsts;
 	IO_Request * req = NULL;
@@ -460,9 +521,7 @@ IO_Request * _Driver_GetNextIORequest(OS_Driver * driver, BOOL wait)
 			driver->io_queue_tail = NULL;
 		}
 	}
-	OS_EXIT_CRITICAL(intsts);	
-
-	return req;
+	OS_EXIT_CRITICAL(intsts);
 }
 
 void _Driver_FreeIORequest(OS_Driver * driver, IO_Request * req)

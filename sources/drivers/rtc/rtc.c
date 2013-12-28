@@ -18,11 +18,11 @@
 typedef OS_Driver RTC_Driver;
 
 // Create a global instance of the RTC driver
-OS_Driver g_rtc_driver;
+RTC_Driver g_rtc_driver;
 
 // Driver functions
-static OS_Return _RTC_DriverRead(OS_Driver * driver, void * buffer, UINT32 size);
-static OS_Return _RTC_DriverWrite(OS_Driver * driver, void * buffer, UINT32 size);
+static OS_Return _RTC_DriverRead(OS_Driver * driver, IO_Request * req);
+static OS_Return _RTC_DriverWrite(OS_Driver * driver, IO_Request * req);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Basic driver functions
@@ -44,30 +44,36 @@ OS_Return _RTC_DriverInit(OS_Driver * driver)
     return SUCCESS;
 }
 
-OS_Return _RTC_DriverRead(OS_Driver * driver, void * buffer, UINT32 size)
+OS_Return _RTC_DriverRead(OS_Driver * driver, IO_Request * req)
 {
 	OS_Return status = BAD_ARGUMENT;
 	
-	ASSERT(driver && buffer);
+	ASSERT(driver && req);
 
-	if(size >= sizeof(OS_DateAndTime)) {
-		status = _OS_GetDateAndTime((OS_DateAndTime *) buffer);
+	if(req->size >= sizeof(OS_DateAndTime)) {
+		status = _OS_GetDateAndTime((OS_DateAndTime *) req->buffer);
+		req->completed = sizeof(OS_DateAndTime);
+		status = SUCCESS;
 	}
-	else if(size >= sizeof(OS_Time)) {
-		status = _OS_GetTime((OS_Time *) buffer);		
+	else if(req->size >= sizeof(OS_Time)) {
+		status = _OS_GetTime((OS_Time *) req->buffer);		
+		req->completed = sizeof(OS_Time);
+		status = SUCCESS;
 	}
 	
     return status;
 }
 
-OS_Return _RTC_DriverWrite(OS_Driver * driver, void * buffer, UINT32 size)
+OS_Return _RTC_DriverWrite(OS_Driver * driver, IO_Request * req)
 {
 	OS_Return status = BAD_ARGUMENT;
 	
-	ASSERT(driver && buffer);
+	ASSERT(driver && req);
 
-	if(size >= sizeof(OS_DateAndTime)) {
-		status = _OS_SetDateAndTime((OS_DateAndTime *) buffer);
+	if(req->size >= sizeof(OS_DateAndTime)) {
+		status = _OS_SetDateAndTime((OS_DateAndTime *) req->buffer);
+		req->completed = sizeof(OS_DateAndTime);
+		status = SUCCESS;
 	}
 		
     return status;
