@@ -38,7 +38,7 @@ SECTIONS
 {	
 	/* Allocate space for kernel heap */
 	__kernel_heap_start__  	   = 0x20080000;
-	__kernel_heap_length__     = 0x8000;
+	__kernel_heap_length__     = 0x80000;
 
 	/* Allocate space for kernel heap */
 	__user_heap_start__  	   = 0x20100000;

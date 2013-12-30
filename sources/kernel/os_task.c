@@ -161,6 +161,8 @@ OS_Return _OS_CreatePeriodicTask(
 		FAULT("_OS_CreateAperiodicTask failed for process %s: Exhausted all resources\n", g_current_process->name);
 		return RESOURCE_EXHAUSTED;	
 	}
+	
+	KlogStr(KLOG_GENERAL_INFO, "Creating periodic task - ", task_name);
 
 	// Get a pointer to the actual TCB	
 	tcb = (OS_PeriodicTask *)&g_task_pool[*task];
@@ -197,7 +199,7 @@ OS_Return _OS_CreatePeriodicTask(
 	tcb->id = *task;
 	
 	// Note down the owner process
-	tcb->owner_process = g_current_process;
+	tcb->owner_process = g_current_process ? g_current_process : g_kernel_process;
 
 	OS_ENTER_CRITICAL(intsts);
 	//if(!ValidateNewThread(period_in_us, budget_in_us))
@@ -315,6 +317,8 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 		return RESOURCE_EXHAUSTED;	
 	}
 	
+	KlogStr(KLOG_GENERAL_INFO, "Creating aperiodic task - ", task_name);
+
 	// Get a pointer to the TCB
 	tcb = (OS_AperiodicTask *)&g_task_pool[*task];
 
@@ -350,8 +354,8 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	tcb->name[OS_TASK_NAME_SIZE-1] = '\0';
 
 	// Note down the owner process
-	tcb->owner_process = g_current_process;
-
+	tcb->owner_process = g_current_process ? g_current_process : g_kernel_process;
+	
 	OS_ENTER_CRITICAL(intsts); // Enter critical section
 	
 	// Block the resource

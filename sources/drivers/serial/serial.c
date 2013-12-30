@@ -48,8 +48,8 @@ OS_Return _Serial_DriverInit(OS_Driver * driver)
     _OS_CreatePeriodicTask(SERIAL_TASK_PERIOD, SERIAL_TASK_PERIOD, 
         SERIAL_TASK_PERIOD / 40, 0, sdriver->serial_task_stack, 
         sizeof(sdriver->serial_task_stack), 
-        "SERIAL", SYSTEM_TASK,
-        &sdriver->serial_task, SerialTaskFn, 0);
+        "Serial", SYSTEM_TASK,
+        &sdriver->serial_task, SerialTaskFn, sdriver);
     
     return SUCCESS;
 }
@@ -86,7 +86,8 @@ OS_Return _Serial_DriverWrite(OS_Driver * driver, IO_Request *req)
 void SerialTaskFn(void * ptr)
 {
 	Serial_driver * sdriver = (Serial_driver *) ptr;
-	
+	ASSERT(sdriver);
+		
 	if(sdriver->write_index > sdriver->read_index)
 	{
 		sdriver->read_index += Uart_DebugWriteNB(

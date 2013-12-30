@@ -65,6 +65,8 @@ OS_Return OS_CreateProcess(
 		FAULT("OS_CreateProcess failed for '%s': Exhausted all resources\n", g_current_process->name);
 		return RESOURCE_EXHAUSTED;	
 	}
+	
+	KlogStr(KLOG_GENERAL_INFO, "Creating process - ", process_name);
 
 	// Get a pointer to actual PCB
 	pcb = &g_process_pool[*process];

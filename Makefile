@@ -30,7 +30,6 @@ ifeq ($(TARGET), mini210s)
 	SOC := s5pv210
 endif
 
-
 ifeq ($(SOC), s3c2440)
 	CORE := arm920t
 endif

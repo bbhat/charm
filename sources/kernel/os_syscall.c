@@ -64,7 +64,8 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_OSGetStat,
 		syscall_TaskGetStat,
 		syscall_GetTaskAllocMask,
-		0, 
+		syscall_DriverStandardCall, 
+		syscall_DriverCustomCall,
 		0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0, 
 		0, 0, 0, 0, 0,
@@ -295,7 +296,6 @@ static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const 
 
 static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-    const INT8 * str_args = (const INT8 *)arg;
     const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
 	OS_Return result = SYSCALL_ERROR;
@@ -305,7 +305,7 @@ static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, cons
     case SUBCALL_DRIVER_LOOKUP:
         if(((param_info->arg_bytes >> 2) >= 1) && ((param_info->ret_bytes >> 2) >= 2))
         {
-        	result = _OS_DriverLookup(str_args[0], (OS_Driver_t *)(uint_ret+1));
+        	result = _OS_DriverLookup((const INT8 *)uint_args[0], (OS_Driver_t *)(uint_ret+1));
         }
         break;
         
