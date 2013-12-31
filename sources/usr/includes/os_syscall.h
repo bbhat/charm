@@ -63,8 +63,8 @@ typedef struct
 {
 	UINT16	id;
 	UINT16	sub_id;
-	UINT16	arg_bytes;
-	UINT16	ret_bytes;
+	UINT16	arg_count;
+	UINT16	ret_count;
 	UINT16	reserved[4];
 	
 } _OS_Syscall_Args;

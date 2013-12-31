@@ -10,6 +10,8 @@
 #include "os_api.h"
 #include "os_syscall.h"
 
+#define ARRAYSIZE(arg)	(sizeof(arg) / sizeof(arg[0]))
+
 OS_Return OS_CreatePeriodicTask(
 	UINT32 period_in_us,
 	UINT32 deadline_in_us,
@@ -29,8 +31,8 @@ OS_Return OS_CreatePeriodicTask(
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_PERIODIC_TASK_CREATE;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = period_in_us;
 	arg[1] = deadline_in_us;
@@ -66,8 +68,8 @@ OS_Return OS_CreateAperiodicTask(
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_APERIODIC_TASK_CREATE;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = priority;
 	arg[1] = (UINT32)stack;
@@ -121,8 +123,8 @@ void PFM_SetUserLED(LED_Number led, LED_Options options)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_PFM_LED_SET;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = 0;
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = 0;
 	
 	arg[0] = led;
 	arg[1] = options;
@@ -141,8 +143,8 @@ void OS_TaskYield()
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_TASK_YIELD;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = 0;
-	param_info.ret_bytes = 0;
+	param_info.arg_count = 0;
+	param_info.ret_count = 0;
 	
 	// This system call will result in context switch, so call advanced version
 	_OS_Syscall(&param_info, NULL, NULL, SYSCALL_SWITCHING);	
@@ -160,8 +162,8 @@ OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_ALLOC;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = value;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
@@ -176,54 +178,54 @@ OS_Return OS_SemWait(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
-	UINT32 ret;
+	UINT32 ret[1];
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_WAIT;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = sem;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
 	
-	return (OS_Return) ret;
+	return (OS_Return) ret[0];
 }
 
 OS_Return OS_SemPost(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
-	UINT32 ret;
+	UINT32 ret[1];
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_POST;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = sem;
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
 	
-	return (OS_Return) ret;
+	return (OS_Return) ret[0];
 }
 
 OS_Return OS_SemFree(OS_Sem_t sem)
 {
 	_OS_Syscall_Args param_info;
 	UINT32 arg[1];
-	UINT32 ret;
+	UINT32 ret[0];
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_FREE;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = sem;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
 	
-	return (OS_Return) ret;
+	return (OS_Return) ret[0];
 }
 
 OS_Return OS_SemGetValue(OS_Sem_t sem, INT32 *val)
@@ -235,8 +237,8 @@ OS_Return OS_SemGetValue(OS_Sem_t sem, INT32 *val)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_SEM_GET_VALUE;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = sem;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
@@ -261,8 +263,8 @@ OS_Return OS_GetStatCounters(OS_StatCounters * ptr)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_OS_GET_STAT;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)ptr;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
@@ -279,8 +281,8 @@ OS_Return OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_TASK_GET_STAT;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)task;
 	arg[1] = (void *)ptr;	
@@ -298,8 +300,8 @@ OS_Return OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_GET_TASK_ALLOC_MASK;
 	param_info.sub_id = 0;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)alloc_mask;
 	arg[1] = (void *)count;
@@ -319,8 +321,8 @@ OS_Return OS_DriverLookup(const INT8 * driver_name, OS_Driver_t * driver)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
 	param_info.sub_id = SUBCALL_DRIVER_LOOKUP;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)driver_name;
 
@@ -342,8 +344,8 @@ OS_Return OS_DriverOpen(OS_Driver_t driver, OS_DriverAccessMode mode)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
 	param_info.sub_id = SUBCALL_DRIVER_OPEN;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)driver;
 	arg[1] = (void *)mode;
@@ -362,8 +364,8 @@ OS_Return OS_DriverClose(OS_Driver_t driver)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
 	param_info.sub_id = SUBCALL_DRIVER_CLOSE;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)driver;
 
@@ -381,8 +383,8 @@ OS_Return OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
 	param_info.sub_id = SUBCALL_DRIVER_READ;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)driver;
 	arg[1] = (void *)buffer;
@@ -402,8 +404,8 @@ OS_Return OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size)
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
 	param_info.sub_id = SUBCALL_DRIVER_WRITE;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)driver;
 	arg[1] = (void *)buffer;
@@ -423,8 +425,8 @@ OS_Return OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 siz
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
 	param_info.sub_id = SUBCALL_DRIVER_CONFIGURE;
-	param_info.arg_bytes = sizeof(arg);
-	param_info.ret_bytes = sizeof(ret);
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = (void *)driver;
 	arg[1] = (void *)buffer;
