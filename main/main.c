@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 #if OS_ENABLE_CPU_STATS==1
 	// Create IO mappings for the kernel task before we access timer registers
 	// Disable caching and write buffer for this region
-//	OS_CreateProcessFromFile(&test_proc1, "STAT", ADMIN_PROCESS, "applications/bin/SystemMonitor.elf", NULL);	
+	OS_CreateProcessFromFile(&test_proc1, "STAT", ADMIN_PROCESS, "applications/bin/SystemMonitor.elf", NULL);	
 #endif
 
 #if defined(TEST_KERNEL)

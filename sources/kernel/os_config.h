@@ -91,6 +91,7 @@ typedef enum
     KLOG_GENERAL_INFO         = (1 << 8),
     KLOG_SEMAPHORE_DEBUG	  = (1 << 9),
     KLOG_OS_STARTUP	  		  = (1 << 10),
+    KLOG_SYSCALL			  = (1 << 11),
 	
     KLOG_MISC                 = (1 << 31)
     
@@ -101,7 +102,7 @@ typedef enum
 #define OS_WITH_VALIDATE_TASK        1
 
 #define OS_KERNEL_LOGGING            0
-#define OS_KLOG_MASK                 (KLOG_CONTEXT_SWITCH)
+#define OS_KLOG_MASK                 (KLOG_SYSCALL)
 #define DEBUG_UART_CHANNEL           0
 
 #endif // _OS_CONFIG_H

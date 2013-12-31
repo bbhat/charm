@@ -28,7 +28,7 @@ int d = 3;
 
 void task_period(void * ptr)
 {
-	printf("LED %d\n", *(LED_Number *)ptr);
+//	printf("LED %d\n", *(LED_Number *)ptr);
 	PFM_SetUserLED(*(LED_Number *)ptr, LED_TOGGLE);
 }
 
