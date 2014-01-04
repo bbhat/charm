@@ -23,35 +23,55 @@ int printf(const char *fmt, ...)
 	return OS_DriverWrite(__console_serial_driver__, g_pcOutBuf, &len);
 }
 
+int puts (const char * str)
+{
+	int len = strlen(str);
+	return OS_DriverWrite(__console_serial_driver__, str, &len);
+}
+
 int scanf(const char * fmt, ...)
 {
+	int eol = 0;
 	int i = 0;
 	int j;
 	
 	unsigned char str[32];
-	unsigned char c;
 	va_list args;
-	int len = sizeof(str);
-	int eol = 0;
 	
 	do
 	{
+		int len = sizeof(str) - 1;
 		OS_DriverRead(__console_serial_driver__, str, &len);
-		for(j = 0; j < len; j++)
+				
+		if(!len)
 		{
-			if((str[j] == 0x0d) || (str[j] == 0x0a))
-			{
-				g_pcInBuf[i] = '\0';
-				eol = 1;
-				break;
+			// Attempt again later
+			OS_TaskYield();
+		}
+		else
+		{
+			// Echo the characters. 
+			int echo_len = len;
+			if(str[echo_len - 1] == 0x0a) {
+				// If the last character is carriage return, then also output a new line character
+				str[echo_len++] = 0x0d;
 			}
-			else
+			else if(str[echo_len - 1] == 0x0d) {
+				// If the last character is new line character, then also output a carriage return
+				str[echo_len++] = 0x0a;
+			}
+			OS_DriverWrite(__console_serial_driver__, str, &echo_len);
+					
+			for(j = 0; ((j < len) && !eol); j++)
 			{
+				eol = ((str[j] == 0x0d) || (str[j] == 0x0a));
 				g_pcInBuf[i++] = str[j];
 			}
-		}
+		}		
 	}
 	while (!eol);
+	
+	g_pcInBuf[i-1] = '\0';
 	
 	va_start(args,fmt);
 	i = vsscanf(g_pcInBuf,fmt,args);

@@ -411,7 +411,7 @@ OS_Return OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size)
 	arg[1] = (void *)buffer;
 	arg[2] = (void *)size;
 
-	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
 	
 	return (OS_Return) ret[0];	
 }

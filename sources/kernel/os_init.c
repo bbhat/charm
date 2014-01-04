@@ -91,15 +91,15 @@ void _OS_Init()
 	// Initialize the Kernel process
 	OS_CreateProcess(&kernel_pcb, "kernel", (SYSTEM_PROCESS | ADMIN_PROCESS), &kernel_process_entry, NULL);	
 	g_kernel_process = &g_process_pool[kernel_pcb];
-	
+
 	// Initialize debug UART
 	Uart_Init(UART0);	
-		
-	// Start the scheduling timer
-	_OS_InitTimer();
-
+			
 	// Target Initialization
 	_OS_TargetInit();	
+
+	// Start the scheduling timer
+	_OS_InitTimer();
 
     KlogStr(KLOG_OS_STARTUP, "Calling - ", "_OS_Start");
 	
@@ -201,6 +201,13 @@ void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable)
 	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
 			(VADDR) ELFIN_UART_BASE, (PADDR) ELFIN_UART_BASE, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
+
+	//------------------------- UART ---------------------------------
+	// Create IO mappings for the kernel task before we access RTC registers
+	// Disable caching and write buffer for this region
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
+			(VADDR) RTC_BASE, (PADDR) RTC_BASE, 
+			(UINT32) 0x10000, KERNEL_RW_USER_NA, FALSE, FALSE);
 
 	//------------------------- VIC ---------------------------------
 	// Create IO mappings for the kernel task before we access VIC registers

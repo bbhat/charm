@@ -56,11 +56,17 @@ OS_Return _Serial_DriverInit(OS_Driver * driver)
 
 OS_Return _Serial_DriverRead(OS_Driver * driver, IO_Request *req)
 {
-	OS_Return status = NOT_SUPPORTED;
+	UINT32 length;
 	
-	ASSERT(driver && req);	
+	ASSERT(driver && req);
+
+	// At this point, this driver only supports non-blocking read.
 	
-    return status;
+	length = req->size;
+	Uart_ReadNB(DEBUG_UART, (const INT8 *)req->buffer + req->completed, &length);
+	req->completed += length;	
+	
+    return SUCCESS;
 }
 
 OS_Return _Serial_DriverWrite(OS_Driver * driver, IO_Request *req)

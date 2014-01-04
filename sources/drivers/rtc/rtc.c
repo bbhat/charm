@@ -39,7 +39,7 @@ OS_Return _RTC_DriverInit(OS_Driver * driver)
     // Set Access permissions. User processes can only read date / time
     // The driver framework guarantees that access permissions are enforced
     driver->user_access_mask = ACCESS_READ;
-	driver->admin_access_mask = ACCESS_READ | ACCESS_WRITE;
+	driver->admin_access_mask = ACCESS_READ | ACCESS_WRITE | ACCESS_EXCLUSIVE;
     
     return SUCCESS;
 }

@@ -13,13 +13,15 @@
 #include "mmu.h"
 
 //#define TEST_KERNEL
-#define TEST_OS
+//#define TEST_OS
 //#define TEST_SRT
 //#define TEST_APERIODIC
+#define TEST_RTC
 
 OS_Process_t test_proc;
 OS_Process_t test_proc1;
 OS_Process_t test_proc2;
+OS_Process_t test_rtc;
 
 OS_Task_t task1, task2, task3, task4;
 
@@ -146,6 +148,10 @@ int main(int argc, char *argv[])
 
 #if defined(TEST_APERIODIC)
 	OS_CreateProcessFromFile(&test_proc2, "test_aperiodic", 0, "applications/bin/test_aperiodic.elf", NULL);
+#endif
+
+#if defined(TEST_RTC)
+	OS_CreateProcessFromFile(&test_rtc, "test_rtc", ADMIN_PROCESS, "applications/bin/test_rtc.elf", NULL);
 #endif
 
 #endif
