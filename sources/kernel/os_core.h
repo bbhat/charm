@@ -41,7 +41,7 @@ typedef enum
 	CONFIGURATION_ERROR = -27,
 	INVALID_ELF_FILE = -28,
 	FILE_ERROR = -29,
-	SYSCALL_ERROR = -30,
+	SYSCALL_ARGUMENT_ERROR = -30,
 	INVALID_SWI_ERROR = -30,
 	RESOURCE_EXHAUSTED = -31,
 	PROCESS_INVALID = -32,			// Certain functions can only be called from a valid process

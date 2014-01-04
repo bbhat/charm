@@ -420,22 +420,13 @@ void AperiodicKernelTaskEntry(void *pdata)
 
 	// Call the thread handler function
 	task->task_function(task->pdata);
-
-	// If this function ever returns, just block this task by adding it to
-	// block q
-	OS_ENTER_CRITICAL(intsts);		
-	_OS_QueueDelete(&g_ap_ready_q, task);
-
-	// Insert into block q
-	_OS_QueueInsert(&g_block_q, task, task->priority);
 	
-	// TODO: Free the TCB resource
-	// SetResourceStatus
+	// Complete the aperiodic task. This removes the task from future scheduling
+	// and moves it into permanent blocked queue
+	_OS_CompleteAperiodicTask();
 	
-	OS_EXIT_CRITICAL(intsts);
-
 	// Now call reschedule function
-	_OS_Schedule();
+	_OS_Schedule();	
 }
 
 ///////////////////////////////////////////////////////////////////////////////

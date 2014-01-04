@@ -469,6 +469,40 @@ void _OS_TaskYield()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Function to be called when an Aperiodic task finishes so that it is no more included
+// in scheduling. Only Aperiodic tasks are allowed to complete
+///////////////////////////////////////////////////////////////////////////////
+OS_Return _OS_CompleteAperiodicTask()
+{
+	OS_Return ret = INVALID_TASK;
+	UINT32 intsts;
+	
+	if(IS_APERIODIC_TASK(g_current_task->attributes))
+	{
+		OS_AperiodicTask * task = (OS_AperiodicTask *) g_current_task;
+
+		// Ensure that we are in the critical section as some call paths are not thread safe.
+		OS_ENTER_CRITICAL(intsts);		
+
+		// If this function ever returns, just block this task by adding it to
+		// block q
+		_OS_QueueDelete(&g_ap_ready_q, task);
+
+		// Insert into block q
+		_OS_QueueInsert(&g_block_q, task, task->priority);
+
+		// Note that the TCB resource for this task will not be freed.
+		// This task will remain in the blocked queue permanently
+	
+		OS_EXIT_CRITICAL(intsts);
+		
+		ret = SUCCESS;
+	}
+
+	return ret;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // The below function, gets the total elapsed time since the beginning
 // of the system in microseconds.
 ///////////////////////////////////////////////////////////////////////////////

@@ -27,6 +27,7 @@ static void syscall_SemFree(const _OS_Syscall_Args * param_info, const void * ar
 static void syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_TaskComplete(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
@@ -60,7 +61,8 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_SemFree,
 		syscall_SemGetValue,
 		syscall_GetCurTask,
-		syscall_TaskYield, 
+		syscall_TaskYield,
+		syscall_TaskComplete,
 		syscall_OSGetStat,
 		syscall_TaskGetStat,
 		syscall_GetTaskAllocMask,
@@ -80,7 +82,7 @@ void _OS_KernelSyscall(const _OS_Syscall_Args * param_info, const void * arg, vo
 	if(!param_info || (param_info->id >= SYSCALL_MAX_COUNT) || !_syscall_handlers[param_info->id])
 	{
 		KlogStr(KLOG_WARNING, "Error occurred in Kernel function %s", __FUNCTION__);
-		if(ret) ((UINT32 *)ret)[0] = SYSCALL_ERROR;
+		if(ret) ((UINT32 *)ret)[0] = SYSCALL_ARGUMENT_ERROR;
 		return;
 	}
 	
@@ -95,7 +97,7 @@ static void syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, cons
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
 	if((param_info->arg_count >= 9) && (param_info->ret_count >= 2))
 	{	
@@ -120,11 +122,22 @@ static void syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * 
 	_OS_TaskYield();
 }
 
+static void syscall_TaskComplete(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+	UINT32 * uint_ret = (UINT32 *)ret;
+	
+	// Complete current aperiodic task. This removes the task from future scheduling
+	// and moves it into permanent blocked queue
+	OS_Return result = _OS_CompleteAperiodicTask();
+	
+	if(uint_ret) uint_ret[0] = result;
+}
+
 static void syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
 	if((param_info->arg_count >= 6) && (param_info->ret_count >= 2))
 	{
@@ -143,19 +156,19 @@ static void syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, con
 
 static void syscall_ProcessCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	if(ret) ((UINT32 *)ret)[0] = SYSCALL_ERROR;
+	if(ret) ((UINT32 *)ret)[0] = SYSCALL_ARGUMENT_ERROR;
 }
 
 static void syscall_ProcessCreateFromFile(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
-	if(ret) ((UINT32 *)ret)[0] = SYSCALL_ERROR;
+	if(ret) ((UINT32 *)ret)[0] = SYSCALL_ARGUMENT_ERROR;
 }
 
 static void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
 	if((param_info->arg_count >= 1) && (param_info->ret_count >= 2))
 	{
@@ -168,7 +181,7 @@ static void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * a
 static void syscall_SemWait(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
 	if(param_info->arg_count >= 1)
 	{		
@@ -181,7 +194,7 @@ static void syscall_SemWait(const _OS_Syscall_Args * param_info, const void * ar
 static void syscall_SemPost(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
 	if(param_info->arg_count >= 1)
 	{
@@ -194,7 +207,7 @@ static void syscall_SemPost(const _OS_Syscall_Args * param_info, const void * ar
 static void syscall_SemFree(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
 	if(param_info->arg_count >= 1)
 	{
@@ -208,7 +221,7 @@ static void syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void 
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
 	if((param_info->arg_count >= 1) && (param_info->ret_count >= 2))
 	{
@@ -247,9 +260,9 @@ static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * 
 	
 #if OS_ENABLE_CPU_STATS==1	
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 
-	if((param_info->arg_count >= 1) && (param_info->ret_count >= 1))
+	if(param_info->arg_count >= 1)
 	{
 		result = _OS_GetStatCounters((OS_StatCounters *)uint_args[0]);
 	}
@@ -265,9 +278,9 @@ static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void 
 	UINT32 * uint_ret = (UINT32 *)ret;
 #if OS_ENABLE_CPU_STATS==1
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
-	if((param_info->arg_count >= 2) && (param_info->ret_count >= 1))
+	if(param_info->arg_count >= 2)
 	{
 		result = _OS_GetTaskStatCounters((OS_Task_t )uint_args[0], (OS_TaskStatCounters *)uint_args[1]);
 	}
@@ -283,9 +296,9 @@ static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const 
 	UINT32 * uint_ret = (UINT32 *)ret;
 #if OS_ENABLE_CPU_STATS==1
 	const UINT32 * uint_args = (const UINT32 *)arg;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
-	if((param_info->arg_count >= 3) && (param_info->ret_count >= 1))
+	if(param_info->arg_count >= 3)
 	{
 		result = _OS_GetTaskAllocMask((UINT32 *)uint_args[0], uint_args[1], uint_args[2]);
 	}
@@ -300,7 +313,7 @@ static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, cons
 {
     const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
-	OS_Return result = SYSCALL_ERROR;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
 	Klog32(KLOG_SYSCALL, "Syscall SubId - ", param_info->sub_id);
 	
@@ -314,28 +327,28 @@ static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, cons
         break;
         
     case SUBCALL_DRIVER_OPEN:
-        if((param_info->arg_count >= 2) && (param_info->ret_count >= 1))
+        if(param_info->arg_count >= 2)
         {
         	result = _OS_DriverOpen((OS_Driver_t) uint_args[0], (OS_DriverAccessMode) uint_args[1]);
         }
         break;
             
     case SUBCALL_DRIVER_CLOSE:
-        if((param_info->arg_count >= 1) && (param_info->ret_count >= 1))
+        if(param_info->arg_count >= 1)
         {
         	result = _OS_DriverClose((OS_Driver_t) uint_args[0]);
         }
         break;
             
     case SUBCALL_DRIVER_READ:
-        if((param_info->arg_count >= 3) && (param_info->ret_count >= 1))
+        if(param_info->arg_count >= 3)
         {
         	result = _OS_DriverRead((OS_Driver_t) uint_args[0], (void *) uint_args[1], (UINT32 *) uint_args[2]);
         }
         break;
         
     case SUBCALL_DRIVER_WRITE:
-        if((param_info->arg_count >= 3) && (param_info->ret_count >= 1))
+        if(param_info->arg_count >= 3)
         {
         	result = _OS_DriverWrite((OS_Driver_t) uint_args[0], (const void *) uint_args[1], (UINT32 *) uint_args[2]);
         }

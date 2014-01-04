@@ -47,22 +47,22 @@ void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata)
 
 void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata)
 {
-	// Syscall Parameter structure for most used, non-varying syscalls
-	_OS_Syscall_Args task_yield_params = {
-			.id = SYSCALL_TASK_YIELD,
-			.sub_id = 0,
-			.arg_count = 0,
-			.ret_count = 0
-		};
-
+	_OS_Syscall_Args param_info;
+	UINT32 ret[1];
+	
 	// Call the thread handler function
 	entry_function(pdata);
-		
-	while(1)
-	{		
-		_OS_Syscall(&task_yield_params, NULL, NULL, SYSCALL_SWITCHING);	
-	}
 	
+	// If the aperiodic task completes, then we should block it permanently
+	// by calling complete on that task
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_TASK_COMPLETE;
+	param_info.sub_id = 0;
+	param_info.arg_count = 0;
+	param_info.ret_count = ARRAYSIZE(ret);
+	
+	_OS_Syscall(&param_info, NULL, &ret, SYSCALL_SWITCHING);		
 }
 
 ///////////////////////////////////////////////////////////////////////////////
