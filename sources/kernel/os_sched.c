@@ -242,11 +242,11 @@ void _OS_PeriodicTimerISR(void *arg)
 		ASSERT(g_current_period_us == task->job_release_time);
         
         // Reset the remaining budget to full
-        task->periodic.remaining_budget = task->periodic.budget;
+        task->p.remaining_budget = task->p.budget;
         
         // Insert into ready queue with deadline as the key. This is where the EDF scheduler
         // is coming into picture
-        _OS_SetAlarm(task, g_current_period_us + task->periodic.deadline, TRUE);
+        _OS_SetAlarm(task, g_current_period_us + task->p.deadline, TRUE);
     }
     
     // Call the OS Scheduler function to schedule the next task
@@ -309,16 +309,16 @@ static void UpdateSemaphoreWaitQueue(void)
 		
 				// Deadline has expired
 				// TODO: Take necessary action for deadline miss
-				task->periodic.dline_miss_count ++;
+				task->p.dline_miss_count ++;
 		
 				KlogStr(KLOG_DEADLINE_MISS, "Deadline Miss (Blocked) - ", task->name);
 		
 				// We are done for the current period. Update the next job_release_time.
-				task->periodic.job_release_time += task->periodic.period;
+				task->p.job_release_time += task->p.period;
 		
 				// Re-insert the task with the new deadline
-				task->periodic.alarm_time = task->periodic.job_release_time + task->periodic.deadline;
-				_OS_QueueInsert(&sem->periodic_task_queue, (void *) task, task->periodic.alarm_time);
+				task->p.alarm_time = task->p.job_release_time + task->p.deadline;
+				_OS_QueueInsert(&sem->periodic_task_queue, (void *) task, task->p.alarm_time);
 			}
 		}
 	}
@@ -337,20 +337,20 @@ static void CheckTaskBudgetDline(OS_Task * task)
     {
 		// The budget spent should always be < remaining_budget. However because of
 		// inaccuracies in the tick <-> us conversions, it is better to limit the budget_spent
-        if(budget_spent > task->periodic.remaining_budget)
-			budget_spent = task->periodic.remaining_budget;
+        if(budget_spent > task->p.remaining_budget)
+			budget_spent = task->p.remaining_budget;
 
         // Adjust the remaining & accumulated budgets
-		task->periodic.remaining_budget -= budget_spent;
+		task->p.remaining_budget -= budget_spent;
         
         // If the remaining_budget == 0, there was a TBE exception.
-        if(task->periodic.remaining_budget == 0)
+        if(task->p.remaining_budget == 0)
         {
             KlogStr(KLOG_TBE_EXCEPTION, "TBE Exception = ", task->name);
             
             // Count the number of TBEs
-            task->periodic.TBE_count++;
-            task->periodic.exec_count++;
+            task->p.TBE_count++;
+            task->p.exec_count++;
             
             // TODO: Raise the flag saying that the thread has exceeded its budget
             
@@ -358,14 +358,14 @@ static void CheckTaskBudgetDline(OS_Task * task)
             _OS_QueueGet(&g_ready_q, NULL, NULL);
             
             // We are done for the current period. Update the next job_release_time.
-            task->periodic.job_release_time += task->periodic.period;
+            task->p.job_release_time += task->p.period;
             
 			// If we are going to put the task into ready queue, then the alarm time
 			// should be the deadline. Or else, it should be the next release time
-			if(task->periodic.job_release_time == g_current_period_us)
-				_OS_SetAlarm(task, task->periodic.job_release_time + task->periodic.deadline, TRUE);
+			if(task->p.job_release_time == g_current_period_us)
+				_OS_SetAlarm(task, task->p.job_release_time + task->p.deadline, TRUE);
 			else
-				_OS_SetAlarm(task, task->periodic.job_release_time, FALSE);
+				_OS_SetAlarm(task, task->p.job_release_time, FALSE);
         }
     }
     
@@ -379,20 +379,20 @@ static void CheckTaskBudgetDline(OS_Task * task)
         
         // Deadline has expired
         // TODO: Take necessary action for deadline miss
-        task->periodic.dline_miss_count ++;
-        task->periodic.exec_count++;
+        task->p.dline_miss_count ++;
+        task->p.exec_count++;
         
         KlogStr(KLOG_DEADLINE_MISS, "Deadline Miss - ", task->name);
         
         // We are done for the current period. Update the next job_release_time.
-        task->periodic.job_release_time += task->periodic.period;
+        task->p.job_release_time += task->p.period;
         
 		// If we are going to put the task into ready queue, then the alarm time
 		// should be the deadline. Or else, it should be the next release time
-		if(task->periodic.job_release_time == g_current_period_us)
-			_OS_SetAlarm(task, task->periodic.job_release_time + task->periodic.deadline, TRUE);
+		if(task->p.job_release_time == g_current_period_us)
+			_OS_SetAlarm(task, task->p.job_release_time + task->p.deadline, TRUE);
 		else
-			_OS_SetAlarm(task, task->periodic.job_release_time, FALSE);
+			_OS_SetAlarm(task, task->p.job_release_time, FALSE);
     }
 }
 
@@ -409,7 +409,7 @@ void _OS_SetAlarm(OS_Task *task,
     ASSERT(abs_time_in_us > g_current_period_us)
     
     // Insert the task into the g_ready_q / g_wait_q
-    task->periodic.alarm_time = abs_time_in_us;
+    task->p.alarm_time = abs_time_in_us;
     _OS_QueueInsert((ready ? &g_ready_q : &g_wait_q), (void *) task, abs_time_in_us);
 }
 
@@ -436,8 +436,8 @@ void _OS_Schedule()
     {
         // The timeout to be used = MIN(task remaining budget, task next deadline)
         UINT64 now = g_current_period_us + g_current_period_offset_us;
-        UINT64 abs_deadline_us = (task->periodic.job_release_time + task->periodic.deadline);
-        UINT64 abs_budget_us = (now + task->periodic.remaining_budget);
+        UINT64 abs_deadline_us = (task->p.job_release_time + task->p.deadline);
+        UINT64 abs_budget_us = (now + task->p.remaining_budget);
         UINT64 abs_timeout_us = MIN(abs_deadline_us, abs_budget_us);
         
 		ASSERT(abs_timeout_us > now);
@@ -498,24 +498,24 @@ void _OS_TaskYield()
 #endif
             OS_Task * task = (OS_Task *)g_current_task;
 
-            task->periodic.exec_count++;
+            task->p.exec_count++;
             
             // Adjust the remaining & accumulated budgets
-            ASSERT(budget_spent <= task->periodic.remaining_budget);
-            task->periodic.remaining_budget -= budget_spent;
+            ASSERT(budget_spent <= task->p.remaining_budget);
+            task->p.remaining_budget -= budget_spent;
             
             // Take the current task out of ready queue
             _OS_QueueGet(&g_ready_q, NULL, NULL);
             
             // We are done for the current period. Update the next job_release_time.
-            task->periodic.job_release_time += task->periodic.period;
+            task->p.job_release_time += task->p.period;
             
 			// If we are going to put the task into ready queue, then the alarm time
 			// should be the deadline. Or else, it should be the next release time
-			if(task->periodic.job_release_time == g_current_period_us)
-				_OS_SetAlarm(task, task->periodic.job_release_time + task->periodic.deadline, TRUE);
+			if(task->p.job_release_time == g_current_period_us)
+				_OS_SetAlarm(task, task->p.job_release_time + task->p.deadline, TRUE);
 			else
-				_OS_SetAlarm(task, task->periodic.job_release_time, FALSE);
+				_OS_SetAlarm(task, task->p.job_release_time, FALSE);
         }
 
         // Before calling _OS_Schedule, update g_current_period_offset_us
@@ -547,7 +547,7 @@ OS_Return _OS_CompleteAperiodicTask()
 		_OS_QueueDelete(&g_ap_ready_q, task);
 
 		// Insert into block q
-		_OS_QueueInsert(&g_block_q, task, task->aperiodic.priority);
+		_OS_QueueInsert(&g_block_q, task, task->ap.priority);
 
 		// Note that the TCB resource for this task will not be freed.
 		// This task will remain in the blocked queue permanently

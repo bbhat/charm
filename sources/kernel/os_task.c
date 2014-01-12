@@ -180,23 +180,23 @@ OS_Return _OS_CreatePeriodicTask(
 	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE - 1);
 	tcb->name[OS_TASK_NAME_SIZE-1] = '\0';
 	
-	tcb->periodic.budget = budget_in_us;
-	tcb->periodic.period = period_in_us;
-	tcb->periodic.deadline = deadline_in_us;
-	tcb->periodic.phase = phase_shift_in_us;
-	tcb->periodic.stack = stack;
-	tcb->periodic.stack_size = stack_size;
-	tcb->periodic.top_of_stack = stack + stack_size;	// Stack grows bottom up
-	tcb->periodic.task_function = periodic_entry_function;
-	tcb->periodic.pdata = pdata;
-	tcb->periodic.remaining_budget = 0;
-    tcb->periodic.job_release_time = phase_shift_in_us;
-	tcb->periodic.accumulated_budget = 0;
-	tcb->periodic.exec_count = 0;
-	tcb->periodic.TBE_count = 0;
-	tcb->periodic.dline_miss_count = 0;
-	tcb->periodic.alarm_time = 0;
-	tcb->periodic.id = *task;
+	tcb->p.budget = budget_in_us;
+	tcb->p.period = period_in_us;
+	tcb->p.deadline = deadline_in_us;
+	tcb->p.phase = phase_shift_in_us;
+	tcb->p.stack = stack;
+	tcb->p.stack_size = stack_size;
+	tcb->p.top_of_stack = stack + stack_size;	// Stack grows bottom up
+	tcb->p.task_function = periodic_entry_function;
+	tcb->p.pdata = pdata;
+	tcb->p.remaining_budget = 0;
+    tcb->p.job_release_time = phase_shift_in_us;
+	tcb->p.accumulated_budget = 0;
+	tcb->p.exec_count = 0;
+	tcb->p.TBE_count = 0;
+	tcb->p.dline_miss_count = 0;
+	tcb->p.alarm_time = 0;
+	tcb->p.id = *task;
 	
 	// Note down the owner process
 	tcb->owner_process = g_current_process ? g_current_process : g_kernel_process;
@@ -325,30 +325,30 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	// Convert the stack_size_in_bytes into number of words
 	stack_size = stack_size_in_bytes >> 2;
 
-	tcb->aperiodic.stack = stack;
-	tcb->aperiodic.stack_size = stack_size;
-	tcb->aperiodic.task_function = task_entry_function;
-	tcb->aperiodic.pdata = pdata;
-	tcb->aperiodic.priority = priority;
-	tcb->aperiodic.attributes = (APERIODIC_TASK | options);
-	tcb->aperiodic.top_of_stack = stack + stack_size; // Stack grows bottom up
-	tcb->aperiodic.accumulated_budget = 0;
-	tcb->aperiodic.id = *task;
+	tcb->ap.stack = stack;
+	tcb->ap.stack_size = stack_size;
+	tcb->ap.task_function = task_entry_function;
+	tcb->ap.pdata = pdata;
+	tcb->ap.priority = priority;
+	tcb->ap.attributes = (APERIODIC_TASK | options);
+	tcb->ap.top_of_stack = stack + stack_size; // Stack grows bottom up
+	tcb->ap.accumulated_budget = 0;
+	tcb->ap.id = *task;
 	
 	// Build a Stack for the new thread
 	if(IS_SYSTEM_TASK(tcb->attributes))
 	{
-		tcb->aperiodic.top_of_stack = _OS_BuildKernelTaskStack(tcb->aperiodic.top_of_stack, 
+		tcb->ap.top_of_stack = _OS_BuildKernelTaskStack(tcb->ap.top_of_stack, 
 			AperiodicKernelTaskEntry, tcb);
 	}
 	else	// User stack
 	{
-		tcb->aperiodic.top_of_stack = _OS_BuildUserTaskStack(tcb->aperiodic.top_of_stack, 
+		tcb->ap.top_of_stack = _OS_BuildUserTaskStack(tcb->ap.top_of_stack, 
 			AperiodicUserTaskEntry, tcb);	
 	}
 
 #if OS_WITH_VALIDATE_TASK==1
-	tcb->aperiodic.signature = TASK_SIGNATURE;
+	tcb->ap.signature = TASK_SIGNATURE;
 #endif
 	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE - 1);
 	tcb->name[OS_TASK_NAME_SIZE-1] = '\0';
@@ -399,7 +399,7 @@ void KernelTaskEntryMain(void *pdata)
 
 #if OS_WITH_VALIDATE_TASK==1
 	// Validate the task
-	if(task->periodic.signature != TASK_SIGNATURE) {
+	if(task->p.signature != TASK_SIGNATURE) {
 		panic("Invalid Task %p", task);
 	}
 #endif // OS_WITH_VALIDATE_TASK

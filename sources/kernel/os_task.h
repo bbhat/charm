@@ -117,7 +117,7 @@ typedef union OS_Task
 		UINT32 TBE_count;
 		UINT32 dline_miss_count;
 		
-	} periodic;
+	} p;
 
 	struct OS_AperiodicTask
 	{
@@ -147,7 +147,7 @@ typedef union OS_Task
 	#if OS_WITH_VALIDATE_TASK==1
 		UINT32 signature;		// A unique identifier to validate the task structure
 	#endif	// OS_WITH_VALIDATE_TASK	
-	} aperiodic;
+	} ap;
 
 } OS_Task;
 

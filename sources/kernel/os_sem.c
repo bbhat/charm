@@ -124,7 +124,7 @@ OS_Return _OS_SemWait(OS_Sem_t sem)
 	{
 	    // Adjust the remaining  budget for the current task
 	    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
-	    g_current_task->periodic.remaining_budget -= budget_spent;		
+	    g_current_task->p.remaining_budget -= budget_spent;		
 	}
 
 	// If the semaphore count is 0, then block the thread
@@ -138,7 +138,7 @@ OS_Return _OS_SemWait(OS_Sem_t sem)
 			
 			// Add the current task to the semaphore's blocked queue for periodic tasks
 			_OS_QueueInsert(&semobj->periodic_task_queue, (void*)g_current_task, 
-				g_current_task->periodic.alarm_time);				
+				g_current_task->p.alarm_time);				
 
 			// Set appropriate bit in g_semaphore_active_periodic_queue_mask so that this queue
 			// will be updated during regular periodic scheduling
@@ -154,7 +154,7 @@ OS_Return _OS_SemWait(OS_Sem_t sem)
 			
 			// Add the current task to the semaphore's blocked queue for aperiodic tasks
 			_OS_QueueInsert(&semobj->aperiodic_task_queue, (void*)g_current_task, 
-				g_current_task->aperiodic.priority);
+				g_current_task->ap.priority);
 		}
 		
 		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore :- ", semobj->count);				
@@ -210,7 +210,7 @@ OS_Return _OS_SemPost(OS_Sem_t sem)
 	{
 	    // Adjust the remaining  budget for the current task
 	    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
-	    g_current_task->periodic.remaining_budget -= budget_spent;		
+	    g_current_task->p.remaining_budget -= budget_spent;		
 	}
 
 	if(semobj->count == 0) 
@@ -221,7 +221,7 @@ OS_Return _OS_SemPost(OS_Sem_t sem)
 		{
 			// If a new job release is due, then place this task in the ready queue.
 			// otherwise place this in the wait queue
-			if(task->periodic.job_release_time <= g_current_period_us)  
+			if(task->p.job_release_time <= g_current_period_us)  
 			{
 				_OS_QueueInsert(&g_ready_q,(void*)task, key);
 			}
@@ -303,8 +303,8 @@ OS_Return _OS_SemFree(OS_Sem_t sem)
 	if(IS_PERIODIC_TASK(g_current_task->attributes)) 
 	{
 	    // Adjust the remaining  budget for the current task
-	    ASSERT(budget_spent <= g_current_task->periodic.remaining_budget);
-	    g_current_task->periodic.remaining_budget -= budget_spent;		
+	    ASSERT(budget_spent <= g_current_task->p.remaining_budget);
+	    g_current_task->p.remaining_budget -= budget_spent;		
 	}
 
 	// We need to unblock all waiting threads in its wait queues and make them ready

@@ -72,11 +72,11 @@ OS_Return _OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr)
 	
     if(IS_PERIODIC_TASK(tcb->attributes))
 	{
-		ptr->period = tcb->periodic.period;
-		ptr->budget = tcb->periodic.budget;
-		ptr->exec_count = tcb->periodic.exec_count;
-		ptr->TBE_count = tcb->periodic.TBE_count;
-		ptr->dline_miss_count = tcb->periodic.dline_miss_count;
+		ptr->period = tcb->p.period;
+		ptr->budget = tcb->p.budget;
+		ptr->exec_count = tcb->p.exec_count;
+		ptr->TBE_count = tcb->p.TBE_count;
+		ptr->dline_miss_count = tcb->p.dline_miss_count;
 	}
 	else
 	{
