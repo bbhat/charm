@@ -170,9 +170,9 @@ static void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * a
 	UINT32 * uint_ret = (UINT32 *)ret;
 	OS_Return result = SYSCALL_ARGUMENT_ERROR;
 	
-	if((param_info->arg_count >= 1) && (param_info->ret_count >= 2))
+	if((param_info->arg_count >= 2) && (param_info->ret_count >= 2))
 	{
-		result = _OS_SemAlloc((OS_Sem_t *)(uint_ret+1), uint_args[0]);
+		result = _OS_SemAlloc((OS_Sem_t *)(uint_ret+1), uint_args[0], uint_args[1]);
 	}
 	
 	if(uint_ret) uint_ret[0] = result;

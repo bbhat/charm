@@ -153,10 +153,10 @@ void OS_TaskYield()
 ///////////////////////////////////////////////////////////////////////////////
 // Semaphore Functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value)
+OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value, BOOL binary)
 {
 	_OS_Syscall_Args param_info;
-	UINT32 arg[1];
+	UINT32 arg[2];
 	UINT32 ret[2];
 	
 	// Prepare the argument info structure
@@ -166,6 +166,7 @@ OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value)
 	param_info.ret_count = ARRAYSIZE(ret);
 	
 	arg[0] = value;	
+	arg[1] = binary;	
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
 	
 	// Store the return value

@@ -50,7 +50,14 @@ static char os_name_string [] = { OS_NAME_STRING };
 OS_AperiodicTask * g_idle_task;  // A TCB for the idle task
 static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
 
-extern OS_Process	* g_kernel_process;	// Kernel process
+extern OS_Process * g_kernel_process;	// Kernel process
+
+// Semaphores which have periodic tasks blocking on them needs to be managed
+// by the scheduler. The scheduler needs to keep updating the queue as and when
+// their deadlines get expired. The following mask indicates all such semaphores.
+// We don't need such special treatment for blocked Aperiodic tasks
+extern UINT32 g_semaphore_active_periodic_queue_mask[];
+extern OS_SemaphoreCB * g_semaphore_pool[];
 
 // Periodic timer ISR
 void _OS_PeriodicTimerISR(void *arg);
@@ -70,15 +77,24 @@ void _OS_SetAlarm(OS_PeriodicTask *task,
                   UINT64 abs_time_in_us,
                   BOOL ready);
 
-void init_serial(void);
 void kernel_process_entry(void * pdata);
 void main(int argc, char **argv);
 
 // local methods
-static void _OS_Sched_CheckTaskBudgetDline(OS_PeriodicTask * task);
+static void CheckTaskBudgetDline(OS_PeriodicTask * task);
+static void UpdateSemaphoreWaitQueue(void);
 static void _OS_idle_task(void * ptr);
 
 #define MIN(a, b)   (((a) > (b)) ? (b) : (a))
+
+static __inline__ UINT32 clz(UINT32 input)
+{
+	unsigned int result;
+	
+	__asm__ volatile("clz %0, %1" : "=r" (result) : "r" (input));
+	
+	return result;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // The following funcstion starts the OS scheduling
@@ -166,10 +182,6 @@ void kernel_process_entry(void * pdata)
             g_idle_task = (OS_AperiodicTask *)&g_task_pool[idle_tcb];
         }
         
-#if WITH_SERIAL_LOGGING_TASK==1
-	init_serial();
-#endif        
-        
     // Call main from the kernel process which will create more processes
     // Note that main() should return in order for normal scheduling to start
     // This is a difference in the other OS and this OS.
@@ -214,7 +226,10 @@ void _OS_PeriodicTimerISR(void *arg)
 #endif
     
     // Check if any ready task exceeded budget or deadline
-    _OS_Sched_CheckTaskBudgetDline(task);
+    CheckTaskBudgetDline(task);
+    
+    // Update all semaphore wait queues which may have expiring deadlines for periodic tasks
+    UpdateSemaphoreWaitQueue();
     
     // Consider new jobs to be introduced from the wait queue
     while(_OS_QueuePeek(&g_wait_q, NULL, &new_time) == SUCCESS)
@@ -260,16 +275,59 @@ void _OS_BudgetTimerISR(void *arg)
         
     // Some ready task must have exceeded its budget or deadline
     // Do the necessary handling
-    _OS_Sched_CheckTaskBudgetDline(task);
+    CheckTaskBudgetDline(task);
     
     // Call the OS Scheduler function to schedule the next task
     _OS_Schedule();
 }
 
+static void UpdateSemaphoreWaitQueue(void)
+{
+	UINT32 i;
+	UINT64 new_time = 0;
+	OS_PeriodicTask * task;
+	const UINT32 word_count = (MAX_SEMAPHORE_COUNT + 31) >> 5;
+	
+	for(i = 0; i < word_count; i++)
+	{
+		UINT32 mask = g_semaphore_active_periodic_queue_mask[i];
+		if(mask)
+		{
+			const UINT32 index = clz(mask);
+			mask &= ~(1 << index);
+
+			OS_SemaphoreCB * sem = g_semaphore_pool[(i << 5) + (31 - index)];
+			ASSERT(sem);
+			
+			// Check if the first element in the blocked periodic task queue has exceeded
+    		while(_OS_QueuePeek(&sem->periodic_task_queue, NULL, &new_time) == SUCCESS)
+		    {
+				if(new_time > g_current_period_us) break;
+		
+				// Now get the front task from the queue.
+				_OS_QueueGet(&sem->periodic_task_queue, (void**) &task, NULL);
+		
+				// Deadline has expired
+				// TODO: Take necessary action for deadline miss
+				task->dline_miss_count ++;
+		
+				KlogStr(KLOG_DEADLINE_MISS, "Deadline Miss (Blocked) - ", task->name);
+		
+				// We are done for the current period. Update the next job_release_time.
+				task->job_release_time += task->period;
+		
+				// Re-insert the task with the new deadline
+				task->alarm_time = task->job_release_time + task->deadline;
+				_OS_QueueInsert(&sem->periodic_task_queue, (void *) task, task->alarm_time);
+			}
+		}
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Check task budget & deadline
 ///////////////////////////////////////////////////////////////////////////////
-static void _OS_Sched_CheckTaskBudgetDline(OS_PeriodicTask * task)
+static void CheckTaskBudgetDline(OS_PeriodicTask * task)
 {	
 	UINT64 new_time = 0;
 	UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);

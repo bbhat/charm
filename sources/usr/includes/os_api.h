@@ -181,7 +181,7 @@ OS_Return OS_CreateProcessFromFile(
 ///////////////////////////////////////////////////////////////////////////////
 //                              Semaphore functions
 ///////////////////////////////////////////////////////////////////////////////
-OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value);
+OS_Return OS_SemAlloc(OS_Sem_t *sem, UINT32 value, BOOL binary);
 OS_Return OS_SemWait(OS_Sem_t sem);
 OS_Return OS_SemPost(OS_Sem_t sem);
 OS_Return OS_SemFree(OS_Sem_t sem);

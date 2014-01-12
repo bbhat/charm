@@ -61,9 +61,9 @@ void task_p(void * ptr)
 
 int main(int argc, char *argv[])
 {
-	OS_SemAlloc(&sem1, 0);
-	OS_SemAlloc(&sem2, 0);
-	OS_SemAlloc(&sem3, 0);
+	OS_SemAlloc(&sem1, 0, 0);
+	OS_SemAlloc(&sem2, 0, 0);
+	OS_SemAlloc(&sem3, 0, 0);
 
 	OS_CreatePeriodicTask(1000, 1000, 400, 0, stack1, sizeof(stack1), "LED1", &task1, task_p, &a);
 	OS_CreateAperiodicTask(3, stack2, sizeof(stack2), "LED2", &task2, task_ap1, &b);
