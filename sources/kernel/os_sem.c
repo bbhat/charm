@@ -35,7 +35,7 @@ extern UINT64 g_current_period_us;
 extern UINT32 g_sched_starting_counter_value;
 #endif
 
-extern OS_GenericTask * g_current_task;
+extern OS_Task * g_current_task;
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
@@ -124,7 +124,7 @@ OS_Return _OS_SemWait(OS_Sem_t sem)
 	{
 	    // Adjust the remaining  budget for the current task
 	    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
-	    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;		
+	    g_current_task->periodic.remaining_budget -= budget_spent;		
 	}
 
 	// If the semaphore count is 0, then block the thread
@@ -138,7 +138,7 @@ OS_Return _OS_SemWait(OS_Sem_t sem)
 			
 			// Add the current task to the semaphore's blocked queue for periodic tasks
 			_OS_QueueInsert(&semobj->periodic_task_queue, (void*)g_current_task, 
-				((OS_PeriodicTask *)g_current_task)->alarm_time);				
+				g_current_task->periodic.alarm_time);				
 
 			// Set appropriate bit in g_semaphore_active_periodic_queue_mask so that this queue
 			// will be updated during regular periodic scheduling
@@ -154,7 +154,7 @@ OS_Return _OS_SemWait(OS_Sem_t sem)
 			
 			// Add the current task to the semaphore's blocked queue for aperiodic tasks
 			_OS_QueueInsert(&semobj->aperiodic_task_queue, (void*)g_current_task, 
-				((OS_AperiodicTask *)g_current_task)->priority);
+				g_current_task->aperiodic.priority);
 		}
 		
 		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore :- ", semobj->count);				
@@ -179,7 +179,7 @@ exit:
 
 OS_Return _OS_SemPost(OS_Sem_t sem)
 {
-	OS_GenericTask* task = NULL;
+	OS_Task* task = NULL;
 	OS_Return status;
 	UINT64 key = 0;
 	
@@ -210,7 +210,7 @@ OS_Return _OS_SemPost(OS_Sem_t sem)
 	{
 	    // Adjust the remaining  budget for the current task
 	    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
-	    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;		
+	    g_current_task->periodic.remaining_budget -= budget_spent;		
 	}
 
 	if(semobj->count == 0) 
@@ -221,7 +221,7 @@ OS_Return _OS_SemPost(OS_Sem_t sem)
 		{
 			// If a new job release is due, then place this task in the ready queue.
 			// otherwise place this in the wait queue
-			if(((OS_PeriodicTask *)task)->job_release_time <= g_current_period_us)  
+			if(task->periodic.job_release_time <= g_current_period_us)  
 			{
 				_OS_QueueInsert(&g_ready_q,(void*)task, key);
 			}
@@ -274,7 +274,7 @@ exit:
 OS_Return _OS_SemFree(OS_Sem_t sem)
 {
 	OS_Return status;
-	OS_GenericTask* task = NULL;
+	OS_Task* task = NULL;
 	UINT64 key = 0;
 	
 #if OS_ENABLE_CPU_STATS==1
@@ -303,8 +303,8 @@ OS_Return _OS_SemFree(OS_Sem_t sem)
 	if(IS_PERIODIC_TASK(g_current_task->attributes)) 
 	{
 	    // Adjust the remaining  budget for the current task
-	    ASSERT(budget_spent <= ((OS_PeriodicTask *)g_current_task)->remaining_budget);
-	    ((OS_PeriodicTask *)g_current_task)->remaining_budget -= budget_spent;		
+	    ASSERT(budget_spent <= g_current_task->periodic.remaining_budget);
+	    g_current_task->periodic.remaining_budget -= budget_spent;		
 	}
 
 	// We need to unblock all waiting threads in its wait queues and make them ready

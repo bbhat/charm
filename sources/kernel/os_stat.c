@@ -14,7 +14,7 @@
 
 #if OS_ENABLE_CPU_STATS==1
 
-extern OS_AperiodicTask * g_idle_task;
+extern OS_Task * g_idle_task;
 UINT64 _OS_GetElapsedTime();
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,7 +59,7 @@ OS_Return _OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr)
 	if(task >= MAX_TASK_COUNT)
 		return INVALID_TASK;
 	
-	OS_PeriodicTask * tcb = (OS_PeriodicTask *) &g_task_pool[task];
+	OS_Task * tcb = &g_task_pool[task];
 	
 	if(!tcb)
 		return INVALID_TASK;
@@ -72,11 +72,11 @@ OS_Return _OS_GetTaskStatCounters(OS_Task_t task, OS_TaskStatCounters * ptr)
 	
     if(IS_PERIODIC_TASK(tcb->attributes))
 	{
-		ptr->period = tcb->period;
-		ptr->budget = tcb->budget;
-		ptr->exec_count = tcb->exec_count;
-		ptr->TBE_count = tcb->TBE_count;
-		ptr->dline_miss_count = tcb->dline_miss_count;
+		ptr->period = tcb->periodic.period;
+		ptr->budget = tcb->periodic.budget;
+		ptr->exec_count = tcb->periodic.exec_count;
+		ptr->TBE_count = tcb->periodic.TBE_count;
+		ptr->dline_miss_count = tcb->periodic.dline_miss_count;
 	}
 	else
 	{

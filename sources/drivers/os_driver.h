@@ -64,7 +64,7 @@ typedef struct OS_Driver
 	UINT32 driver_functions_count;
 	
 	// IO task
-	OS_GenericTask * io_task;
+	OS_Task * io_task;
 	
 	// Queue for outstanding IOs
 	IO_Request *io_queue_head;

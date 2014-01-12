@@ -42,7 +42,7 @@ void _OS_TaskYield(void);
 OS_Return _PFM_SetUserLED(LED_Number led, LED_Options options);
 OS_Return _OS_GetTaskAllocMask(UINT32 * alloc_mask, UINT32 count, UINT32 starting_task);
 
-OS_GenericTask * g_current_task;
+OS_Task * g_current_task;
 
 //////////////////////////////////////////////////////////////////////////////
 // Vector containing all syscall handlers

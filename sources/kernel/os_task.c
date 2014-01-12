@@ -33,7 +33,7 @@ static BOOL ValidateNewThread(UINT32 period, UINT32 budget);
 static FP32 g_total_allocated_cpu = 0.0;
 
 // Placeholders for all the task control blocks
-OS_GenericTask	g_task_pool[MAX_TASK_COUNT];
+OS_Task	g_task_pool[MAX_TASK_COUNT];
 UINT32 			g_task_usage_mask[(MAX_TASK_COUNT + 31) >> 5];
 
 extern _OS_Queue g_ready_q;
@@ -42,10 +42,10 @@ extern _OS_Queue g_ap_ready_q;
 extern _OS_Queue g_block_q;
 extern UINT32 g_current_period_us;
 
-extern OS_AperiodicTask * g_idle_task;
+extern OS_Task * g_idle_task;
 
 extern void _OS_Schedule();
-extern void _OS_SetAlarm(OS_PeriodicTask *task, UINT64 abs_time_in_us, BOOL is_new_job, BOOL update_timer);
+extern void _OS_SetAlarm(OS_Task *task, UINT64 abs_time_in_us, BOOL is_new_job, BOOL update_timer);
 
 UINT32 *_OS_BuildKernelTaskStack(UINT32 * stack_ptr, void (*task_function)(void *), void * arg);
 UINT32 *_OS_BuildUserTaskStack(UINT32 * stack_ptr, void (*task_function)(void (*entry_function)(void *pdata), 
@@ -105,7 +105,7 @@ OS_Return _OS_CreatePeriodicTask(
 	FP32 this_thread_cpu;
 	UINT32 stack_size;
 	UINT32 intsts;
-	OS_PeriodicTask *tcb;
+	OS_Task *tcb;
 
 	if(!task)
 	{
@@ -165,7 +165,7 @@ OS_Return _OS_CreatePeriodicTask(
 	KlogStr(KLOG_GENERAL_INFO, "Creating periodic task - ", task_name);
 
 	// Get a pointer to the actual TCB	
-	tcb = (OS_PeriodicTask *)&g_task_pool[*task];
+	tcb = (OS_Task *)&g_task_pool[*task];
 
 	// Ensure that the stack is 8 byte aligned
 	//ALIGNED_ARRAY(stack);
@@ -180,23 +180,23 @@ OS_Return _OS_CreatePeriodicTask(
 	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE - 1);
 	tcb->name[OS_TASK_NAME_SIZE-1] = '\0';
 	
-	tcb->budget = budget_in_us;
-	tcb->period = period_in_us;
-	tcb->deadline = deadline_in_us;
-	tcb->phase = phase_shift_in_us;
-	tcb->stack = stack;
-	tcb->stack_size = stack_size;
-	tcb->top_of_stack = stack + stack_size;	// Stack grows bottom up
-	tcb->task_function = periodic_entry_function;
-	tcb->pdata = pdata;
-	tcb->remaining_budget = 0;
-    tcb->job_release_time = phase_shift_in_us;
-	tcb->accumulated_budget = 0;
-	tcb->exec_count = 0;
-	tcb->TBE_count = 0;
-	tcb->dline_miss_count = 0;
-	tcb->alarm_time = 0;
-	tcb->id = *task;
+	tcb->periodic.budget = budget_in_us;
+	tcb->periodic.period = period_in_us;
+	tcb->periodic.deadline = deadline_in_us;
+	tcb->periodic.phase = phase_shift_in_us;
+	tcb->periodic.stack = stack;
+	tcb->periodic.stack_size = stack_size;
+	tcb->periodic.top_of_stack = stack + stack_size;	// Stack grows bottom up
+	tcb->periodic.task_function = periodic_entry_function;
+	tcb->periodic.pdata = pdata;
+	tcb->periodic.remaining_budget = 0;
+    tcb->periodic.job_release_time = phase_shift_in_us;
+	tcb->periodic.accumulated_budget = 0;
+	tcb->periodic.exec_count = 0;
+	tcb->periodic.TBE_count = 0;
+	tcb->periodic.dline_miss_count = 0;
+	tcb->periodic.alarm_time = 0;
+	tcb->periodic.id = *task;
 	
 	// Note down the owner process
 	tcb->owner_process = g_current_process ? g_current_process : g_kernel_process;
@@ -288,7 +288,7 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 {
 	UINT32 stack_size;
 	UINT32 intsts;
-	OS_AperiodicTask *tcb;
+	OS_Task *tcb;
 
 	if(!task)
 	{
@@ -320,35 +320,35 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	KlogStr(KLOG_GENERAL_INFO, "Creating aperiodic task - ", task_name);
 
 	// Get a pointer to the TCB
-	tcb = (OS_AperiodicTask *)&g_task_pool[*task];
+	tcb = &g_task_pool[*task];
 
 	// Convert the stack_size_in_bytes into number of words
 	stack_size = stack_size_in_bytes >> 2;
 
-	tcb->stack = stack;
-	tcb->stack_size = stack_size;
-	tcb->task_function = task_entry_function;
-	tcb->pdata = pdata;
-	tcb->priority = priority;
-	tcb->attributes = (APERIODIC_TASK | options);
-	tcb->top_of_stack = stack + stack_size; // Stack grows bottom up
-	tcb->accumulated_budget = 0;
-	tcb->id = *task;
+	tcb->aperiodic.stack = stack;
+	tcb->aperiodic.stack_size = stack_size;
+	tcb->aperiodic.task_function = task_entry_function;
+	tcb->aperiodic.pdata = pdata;
+	tcb->aperiodic.priority = priority;
+	tcb->aperiodic.attributes = (APERIODIC_TASK | options);
+	tcb->aperiodic.top_of_stack = stack + stack_size; // Stack grows bottom up
+	tcb->aperiodic.accumulated_budget = 0;
+	tcb->aperiodic.id = *task;
 	
 	// Build a Stack for the new thread
 	if(IS_SYSTEM_TASK(tcb->attributes))
 	{
-		tcb->top_of_stack = _OS_BuildKernelTaskStack(tcb->top_of_stack, 
+		tcb->aperiodic.top_of_stack = _OS_BuildKernelTaskStack(tcb->aperiodic.top_of_stack, 
 			AperiodicKernelTaskEntry, tcb);
 	}
 	else	// User stack
 	{
-		tcb->top_of_stack = _OS_BuildUserTaskStack(tcb->top_of_stack, 
+		tcb->aperiodic.top_of_stack = _OS_BuildUserTaskStack(tcb->aperiodic.top_of_stack, 
 			AperiodicUserTaskEntry, tcb);	
 	}
 
 #if OS_WITH_VALIDATE_TASK==1
-	tcb->signature = TASK_SIGNATURE;
+	tcb->aperiodic.signature = TASK_SIGNATURE;
 #endif
 	strncpy(tcb->name, task_name, OS_TASK_NAME_SIZE - 1);
 	tcb->name[OS_TASK_NAME_SIZE-1] = '\0';
@@ -395,11 +395,11 @@ static BOOL ValidateNewThread(UINT32 period, UINT32 budget)
 ///////////////////////////////////////////////////////////////////////////////
 void KernelTaskEntryMain(void *pdata)
 {
-	OS_PeriodicTask * task = (OS_PeriodicTask *) pdata;
+	OS_Task * task = (OS_Task *) pdata;
 
 #if OS_WITH_VALIDATE_TASK==1
 	// Validate the task
-	if(task->signature != TASK_SIGNATURE) {
+	if(task->periodic.signature != TASK_SIGNATURE) {
 		panic("Invalid Task %p", task);
 	}
 #endif // OS_WITH_VALIDATE_TASK
@@ -415,7 +415,7 @@ void KernelTaskEntryMain(void *pdata)
 
 void AperiodicKernelTaskEntry(void *pdata)
 {
-	OS_AperiodicTask * task = (OS_AperiodicTask *) pdata;
+	OS_Task * task = (OS_Task *) pdata;
 	UINT32 intsts;
 
 	// Call the thread handler function
