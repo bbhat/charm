@@ -29,6 +29,8 @@ Main Features of the RTOS
 
 * A comprehensive and flexible device driver framework is provided. This framework makes it easy to write new kernel drivers that can be easily and accessed from other kernel drivers or user applications. Many common tasks such as queuing IOs, blocking, mechanisms for calling from user space etc are automatically handled by the driver framework.
 
+* Semaphore implementation is specifically adapted for the periodic EDF scheduler. If there are multiple tasks waiting for a semaphore, periodic tasks get the first preference when the semaphore becomes available followed by aperiodic tasks. Within the periodic tasks, a task with earliest approaching deadline is given priority (not necessarily mean a task with the smallest period). This behavior ideal for use with an EDF scheduler. The periodic tasks are given preference in the order of their priority.
+
 * Currently this RTOS runs on Mini210s & TQ2440 development boards. The timing and accuracy of the scheduled has been excellent.
 
 * The git repository has all the necessary tools & scripts to enable connecting and debugging using JLink & OpenOCD

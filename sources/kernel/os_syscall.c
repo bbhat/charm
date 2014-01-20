@@ -88,7 +88,7 @@ void _OS_KernelSyscall(const _OS_Syscall_Args * param_info, const void * arg, vo
 	
 	Klog32(KLOG_SYSCALL, "Syscall Id - ", param_info->id);
 	
-	// Note down the result pointer which may be needed
+	// Note down the return pointer which may be needed to update the output parameters
 	if(g_current_task) g_current_task->syscall_result = (UINT32 *)ret;
 	_syscall_handlers[param_info->id](param_info, arg, ret);
 }
@@ -341,16 +341,18 @@ static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, cons
         break;
             
     case SUBCALL_DRIVER_READ:
-        if(param_info->arg_count >= 3)
+        if(param_info->arg_count >= 4)
         {
-        	result = _OS_DriverRead((OS_Driver_t) uint_args[0], (void *) uint_args[1], (UINT32 *) uint_args[2]);
+        	result = _OS_DriverRead((OS_Driver_t) uint_args[0], (void *) uint_args[1], 
+        							(UINT32 *) uint_args[2], (BOOL) uint_args[3]);
         }
         break;
         
     case SUBCALL_DRIVER_WRITE:
-        if(param_info->arg_count >= 3)
+        if(param_info->arg_count >= 4)
         {
-        	result = _OS_DriverWrite((OS_Driver_t) uint_args[0], (const void *) uint_args[1], (UINT32 *) uint_args[2]);
+        	result = _OS_DriverWrite((OS_Driver_t) uint_args[0], (const void *) uint_args[1], 
+        							(UINT32 *) uint_args[2], (BOOL) uint_args[3]);
         }
         break;
         

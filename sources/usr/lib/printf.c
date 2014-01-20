@@ -20,13 +20,13 @@ int printf(const char *fmt, ...)
 	len = vsprintf(g_pcOutBuf,fmt,args);
 	va_end(args);
 	
-	return OS_DriverWrite(__console_serial_driver__, g_pcOutBuf, &len);
+	return OS_DriverWrite(__console_serial_driver__, g_pcOutBuf, &len, FALSE);
 }
 
 int puts (const char * str)
 {
 	int len = strlen(str);
-	return OS_DriverWrite(__console_serial_driver__, str, &len);
+	return OS_DriverWrite(__console_serial_driver__, str, &len, FALSE);
 }
 
 int scanf(const char * fmt, ...)
@@ -41,7 +41,7 @@ int scanf(const char * fmt, ...)
 	do
 	{
 		int len = sizeof(str) - 1;
-		OS_DriverRead(__console_serial_driver__, str, &len);
+		OS_DriverRead(__console_serial_driver__, str, &len, TRUE);
 				
 		if(!len)
 		{
@@ -60,7 +60,7 @@ int scanf(const char * fmt, ...)
 				// If the last character is new line character, then also output a carriage return
 				str[echo_len++] = 0x0a;
 			}
-			OS_DriverWrite(__console_serial_driver__, str, &echo_len);
+			OS_DriverWrite(__console_serial_driver__, str, &echo_len, FALSE);
 					
 			for(j = 0; ((j < len) && !eol); j++)
 			{

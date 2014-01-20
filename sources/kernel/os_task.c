@@ -361,7 +361,7 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	// Block the resource
 	SetResourceStatus(g_task_usage_mask, *task, FALSE);
 	
-	_OS_QueueInsert(&g_ap_ready_q, tcb, priority); // Add the task to aperiodic wait queue
+	_OS_QueueInsert(&g_ap_ready_q, tcb, priority); // Add the task to aperiodic ready queue
 	OS_EXIT_CRITICAL(intsts); // Exit the critical section
 	
 	if(_OS_IsRunning)

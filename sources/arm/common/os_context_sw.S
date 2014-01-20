@@ -282,7 +282,8 @@ _AdvancedSWIHandler_:
                                     // r0 - r2 contains syscall parameters    
     bl      _OS_KernelSyscall		// Call main part of handler
 	
-    b       _OS_Schedule            // Call reschedule (will reach here if there is a syscall error)
+    b       _OS_Schedule            // Call reschedule (will reach here if there is a syscall error 
+    								// or if the syscall does not call _OS_Schedule)
     
 // -------------------------------------------------------------------------------
 // Stores the context of the current task. After storing the context, it switches 

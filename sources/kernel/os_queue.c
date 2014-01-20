@@ -72,7 +72,7 @@ void _OS_QueueInsertTail(_OS_Queue * q, void * item)
 }
 
 // Function to delete an item from the queue.
-void _OS_QueueDelete(_OS_Queue * q, void * item)
+BOOL _OS_QueueDelete(_OS_Queue * q, void * item)
 {
     Node * node, * prev = 0;
 	Node * item_node = (Node*)item;
@@ -96,8 +96,13 @@ void _OS_QueueDelete(_OS_Queue * q, void * item)
 			q->tail = prev;
 
 		q->count--;
-		node->next = 0;		
+		node->next = 0;
+		
+		return TRUE;
 	}
+
+	// Item not found in the queue	
+	return FALSE;
 }
 
 // Function to get the first element from the Queue. 

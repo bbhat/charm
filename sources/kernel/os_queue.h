@@ -53,8 +53,9 @@ void _OS_QueueInit(_OS_Queue * q);
 void _OS_QueueInsert(_OS_Queue * q, void * item, UINT64 key);
 void _OS_QueueInsertTail(_OS_Queue * q, void * item);
 
-// Function to delete an item from the queue.
-void _OS_QueueDelete(_OS_Queue * q, void * item);
+// Function to delete an item from the queue. 
+// Returns true if the item is deleted, false otherwise
+BOOL _OS_QueueDelete(_OS_Queue * q, void * item);
 
 // Function to get the first element from the Queue. 
 void _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key);
