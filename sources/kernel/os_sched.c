@@ -1,14 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 //    
 //                        Copyright 2009-2013 xxxxxxx, xxxxxxx
-//    File:    os_queue.c
+//    File:    os_sched.c
 //    Author: Bala B.
 //    Description: Main Scheduling function implementation
 //    
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "os_core.h"
-#include "os_queue.h"
+#include "os_sched.h"
 #include "os_timer.h"
 #include "util.h"
 #include "sysctl.h"
@@ -19,7 +18,11 @@
 _OS_Queue g_ready_q;
 _OS_Queue g_wait_q;
 _OS_Queue g_ap_ready_q;
-_OS_Queue g_block_q;
+_OS_Queue g_completed_task_q;
+
+// The following queue has all the tasks that are blocked on resources such ASSERT
+// Semaphores or IOs
+_OS_Queue g_periodic_blocked_q;
 
 // This global variable can be accessed from outside
 BOOL _OS_IsRunning = FALSE;
@@ -52,37 +55,11 @@ static UINT32 g_idle_task_stack [OS_IDLE_TASK_STACK_SIZE];
 
 extern OS_Process * g_kernel_process;	// Kernel process
 
-// Semaphores which have periodic tasks blocking on them needs to be managed
-// by the scheduler. The scheduler needs to keep updating the queue as and when
-// their deadlines get expired. The following mask indicates all such semaphores.
-// We don't need such special treatment for blocked Aperiodic tasks
-extern UINT32 g_semaphore_active_periodic_queue_mask[];
-extern OS_SemaphoreCB * g_semaphore_pool[];
-
-// Periodic timer ISR
-void _OS_PeriodicTimerISR(void *arg);
-
-// Budget timer ISR
-void _OS_BudgetTimerISR(void *arg);
-
-// Some more function prototypes
-void _OS_InitInterrupts();
-void _OS_ContextRestore(void *new_task);
-void _OS_ContextSw(void * new_task);
-void _OS_Schedule(void);
-void _OS_Exit(void);
-void _OS_Timer_AckInterrupt(UINT32 timer);
-
-void _OS_SetAlarm(OS_Task *task,
-                  UINT64 abs_time_in_us,
-                  BOOL ready);
-
-void kernel_process_entry(void * pdata);
-void main(int argc, char **argv);
 
 // local methods
+void main(int argc, char **argv);
 static void CheckTaskBudgetDline(OS_Task * task);
-static void UpdateSemaphoreWaitQueue(void);
+static void UpdatePeriodicBlockedQueue(void);
 static void _OS_idle_task(void * ptr);
 
 #define MIN(a, b)   (((a) > (b)) ? (b) : (a))
@@ -228,18 +205,19 @@ void _OS_PeriodicTimerISR(void *arg)
     // Check if any ready task exceeded budget or deadline
     CheckTaskBudgetDline(task);
     
-    // Update all semaphore wait queues which may have expiring deadlines for periodic tasks
-    UpdateSemaphoreWaitQueue();
+    // Update global periodic blocked queue which may have expiring deadlines 
+    // for periodic tasks
+    UpdatePeriodicBlockedQueue();
     
     // Consider new jobs to be introduced from the wait queue
-    while(_OS_QueuePeek(&g_wait_q, NULL, &new_time) == SUCCESS)
+    while(_OS_QueuePeekWithKey(&g_wait_q, NULL, &new_time) == SUCCESS)
     {
         if(new_time > g_current_period_us) break;
 		
         // Dequeue the new task from the queue.
-        _OS_QueueGet(&g_wait_q, (void**) &task, NULL);
+        _OS_PQueueGet(&g_wait_q, (_OS_TaskQNode**) &task);
         
-		ASSERT(g_current_period_us == task->job_release_time);
+		ASSERT(g_current_period_us == task->p.job_release_time);
         
         // Reset the remaining budget to full
         task->p.remaining_budget = task->p.budget;
@@ -277,57 +255,46 @@ void _OS_BudgetTimerISR(void *arg)
     // Do the necessary handling
     CheckTaskBudgetDline(task);
     
-    // Update all semaphore wait queues which may have expiring deadlines for periodic tasks
-    UpdateSemaphoreWaitQueue();
+    // Update global periodic blocked queue which may have expiring deadlines 
+    // for periodic tasks
+    UpdatePeriodicBlockedQueue();
     
     // Call the OS Scheduler function to schedule the next task
     _OS_Schedule();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// UpdateSemaphoreWaitQueue
+// UpdatePeriodicBlockedQueue
 ///////////////////////////////////////////////////////////////////////////////
-static void UpdateSemaphoreWaitQueue(void)
+static void UpdatePeriodicBlockedQueue(void)
 {
-	UINT32 i;
-	UINT64 new_time = 0;
+	UINT64 abs_deadline;
+	const UINT64 curtime = (g_current_period_us + g_current_period_offset_us);
 	OS_Task * task;
-	const UINT32 word_count = (MAX_SEMAPHORE_COUNT + 31) >> 5;
 	
-	for(i = 0; i < word_count; i++)
-	{
-		UINT32 mask = g_semaphore_active_periodic_queue_mask[i];
-		if(mask)
-		{
-			const UINT32 index = clz(mask);
-			mask &= ~(1 << index);
+    while(_OS_QueuePeekWithKey(&g_periodic_blocked_q, (_OS_TaskQNode **) &task, &abs_deadline) == SUCCESS)
+    {
+        if(abs_deadline > curtime) break;
+		
+        // Dequeue the new task from the queue.
+        _OS_PQueueGet(&g_periodic_blocked_q, NULL);
+                
+		// Deadline has expired
+		// TODO: Take necessary action for deadline miss
+		task->p.dline_miss_count ++;
 
-			OS_SemaphoreCB * sem = g_semaphore_pool[(i << 5) + (31 - index)];
-			ASSERT(sem);
-			
-			// Check if the first element in the blocked periodic task queue has exceeded
-    		while(_OS_QueuePeek(&sem->periodic_task_queue, NULL, &new_time) == SUCCESS)
-		    {
-				if(new_time > g_current_period_us) break;
-		
-				// Now get the front task from the queue.
-				_OS_QueueGet(&sem->periodic_task_queue, (void**) &task, NULL);
-		
-				// Deadline has expired
-				// TODO: Take necessary action for deadline miss
-				task->p.dline_miss_count ++;
-		
-				KlogStr(KLOG_DEADLINE_MISS, "Deadline Miss (Blocked) - ", task->name);
-		
-				// We are done for the current period. Update the next job_release_time.
-				task->p.job_release_time += task->p.period;
-		
-				// Re-insert the task with the new deadline
-				task->p.alarm_time = task->p.job_release_time + task->p.deadline;
-				_OS_QueueInsert(&sem->periodic_task_queue, (void *) task, task->p.alarm_time);
-			}
-		}
-	}
+		KlogStr(KLOG_DEADLINE_MISS, "Deadline Miss (Blocked) - ", task->name);
+
+        // Reset the remaining budget to full
+        task->p.remaining_budget = task->p.budget;
+
+		// We are done for the current period. Update the next job_release_time.
+		task->p.job_release_time += task->p.period;
+
+		// Re-insert the task with the new deadline
+		_OS_PQueueInsertWithKey(&g_periodic_blocked_q, (_OS_TaskQNode *) task, 
+								task->p.job_release_time + task->p.deadline);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -361,7 +328,7 @@ static void CheckTaskBudgetDline(OS_Task * task)
             // TODO: Raise the flag saying that the thread has exceeded its budget
             
             // Take the current task out of ready queue
-            _OS_QueueGet(&g_ready_q, NULL, NULL);
+            _OS_PQueueGet(&g_ready_q, NULL);
             
             // We are done for the current period. Update the next job_release_time.
             task->p.job_release_time += task->p.period;
@@ -376,12 +343,12 @@ static void CheckTaskBudgetDline(OS_Task * task)
     }
     
     // Check if anyone in the ready queue exceeded the deadline
-    while(_OS_QueuePeek(&g_ready_q, NULL, &new_time) == SUCCESS)
+    while(_OS_QueuePeekWithKey(&g_ready_q, NULL, &new_time) == SUCCESS)
     {
         if(new_time > (g_current_period_us + g_current_period_offset_us)) break;
         
         // Now get the front task from the queue.
-        _OS_QueueGet(&g_ready_q, (void**) &task, NULL);
+        _OS_PQueueGet(&g_ready_q, (_OS_TaskQNode**) &task);
         
         // Deadline has expired
         // TODO: Take necessary action for deadline miss
@@ -415,8 +382,8 @@ void _OS_SetAlarm(OS_Task *task,
     ASSERT(abs_time_in_us > g_current_period_us)
     
     // Insert the task into the g_ready_q / g_wait_q
-    task->p.alarm_time = abs_time_in_us;
-    _OS_QueueInsert((ready ? &g_ready_q : &g_wait_q), (void *) task, abs_time_in_us);
+    task->p.alarm_time() = abs_time_in_us;
+    _OS_PQueueInsertWithKey((ready ? &g_ready_q : &g_wait_q), (_OS_TaskQNode *) task, abs_time_in_us);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -430,9 +397,9 @@ void _OS_Schedule()
     
     // Check if there is any ready task in the periodic ready queue
     // Or else check the Aperiodic ready queue
-    if(_OS_QueuePeek(&g_ready_q, (void**) &task, 0) != SUCCESS)
+    if(_OS_QueuePeek(&g_ready_q, (_OS_TaskQNode**) &task) != SUCCESS)
     {
-        _OS_QueuePeek(&g_ap_ready_q, (void**) &task, 0);
+        _OS_QueuePeek(&g_ap_ready_q, (_OS_TaskQNode**) &task);
     }
 
     KlogStr(KLOG_CONTEXT_SWITCH, "ContextSW To - ", task->name);
@@ -511,7 +478,7 @@ void _OS_TaskYield()
             task->p.remaining_budget -= budget_spent;
             
             // Take the current task out of ready queue
-            _OS_QueueGet(&g_ready_q, NULL, NULL);
+            _OS_PQueueGet(&g_ready_q, NULL);
             
             // We are done for the current period. Update the next job_release_time.
             task->p.job_release_time += task->p.period;
@@ -550,10 +517,10 @@ OS_Return _OS_CompleteAperiodicTask()
 
 		// If this function ever returns, just block this task by adding it to
 		// block q
-		_OS_QueueDelete(&g_ap_ready_q, task);
+		_OS_NPQueueDelete(&g_ap_ready_q, (_OS_TaskQNode *)task);
 
 		// Insert into block q
-		_OS_QueueInsert(&g_block_q, task, task->ap.priority);
+		_OS_PQueueInsertWithKey(&g_completed_task_q, (_OS_TaskQNode *)task, task->ap.priority());
 
 		// Note that the TCB resource for this task will not be freed.
 		// This task will remain in the blocked queue permanently
@@ -567,45 +534,48 @@ OS_Return _OS_CompleteAperiodicTask()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Remove a given task from the scheduler queues
-// This task should be in the ready queue otherwise there will be an assert failure
+// Remove current task from the scheduler ready queue and insert it into blocked queue
+// It is the responsibility of the caller to queue this task somewhere else
 ///////////////////////////////////////////////////////////////////////////////
-void _OS_SchedulerSuspendTask(OS_Task * task)
+void _OS_SchedulerBlockCurrentTask()
 {
 	UINT32 intsts;
-	BOOL status;
-	
-	ASSERT(task);
-	
+		
 	OS_ENTER_CRITICAL(intsts);
 	
-	// Update the task execution time
-	UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-	task->accumulated_budget += budget_spent;
-
-	// Delete this task from the periodic / aperiodic ready queue
-	if(IS_PERIODIC_TASK(task->attributes)) 
-	{
-		// Adjust the remaining  budget for the current task
-		ASSERT(budget_spent <= task->p.remaining_budget);
-		task->p.remaining_budget -= budget_spent;					
-
-		status = _OS_QueueDelete(&g_ready_q, task); 
-	}
-	else  {
-		status = _OS_QueueDelete(&g_ap_ready_q, task); 		
-	}
+	// Get the task execution time
+    UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
+    g_current_task->accumulated_budget += budget_spent;
 	
-	ASSERT(status);
+	if(IS_PERIODIC_TASK(g_current_task->attributes)) {
 	
+	    // Adjust the remaining  budget for the current task
+	    ASSERT(budget_spent <= g_current_task->p.remaining_budget);
+	    g_current_task->p.remaining_budget -= budget_spent;
+	    
+		// Delete the current task from ready tasks queue
+		_OS_PQueueDelete(&g_ready_q, (_OS_TaskQNode *)g_current_task); 
+		
+		// Add this task to the global blocked periodic queue so that scheduler can
+		// continuously update its deadlines and readiness
+		_OS_PQueueInsertWithKey(&g_periodic_blocked_q, (_OS_TaskQNode *)g_current_task,
+			g_current_task->p.alarm_time());
+	}
+	else {
+		// Delete the current task from ready tasks queue
+		_OS_PQueueDelete(&g_ap_ready_q, (_OS_TaskQNode *)g_current_task); 
+	}
+		
 	OS_EXIT_CRITICAL(intsts);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Reinsert a task into scheduler queue. Depending on the current time,
 // this function decides which scheduler queue should this task be inserted
+// This function does not validate if the task given is really blocked or not
+// It is the responsibility of the caller to ensure this
 ///////////////////////////////////////////////////////////////////////////////
-void _OS_SchedulerResumeTask(OS_Task * task)
+void _OS_SchedulerUnblockTask(OS_Task * task)
 {
 	UINT32 intsts;
 	
@@ -613,43 +583,28 @@ void _OS_SchedulerResumeTask(OS_Task * task)
 	
 	OS_ENTER_CRITICAL(intsts);
 	
-	if(IS_PERIODIC_TASK(task->attributes)) 
-	{
-		// We first need to determine the new deadline before we can insert the task
-		UINT64 diff_time = g_current_period_us - task->p.job_release_time;
-		UINT64 diff_period = (diff_time / task->p.period);
+	if(IS_PERIODIC_TASK(g_current_task->attributes)) {
+	
+		// Delete this task from the g_periodic_blocked_q
+		_OS_PQueueDelete(&g_periodic_blocked_q, (_OS_TaskQNode *) task);
 		
-		// Update the dline_miss_count
-		task->p.dline_miss_count += diff_period;
+		// Insert this into the periodic ready / wait queue
+		if(task->p.job_release_time <= g_current_period_us) {
 		
-		// Determine the new job_release_time
-		task->p.job_release_time += (diff_period * task->p.period);
-		
-		// Get the time elapsed since the beginning of the period
-	    g_current_period_offset_us = _OS_Timer_GetTimeElapsed_us(PERIODIC_TIMER);
-
-		// Now check if we should insert this into Ready Queue or the Wait queue
-		if((task->p.job_release_time + task->p.deadline) >= (g_current_period_us + g_current_period_offset_us))
-		{
-			// Deadline is not over. Insert the task into the g_ready_q
-			task->p.alarm_time = task->p.job_release_time + task->p.deadline;
-			_OS_QueueInsert(&g_ready_q, (void *) task, task->p.alarm_time);
+			// We have a job waiting to complete. So insert this into ready queue
+			_OS_PQueueInsertWithKey(&g_ready_q, (_OS_TaskQNode *)task, 
+									task->p.job_release_time + task->p.deadline);
 		}
-		else
-		{
-			// One more deadline missed
-			task->p.dline_miss_count++;
-			
-			// Insert the task into the g_wait_q
-			task->p.job_release_time += task->p.period;
-			task->p.alarm_time = task->p.job_release_time;
-			_OS_QueueInsert(&g_wait_q, (void *) task, task->p.job_release_time);
+		else {
+			// There is no active job. So insert this into wait queue
+			_OS_PQueueInsertWithKey(&g_wait_q, (_OS_TaskQNode *)task, 
+									task->p.job_release_time);
 		}
 	}
-	else
-	{
-		// Insert the task into Aperiodic ready queue
-		_OS_QueueInsert(&g_ap_ready_q, task, task->ap.priority); // Add the task to aperiodic ready queue
+	else {
+	
+		// Insert this task into Aperiodic ready queue
+		_OS_PQueueInsertWithKey(&g_ap_ready_q,(_OS_TaskQNode *)task, task->ap.priority());
 	}
 	
 	OS_EXIT_CRITICAL(intsts);

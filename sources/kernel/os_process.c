@@ -23,7 +23,7 @@ OS_Process * g_current_process;
 
 // Placeholders for all the process control blocks
 OS_Process	g_process_pool[MAX_PROCESS_COUNT];
-UINT32 			g_process_usage_mask[(MAX_PROCESS_COUNT + 31) >> 5];
+UINT32 		g_process_usage_mask[(MAX_PROCESS_COUNT + 31) >> 5];
 
 // Placeholders for Ramdisk file structures
 FILE g_rdfile_pool[MAX_OPEN_FILES];

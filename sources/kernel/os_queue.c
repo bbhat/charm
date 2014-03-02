@@ -8,129 +8,211 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_core.h"
+#include "os_queue.h"
 
-// A #define redefinition of OSW_QueueNode for ease of use
-typedef _OS_QueueNode Node;  
+///////////////////////////////////////////////////////////////////////////////
+//				Q Initialization
+///////////////////////////////////////////////////////////////////////////////
 
-// Function to initialize the queue 								 
+// Function to initialize the Priority & NonPriority queues.
 void _OS_QueueInit(_OS_Queue * q)
 {
 	ASSERT(q);
-	
 	q->head = q->tail = NULL;
 	q->count = 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+//				Q Insertion
+///////////////////////////////////////////////////////////////////////////////
+
 // Function to insert an element into the queue. The key value determines the 
 // location at which it will be inserted. This is a sorted queue on key value.
-void _OS_QueueInsert(_OS_Queue * q, void * item, UINT64 key)
+void _OS_PQueueInsertWithKey(_OS_Queue * q, _OS_HybridQNode * item, UINT64 key)
 {
-	Node *node, *new_node, *prev = 0;
+	_OS_HybridQNode *node, *prev;
 	ASSERT(q && item);
 	
 	node = q->head;
-	while(node)
-	{
-		if(node->key > key) break;
-		prev = node;
-		node = node->next;
+	while(node && (node->key <= key)) {
+		node = node->p_next;
 	}
 
-	new_node = (Node*) item;
-	new_node->key = key;
-	new_node->next = node;	
-	if(!node)q->tail = new_node;	
-	if(prev)
-	{
-	 	prev->next = new_node;
+	item->key = key;
+	item->p_next = node;
+	
+	if(!q->head) q->head = item;
+	
+	if(node) {
+		prev = node->p_prev;
+		node->p_prev = item;
+		item->p_prev = prev;
+		if(prev) prev->p_next = item;				
 	}
-	else
-	{
-		q->head = new_node;		
-	}	  
+	else {
+		item->p_prev = NULL;
+		q->tail = item;	
+	}
 	q->count++;
 }
 
-// Function to insert an element into the tail end of the queue.
-void _OS_QueueInsertTail(_OS_Queue * q, void * item)
+// Function to insert an element into the non-priority queue
+// Inserts the new element at the tail
+void _OS_NPQueueInsert(_OS_Queue * q, _OS_HybridQNode * item)
 {
-	Node *new_node;
 	ASSERT(q && item);
 
-	new_node = (Node*)item;
-	new_node->next = NULL;
+	item->np_next = NULL;
 
-	if(q->tail)
-	{
-		(q->tail)->next = new_node;	
+	if(q->tail) {
+		(q->tail)->np_next = item;
 	}
-	else
-	{
-		q->head = new_node; //first node
+	else {
+		q->head = item; //first node
 	}
-	q->tail = new_node;
+	item->np_prev = q->tail;
+	q->tail = item;
+	q->count++;
 }
 
-// Function to delete an item from the queue.
-BOOL _OS_QueueDelete(_OS_Queue * q, void * item)
+///////////////////////////////////////////////////////////////////////////////
+//				Q Deletions
+// Functions to delete an item from the queue. Returns true if the item is deleted.
+// This function does not actually validate if the element is in the queue, it is the 
+// responsibility of the caller
+///////////////////////////////////////////////////////////////////////////////
+
+BOOL _OS_PQueueDelete(_OS_Queue * q, _OS_HybridQNode * item)
 {
-    Node * node, * prev = 0;
-	Node * item_node = (Node*)item;
+    _OS_HybridQNode * next, * prev;
+    ASSERT(q && item);
+
+	next = item->p_next;
+	prev = item->p_prev;
+	item->p_next = NULL;
+	item->p_prev = NULL;
+	
+	if(prev) {
+		prev->p_next = next;
+	}
+	else {
+		q->head = next;			// First element in the queue was deleted		
+	}
+	
+	if(next) {
+		next->p_prev = prev;
+	}
+	else {
+		q->tail = prev;			// Last element in the queue was deleted
+	}
+	q->count--;
+	return TRUE;
+}
+
+BOOL _OS_NPQueueDelete(_OS_Queue * q, _OS_HybridQNode * item)
+{
+    _OS_HybridQNode * next, * prev;
+    ASSERT(q && item);
+
+	next = item->np_next;
+	prev = item->np_prev;
+	item->np_next = NULL;
+	item->np_prev = NULL;
+	
+	if(prev) {
+		prev->np_next = next;
+	}
+	else {
+		q->head = next;			// First element in the queue was deleted		
+	}
+	
+	if(next) {
+		next->np_prev = prev;
+	}
+	else {
+		q->tail = prev;			// Last element in the queue was deleted
+	}
+	q->count--;
+	return TRUE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//				Q Get
+// Functions to get the first element from the Queue. 
+///////////////////////////////////////////////////////////////////////////////
+
+void _OS_PQueueGet(_OS_Queue * q, _OS_HybridQNode ** item)
+{
+    _OS_HybridQNode * node;
     ASSERT(q);
 	
 	node = q->head;
-	while(node) 
+	if(item) *item = node;
+	if(node) 
 	{
-		if(node == item_node) break;
-		prev = node;
-		node = node->next;
-	}
-	
-	if(node)   // Item exists
-	{
-		if(prev)	// Not the head node.
-			prev->next = node->next;			
-		else	// This is the head node
-			q->head = node->next;	
-		if(q->tail == node) // This is the last node
-			q->tail = prev;
-
+		q->head = node->p_next;		
+		if(q->tail == node) q->tail = NULL;
+		node->p_next = NULL;
 		q->count--;
-		node->next = 0;
-		
-		return TRUE;
 	}
-
-	// Item not found in the queue	
-	return FALSE;
 }
 
-// Function to get the first element from the Queue. 
-void _OS_QueueGet(_OS_Queue * q, void ** item, UINT64 * key)
+void _OS_PQueueGetWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key)
 {
-    Node * node;
+    _OS_HybridQNode * node;
+    ASSERT(q && key);
+	
+	node = q->head;
+	if(item) *item = node;
+	if(node) 
+	{
+		*key = node->key;
+		q->head = node->p_next;		
+		if(q->tail == node) q->tail = NULL;
+		node->p_next = NULL;
+		q->count--;
+	}
+}
+
+void _OS_NPQueueGet(_OS_Queue * q, _OS_HybridQNode ** item)
+{
+    _OS_HybridQNode * node;
     ASSERT(q);
 	
 	node = q->head;
 	if(item) *item = (void *)node;
 	if(node) 
 	{
-		q->head = node->next;		
-		if(q->tail == node) q->tail = 0;
-		if(key) *key = node->key;
-		node->next = 0;
+		q->head = node->np_next;		
+		if(q->tail == node) q->tail = NULL;
+		node->np_next = NULL;
 		q->count--;
 	}
 }
 
-OS_Return _OS_QueuePeek(_OS_Queue * q, void ** item, UINT64 * key)
+///////////////////////////////////////////////////////////////////////////////
+//				Q Peek
+// Functions to get the first element from the Queue. 
+///////////////////////////////////////////////////////////////////////////////
+
+OS_Return _OS_QueuePeek(_OS_Queue * q, _OS_HybridQNode ** item)
 {
 	ASSERT(q);
 	
 	if(item) *item = (void*) q->head;
-	if(q->head)
-	{
-		if(key) *key = q->head->key;
+	if(q->head) {
+		return SUCCESS;
+	}
+	return NO_DATA;
+}
+
+OS_Return _OS_QueuePeekWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key)
+{
+	ASSERT(q && key);
+	
+	if(item) *item = (void*) q->head;
+	if(q->head) {
+		*key = q->head->key;
 		return SUCCESS;
 	}
 	return NO_DATA;

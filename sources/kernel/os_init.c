@@ -8,7 +8,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_core.h"
-#include "os_queue.h"
+#include "os_sched.h"
+#include "os_timer.h"
 #include "os_process.h"
 #include "os_memory.h"
 #include "target.h"
@@ -23,7 +24,7 @@ extern OS_Return ramdisk_init(void * addr);
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
-extern _OS_Queue g_block_q;
+extern _OS_Queue g_completed_task_q;
 
 // Following variable are derived from the linker script file.
 // They are used to create memory maps for the kernel process
@@ -86,7 +87,8 @@ void _OS_Init()
 	_OS_QueueInit(&g_ready_q); 
 	_OS_QueueInit(&g_wait_q);
 	_OS_QueueInit(&g_ap_ready_q);
-	_OS_QueueInit(&g_block_q);
+	_OS_QueueInit(&g_completed_task_q);
+	_OS_QueueInit(&g_periodic_blocked_q);
 	
 	// Initialize the Kernel process
 	OS_CreateProcess(&kernel_pcb, "kernel", (SYSTEM_PROCESS | ADMIN_PROCESS), &kernel_process_entry, NULL);	

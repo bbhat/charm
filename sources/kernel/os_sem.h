@@ -10,6 +10,7 @@
 #ifndef _OS_SEM_H
 #define _OS_SEM_H
 
+#include "os_core.h"
 #include "os_types.h"
 #include "os_queue.h"
 #include "os_process.h"
@@ -19,16 +20,19 @@ typedef struct
 	UINT32 count;
 	UINT32 attributes;
 	OS_Process * owner;					// Owner process
-	_OS_Queue periodic_task_queue;    		// Wait queue for periodic tasks
-	_OS_Queue aperiodic_task_queue;  		// Wait queue for aperiodic tasks
+	_OS_Queue periodic_wait_queue;    		// Wait queue for periodic tasks
+	_OS_Queue aperiodic_wait_queue;  		// Wait queue for aperiodic tasks
     
 } OS_SemaphoreCB;
+
+extern OS_SemaphoreCB g_semaphore_pool[MAX_SEMAPHORE_COUNT];
 
 ///////////////////////////////////////////////////////////////////////////////
 //
 // The semaphores in this RTOS is specifically adapted to the periodic EDF scheduler.
 // If there are multiple tasks waiting for a semaphore, periodic tasks get the
-// first preference when the semaphore becomes available followed by aperiodic tasks.
+// first preference (provided there is a job waiting) when the semaphore becomes 
+// available followed by aperiodic tasks.
 // Within the periodic tasks, a task with earliest approaching deadline is given
 // priority. This does not necessarily mean a task with the smallest period. 
 // This semaphore behavior ideal for use with an EDF scheduler

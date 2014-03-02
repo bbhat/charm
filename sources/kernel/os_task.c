@@ -8,6 +8,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_core.h"
+#include "os_sched.h"
 #include "os_queue.h"
 #include "os_timer.h"
 #include "os_task.h"
@@ -34,18 +35,7 @@ static FP32 g_total_allocated_cpu = 0.0;
 
 // Placeholders for all the task control blocks
 OS_Task	g_task_pool[MAX_TASK_COUNT];
-UINT32 			g_task_usage_mask[(MAX_TASK_COUNT + 31) >> 5];
-
-extern _OS_Queue g_ready_q;
-extern _OS_Queue g_wait_q;
-extern _OS_Queue g_ap_ready_q;
-extern _OS_Queue g_block_q;
-extern UINT32 g_current_period_us;
-
-extern OS_Task * g_idle_task;
-
-extern void _OS_Schedule();
-extern void _OS_SetAlarm(OS_Task *task, UINT64 abs_time_in_us, BOOL is_new_job, BOOL update_timer);
+UINT32 	g_task_usage_mask[(MAX_TASK_COUNT + 31) >> 5];
 
 UINT32 *_OS_BuildKernelTaskStack(UINT32 * stack_ptr, void (*task_function)(void *), void * arg);
 UINT32 *_OS_BuildUserTaskStack(UINT32 * stack_ptr, void (*task_function)(void (*entry_function)(void *pdata), 
@@ -54,7 +44,6 @@ void KernelTaskEntryMain(void *pdata);
 void UserTaskEntryMain(void (*entry_function)(void *pdata), void *pdata);
 void AperiodicKernelTaskEntry(void *pdata);
 void AperiodicUserTaskEntry(void (*entry_function)(void *pdata), void *pdata);
-void _OS_Schedule();
 
 ///////////////////////////////////////////////////////////////////////////////
 // OS_CreatePeriodicTask - API to create periodic tasks
@@ -195,7 +184,7 @@ OS_Return _OS_CreatePeriodicTask(
 	tcb->p.exec_count = 0;
 	tcb->p.TBE_count = 0;
 	tcb->p.dline_miss_count = 0;
-	tcb->p.alarm_time = 0;
+	tcb->p.alarm_time() = 0;
 	tcb->p.id = *task;
 	
 	// Note down the owner process
@@ -235,7 +224,7 @@ OS_Return _OS_CreatePeriodicTask(
 	
 	OS_ENTER_CRITICAL(intsts);	// Enter critical section
 
-	_OS_QueueInsert(&g_wait_q, tcb, phase_shift_in_us);		
+	_OS_PQueueInsertWithKey(&g_wait_q, (_OS_TaskQNode *) tcb, phase_shift_in_us);		
 
 	OS_EXIT_CRITICAL(intsts); 	// Exit the critical section
 
@@ -329,7 +318,7 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	tcb->ap.stack_size = stack_size;
 	tcb->ap.task_function = task_entry_function;
 	tcb->ap.pdata = pdata;
-	tcb->ap.priority = priority;
+	tcb->ap.priority() = priority;
 	tcb->ap.attributes = (APERIODIC_TASK | options);
 	tcb->ap.top_of_stack = stack + stack_size; // Stack grows bottom up
 	tcb->ap.accumulated_budget = 0;
@@ -361,7 +350,7 @@ OS_Return _OS_CreateAperiodicTask(UINT16 priority,
 	// Block the resource
 	SetResourceStatus(g_task_usage_mask, *task, FALSE);
 	
-	_OS_QueueInsert(&g_ap_ready_q, tcb, priority); // Add the task to aperiodic ready queue
+	_OS_PQueueInsertWithKey(&g_ap_ready_q, (_OS_TaskQNode *) tcb, priority); // Add the task to aperiodic ready queue
 	OS_EXIT_CRITICAL(intsts); // Exit the critical section
 	
 	if(_OS_IsRunning)

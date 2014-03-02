@@ -8,6 +8,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_core.h"
+#include "os_sched.h"
 #include "os_config.h"
 #include "os_driver.h"
 #include "os_config.h"
@@ -34,7 +35,7 @@ extern OS_Task * g_current_task;
 extern _OS_Queue g_ready_q;
 extern _OS_Queue g_wait_q;
 extern _OS_Queue g_ap_ready_q;
-extern _OS_Queue g_block_q;
+extern _OS_Queue g_completed_task_q;
 
 extern void _OS_SchedulerSuspendTask(OS_Task *);
 extern void _OS_SchedulerResumeTask(OS_Task *);
@@ -381,7 +382,7 @@ OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL 
 			io_request->blocked_task = g_current_task;
 			
 			// Suspend scheduling for this task
-			_OS_SchedulerSuspendTask(g_current_task);
+			_OS_SchedulerBlockCurrentTask();
 		}
 	}
 	else
@@ -478,7 +479,7 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size
 			io_request->blocked_task = g_current_task;
 
 			// Suspend scheduling for this task
-			_OS_SchedulerSuspendTask(g_current_task);
+			_OS_SchedulerBlockCurrentTask();
 		}
 	}
 	else 
@@ -575,7 +576,7 @@ void _Driver_IORequestComplete(OS_Driver * driver, OS_Return result)
 				req->blocked_task->syscall_result[0] = result;
 			
 			// Insert this back into the scheduler queue
-			_OS_SchedulerResumeTask(req->blocked_task);
+			_OS_SchedulerUnblockTask(req->blocked_task);
 		}
 		
 	}

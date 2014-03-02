@@ -8,6 +8,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "os_types.h"
+#include "os_queue.h"
 
 #ifndef _OS_TASK_H
 #define _OS_TASK_H
@@ -36,6 +37,8 @@ enum
 #define IS_SYSTEM_TASK(task_attr)	(((task_attr) & TASK_PRIVILEGE_MASK) == SYSTEM_TASK)
 #define IS_USER_TASK(task_attr)		(((task_attr) & TASK_PRIVILEGE_MASK) == USER_TASK)
 
+typedef _OS_HybridQNode	_OS_TaskQNode;
+
 ///////////////////////////////////////////////////////////////////////////////
 // Task TCB 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,13 +47,9 @@ typedef union OS_Task
 {
 	struct
 	{
-		// Attributes for maintaining a list/queue of threads.
-		// IMPORTANT: Make sure that the below two attributes are the first two
-		// attributes in the same order. This is done so that we can have a single
-		// queue implementation for all types of objects as long as the below two
-		// members are part of those objects.
-		union OS_Task * next;	// Do NOT REORDER THESE TWO MEMBERS
-		UINT64 key;	// To be used for maintaining a queue ordered based on this key value
+		// Attribute for maintaining a list/queue of threads.
+		// IMPORTANT: Make sure that the Queue node is the first element in this structure
+		_OS_TaskQNode qp;
 
 		// Folliwing attributes are common in both type of tasks. They should be in the same order
 		UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN Assembly
@@ -74,13 +73,9 @@ typedef union OS_Task
 	
 	struct
 	{
-		// Attributes for maintaining a list/queue of threads.
-		// IMPORTANT: Make sure that the below two attributes are the first two
-		// attributes in the same order. This is done so that we can have a single
-		// queue implementation for all types of objects as long as the below two
-		// members are part of those objects.
-		union OS_Task * next;	// Do NOT REORDER THESE TWO MEMBERS
-		UINT64 alarm_time;	// To be used for maintaining a queue ordered based on this key value
+		// Attribute for maintaining a list/queue of threads.
+		// IMPORTANT: Make sure that the Queue node is the first element in this structure
+		_OS_HybridQNode qp;
 
 		UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN ASSEMBLY
 		struct OS_Process *owner_process;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'OWNER_OFFSET_IN_TCB' IS USED IN Assembly
@@ -121,13 +116,9 @@ typedef union OS_Task
 
 	struct OS_AperiodicTask
 	{
-		// Attributes for maintaining a list/queue of threads.
-		// IMPORTANT: Make sure that the below two attributes are the first two
-		// attributes in the same order. This is done so that we can have a single
-		// queue implementation for all types of objects as long as the below two
-		// members are part of those objects.
-		union OS_Task * next;	// Do NOT REORDER THESE TWO MEMBERS
-		UINT64 priority;	// To be used for maintaining a queue ordered based on this key value
+		// Attribute for maintaining a list/queue of threads.
+		// IMPORTANT: Make sure that the Queue node is the first element in this structure
+		_OS_HybridQNode qp;
 
 		// Folliwing attributes are common in both type of tasks. They should be in the same order
 		UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN Assembly
@@ -181,6 +172,9 @@ OS_Return _OS_CompleteAperiodicTask();
 
 // Placeholders for all the process control blocks
 extern OS_Task	g_task_pool[MAX_TASK_COUNT];
-extern UINT32 			g_task_usage_mask[];
+extern UINT32 	g_task_usage_mask[];
+
+#define	alarm_time()	qp.key
+#define	priority()		qp.key
 
 #endif // _OS_TASK_H
