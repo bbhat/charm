@@ -49,7 +49,7 @@ typedef union OS_Task
 	{
 		// Attribute for maintaining a list/queue of threads.
 		// IMPORTANT: Make sure that the Queue node is the first element in this structure
-		_OS_TaskQNode qp;
+		_OS_HybridQNode qp;
 
 		// Folliwing attributes are common in both type of tasks. They should be in the same order
 		UINT32 *top_of_stack;	// Do NOT REORDER THIS MEMBER, THE OFFSET 'SP_OFFSET_IN_TCB' IS USED IN Assembly

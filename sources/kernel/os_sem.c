@@ -242,7 +242,6 @@ OS_Return _OS_SemFree(OS_Sem_t sem)
 {
 	OS_Return status;
 	OS_Task* task = NULL;
-	UINT64 key = 0;
 	
 #if OS_ENABLE_CPU_STATS==1
     g_sched_starting_counter_value = _OS_Timer_GetCount(PERIODIC_TIMER);

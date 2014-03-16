@@ -7,10 +7,10 @@
 // 
 // -------------------------------------------------------------------------------
 
-SP_OFFSET_IN_TCB        = 12
-OWNER_OFFSET_IN_TCB     = 16
-FUNCTION_OFFSET_IN_TCB  = 28
-PDATA_OFFSET_IN_TCB     = 32
+SP_OFFSET_IN_TCB        = 24
+OWNER_OFFSET_IN_TCB     = 28
+FUNCTION_OFFSET_IN_TCB  = 40
+PDATA_OFFSET_IN_TCB     = 44
 
 SOLICITED_STACK_TYPE    = 1
 INTERRUPT_STACK_TYPE    = 2

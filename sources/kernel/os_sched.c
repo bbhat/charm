@@ -115,17 +115,20 @@ void _OS_Start()
 		// Start the MMU and Virtual Memory
 		_sysctl_enable_mmu();	
 #endif
-	
+
+
         // Start the Periodic timer
         _OS_Timer_PeriodicTimerStart(PERIODIC_TIMER_INTERVAL);
-        
+
 #if OS_ENABLE_CPU_STATS==1
         Syslog32("Max periodic timer count = ", _OS_Timer_GetMaxCount(PERIODIC_TIMER));
 #endif
+
         _OS_IsRunning = TRUE;
 
-        // Call reschedule. 
-        _OS_Schedule();
+		// Switch to idle task explicitly until the actual scheduling begins with the 
+		// first periodic timer interrupt 
+		_OS_ContextRestore(g_idle_task);
         
         // We would never return from the above call. 
         // The current stack continues as SVC stack handling all interrupts
@@ -142,7 +145,6 @@ void kernel_process_entry(void * pdata)
     
     // Create all kernel tasks. Currently there are:
     // - Idle task
-    // - Serial task
     
     // Create the IDLE task 
     _OS_CreateAperiodicTask(MIN_PRIORITY + 1,

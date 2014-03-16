@@ -33,26 +33,33 @@ void _OS_PQueueInsertWithKey(_OS_Queue * q, _OS_HybridQNode * item, UINT64 key)
 	_OS_HybridQNode *node, *prev;
 	ASSERT(q && item);
 	
-	node = q->head;
-	while(node && (node->key <= key)) {
-		node = node->p_next;
-	}
-
 	item->key = key;
-	item->p_next = node;
-	
-	if(!q->head) q->head = item;
-	
-	if(node) {
-		prev = node->p_prev;
-		node->p_prev = item;
-		item->p_prev = prev;
-		if(prev) prev->p_next = item;				
+	item->p_next = item->p_prev = NULL;
+
+	if(!q->head || !q->tail) {
+		q->head = q->tail = item;
 	}
 	else {
-		item->p_prev = NULL;
-		q->tail = item;	
+		node = q->head;
+		while(node && (node->key <= key)) {
+			node = node->p_next;
+		}
+		
+		if(node) {
+			item->p_next = node;
+
+			prev = node->p_prev;
+			node->p_prev = item;
+			item->p_prev = prev;
+			if(prev) prev->p_next = item;				
+		}
+		else {
+			q->tail->p_next = item;
+			item->p_prev = q->tail;
+			q->tail = item;	
+		}
 	}
+	
 	q->count++;
 }
 
@@ -150,9 +157,14 @@ void _OS_PQueueGet(_OS_Queue * q, _OS_HybridQNode ** item)
 	if(item) *item = node;
 	if(node) 
 	{
-		q->head = node->p_next;		
-		if(q->tail == node) q->tail = NULL;
-		node->p_next = NULL;
+		q->head = node->p_next;
+		if(!q->head) {
+			q->tail = NULL;
+		}
+		else {
+			q->head->p_prev = NULL;
+		}
+		node->p_next = node->p_prev = NULL;
 		q->count--;
 	}
 }
@@ -167,9 +179,14 @@ void _OS_PQueueGetWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key)
 	if(node) 
 	{
 		*key = node->key;
-		q->head = node->p_next;		
-		if(q->tail == node) q->tail = NULL;
-		node->p_next = NULL;
+		q->head = node->p_next;
+		if(!q->head) {
+			q->tail = NULL;
+		}
+		else {
+			q->head->p_prev = NULL;
+		}
+		node->p_next = node->p_prev = NULL;
 		q->count--;
 	}
 }
@@ -199,18 +216,16 @@ OS_Return _OS_QueuePeek(_OS_Queue * q, _OS_HybridQNode ** item)
 {
 	ASSERT(q);
 	
-	if(item) *item = (void*) q->head;
-	if(q->head) {
-		return SUCCESS;
-	}
-	return NO_DATA;
+	if(item) *item = q->head;
+	
+	return (q->head) ? SUCCESS : NO_DATA;
 }
 
 OS_Return _OS_QueuePeekWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key)
 {
 	ASSERT(q && key);
 	
-	if(item) *item = (void*) q->head;
+	if(item) *item = q->head;
 	if(q->head) {
 		*key = q->head->key;
 		return SUCCESS;
