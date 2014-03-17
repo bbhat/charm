@@ -47,11 +47,11 @@ void _OS_PQueueInsertWithKey(_OS_Queue * q, _OS_HybridQNode * item, UINT64 key)
 		
 		if(node) {
 			item->p_next = node;
-
 			prev = node->p_prev;
 			node->p_prev = item;
 			item->p_prev = prev;
 			if(prev) prev->p_next = item;				
+			else q->head = item;
 		}
 		else {
 			q->tail->p_next = item;
@@ -200,9 +200,14 @@ void _OS_NPQueueGet(_OS_Queue * q, _OS_HybridQNode ** item)
 	if(item) *item = (void *)node;
 	if(node) 
 	{
-		q->head = node->np_next;		
-		if(q->tail == node) q->tail = NULL;
-		node->np_next = NULL;
+		q->head = node->np_next;
+		if(!q->head) {
+			q->tail = NULL;
+		}
+		else {
+			q->head->np_prev = NULL;
+		}
+		node->np_next = node->np_prev = NULL;
 		q->count--;
 	}
 }

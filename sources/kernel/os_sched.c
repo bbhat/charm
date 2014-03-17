@@ -519,10 +519,10 @@ OS_Return _OS_CompleteAperiodicTask()
 
 		// If this function ever returns, just block this task by adding it to
 		// block q
-		_OS_NPQueueDelete(&g_ap_ready_q, (_OS_TaskQNode *)task);
+		_OS_PQueueDelete(&g_ap_ready_q, (_OS_TaskQNode *)task);
 
 		// Insert into block q
-		_OS_PQueueInsertWithKey(&g_completed_task_q, (_OS_TaskQNode *)task, task->ap.priority());
+		_OS_NPQueueInsert(&g_completed_task_q, (_OS_TaskQNode *)task);
 
 		// Note that the TCB resource for this task will not be freed.
 		// This task will remain in the blocked queue permanently
