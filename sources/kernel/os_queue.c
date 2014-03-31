@@ -7,7 +7,6 @@
 //	
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "os_core.h"
 #include "os_queue.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -217,23 +216,23 @@ void _OS_NPQueueGet(_OS_Queue * q, _OS_HybridQNode ** item)
 // Functions to get the first element from the Queue. 
 ///////////////////////////////////////////////////////////////////////////////
 
-OS_Return _OS_QueuePeek(_OS_Queue * q, _OS_HybridQNode ** item)
+BOOL _OS_QueuePeek(_OS_Queue * q, _OS_HybridQNode ** item)
 {
 	ASSERT(q);
 	
 	if(item) *item = q->head;
 	
-	return (q->head) ? SUCCESS : NO_DATA;
+	return (q->head) ? TRUE : FALSE;
 }
 
-OS_Return _OS_QueuePeekWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key)
+BOOL _OS_QueuePeekWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key)
 {
 	ASSERT(q && key);
 	
 	if(item) *item = q->head;
 	if(q->head) {
 		*key = q->head->key;
-		return SUCCESS;
+		return TRUE;
 	}
-	return NO_DATA;
+	return FALSE;
 }

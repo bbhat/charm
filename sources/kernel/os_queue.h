@@ -21,7 +21,6 @@
 // Necessary Include Files
 ///////////////////////////////////////////////////////////////////////////////
 #include "os_types.h"	// Include common data types being used
-#include "os_core.h"  // For OS_Return definition
 
 typedef struct _OS_HybridQNode
 {	
@@ -69,7 +68,7 @@ void _OS_PQueueGetWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key);
 void _OS_NPQueueGet(_OS_Queue * q, _OS_HybridQNode ** item);
 
 // Function to peek the first element from the Queue. 
-OS_Return _OS_QueuePeek(_OS_Queue * q, _OS_HybridQNode ** item);
-OS_Return _OS_QueuePeekWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key);
+BOOL _OS_QueuePeek(_OS_Queue * q, _OS_HybridQNode ** item);
+BOOL _OS_QueuePeekWithKey(_OS_Queue * q, _OS_HybridQNode ** item, UINT64 * key);
 
 #endif // _OS_QUEUE_H

@@ -212,7 +212,7 @@ void _OS_PeriodicTimerISR(void *arg)
     UpdatePeriodicBlockedQueue();
     
     // Consider new jobs to be introduced from the wait queue
-    while(_OS_QueuePeekWithKey(&g_wait_q, NULL, &new_time) == SUCCESS)
+    while(_OS_QueuePeekWithKey(&g_wait_q, NULL, &new_time))
     {
         if(new_time > g_current_period_us) break;
 		
@@ -274,7 +274,7 @@ static void UpdatePeriodicBlockedQueue(void)
 	const UINT64 curtime = (g_current_period_us + g_current_period_offset_us);
 	OS_Task * task;
 	
-    while(_OS_QueuePeekWithKey(&g_periodic_blocked_q, (_OS_TaskQNode **) &task, &abs_deadline) == SUCCESS)
+    while(_OS_QueuePeekWithKey(&g_periodic_blocked_q, (_OS_TaskQNode **) &task, &abs_deadline))
     {
         if(abs_deadline > curtime) break;
 		
@@ -345,7 +345,7 @@ static void CheckTaskBudgetDline(OS_Task * task)
     }
     
     // Check if anyone in the ready queue exceeded the deadline
-    while(_OS_QueuePeekWithKey(&g_ready_q, NULL, &new_time) == SUCCESS)
+    while(_OS_QueuePeekWithKey(&g_ready_q, NULL, &new_time))
     {
         if(new_time > (g_current_period_us + g_current_period_offset_us)) break;
         
@@ -399,7 +399,7 @@ void _OS_Schedule()
     
     // Check if there is any ready task in the periodic ready queue
     // Or else check the Aperiodic ready queue
-    if(_OS_QueuePeek(&g_ready_q, (_OS_TaskQNode**) &task) != SUCCESS)
+    if(!_OS_QueuePeek(&g_ready_q, (_OS_TaskQNode**) &task))
     {
         _OS_QueuePeek(&g_ap_ready_q, (_OS_TaskQNode**) &task);
     }
