@@ -461,9 +461,9 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size
 
 	OS_Return status = DEFER_IO_REQUEST;
 	
-	if(!driver_inst->io_queue_head && driver_inst->read) 
+	if(!driver_inst->io_queue_head && driver_inst->write) 
 	{
-		status = driver_inst->read(driver_inst, io_request);
+		status = driver_inst->write(driver_inst, io_request);
 		*size = io_request->completed;
 	}
 	
