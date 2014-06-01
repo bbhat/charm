@@ -30,7 +30,7 @@ typedef struct _OS_HybridQNode
 	struct _OS_HybridQNode * p_prev;	// Priority Queue Previous
 	UINT64 key;							// Priority Key
 	
-} _OS_HybridQNode;
+} __attribute__ ((packed)) _OS_HybridQNode;
 
 // Following type can be with for both Priority and NonPriority queues
 typedef struct

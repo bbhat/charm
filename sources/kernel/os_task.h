@@ -69,7 +69,8 @@ typedef union OS_Task
 	#if OS_WITH_VALIDATE_TASK==1
 		UINT32 signature;		// A unique identifier to validate the task structure
 	#endif	// OS_WITH_VALIDATE_TASK
-	};
+	
+	} __attribute__ ((packed));
 	
 	struct
 	{
@@ -112,7 +113,7 @@ typedef union OS_Task
 		UINT32 TBE_count;
 		UINT32 dline_miss_count;
 		
-	} p;
+	} __attribute__ ((packed)) p;
 
 	struct OS_AperiodicTask
 	{
@@ -137,8 +138,9 @@ typedef union OS_Task
 		INT8 name[OS_TASK_NAME_SIZE];
 	#if OS_WITH_VALIDATE_TASK==1
 		UINT32 signature;		// A unique identifier to validate the task structure
-	#endif	// OS_WITH_VALIDATE_TASK	
-	} ap;
+	#endif	// OS_WITH_VALIDATE_TASK
+	
+	} __attribute__ ((packed)) ap;
 
 } OS_Task;
 

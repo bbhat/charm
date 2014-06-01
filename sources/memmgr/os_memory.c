@@ -24,7 +24,6 @@ static UINT32 g_kernel_heap_alloc = 0;
 
 static const UINTPTR g_user_heap_start = (UINTPTR)&__user_heap_start__;
 static const UINT32 g_user_heap_length = (UINTPTR)&__user_heap_length__;
-static UINT32 g_user_heap_alloc = 0;
 
 #if ENABLE_MMU
 

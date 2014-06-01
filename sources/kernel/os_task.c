@@ -405,7 +405,6 @@ void KernelTaskEntryMain(void *pdata)
 void AperiodicKernelTaskEntry(void *pdata)
 {
 	OS_Task * task = (OS_Task *) pdata;
-	UINT32 intsts;
 
 	// Call the thread handler function
 	task->task_function(task->pdata);

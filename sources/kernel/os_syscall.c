@@ -68,10 +68,11 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_GetTaskAllocMask,
 		syscall_DriverStandardCall, 
 		syscall_DriverCustomCall,
-		0, 0, 0, 0, 0, 
-		0, 0, 0, 0, 0, 
-		0, 0, 0, 0, 0,
-		0, syscall_SetUserLED
+		0, 0, 0, 
+		0, 0, 0, 0, 
+		0, 0, 0, 0, 
+		0, 0, 0, 0, 
+		syscall_SetUserLED
 	};
 
 ///////////////////////////////////////////////////////////////////////////////
