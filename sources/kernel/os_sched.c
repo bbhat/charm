@@ -448,6 +448,8 @@ void _OS_Schedule()
 			g_max_scheduler_elapsed_count = diff_count;
 		}
 	}
+	
+	g_sched_starting_counter_value = 0;
 #endif
 
     // It is OK to context switch to another task with interrupts disabled
