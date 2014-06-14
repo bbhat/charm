@@ -370,6 +370,9 @@ OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL 
 		*size = io_request->completed;
 	}
 	
+	// Update the task remaining and accumulated budgets
+	_OS_UpdateCurrentTaskBudget();
+	
 	if(status == DEFER_IO_REQUEST)
 	{
 		// Enqueue this IO in the pending queue
@@ -466,6 +469,9 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size
 		status = driver_inst->write(driver_inst, io_request);
 		*size = io_request->completed;
 	}
+	
+	// Update the task remaining and accumulated budgets
+	_OS_UpdateCurrentTaskBudget();
 	
 	if(status == DEFER_IO_REQUEST)
 	{

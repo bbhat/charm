@@ -57,6 +57,7 @@ void _OS_SetAlarm(OS_Task *task,
                   BOOL ready);
 void _OS_SchedulerBlockCurrentTask();
 void _OS_SchedulerUnblockTask(OS_Task * task);
+void _OS_UpdateCurrentTaskBudget();
 
 void kernel_process_entry(void * pdata);
 

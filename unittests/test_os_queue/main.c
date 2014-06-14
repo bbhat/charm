@@ -14,14 +14,14 @@
 
 #define ASSERT(x) 	do { 																\
 						if(!(x)) {														\
-							printf("ASSSERT Failed in %s: %s\n", __FUNCTION__, #x);		\
+							printf("ASSERT Failed in " __FUNCTION__ ":" #x "\n");		\
 							exit(0);													\
 						}																\
 					} while(0);
 
 #define REQUIRE(x) 	do { 																\
 						if(!(x)) {														\
-							printf("ASSSERT Failed in %s: %s\n", __FUNCTION__, #x);		\
+							printf("ASSERT Failed in " __FUNCTION__ ":" #x "\n");		\
 							exit(0);													\
 						}																\
 					} while(0);

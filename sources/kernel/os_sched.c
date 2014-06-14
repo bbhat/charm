@@ -382,7 +382,7 @@ void _OS_SetAlarm(OS_Task *task,
 {
     // Ensure that the timeout is in the future
     ASSERT(abs_time_in_us > g_current_period_us)
-    
+        
     // Insert the task into the g_ready_q / g_wait_q
     task->p.alarm_time() = abs_time_in_us;
     _OS_PQueueInsertWithKey((ready ? &g_ready_q : &g_wait_q), (_OS_TaskQNode *) task, abs_time_in_us);
@@ -546,17 +546,9 @@ void _OS_SchedulerBlockCurrentTask()
 	UINT32 intsts;
 		
 	OS_ENTER_CRITICAL(intsts);
-	
-	// Get the task execution time
-    UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-    g_current_task->accumulated_budget += budget_spent;
-	
+		
 	if(IS_PERIODIC_TASK(g_current_task->attributes)) {
 	
-	    // Adjust the remaining  budget for the current task
-	    ASSERT(budget_spent <= g_current_task->p.remaining_budget);
-	    g_current_task->p.remaining_budget -= budget_spent;
-	    
 		// Delete the current task from ready tasks queue
 		_OS_PQueueDelete(&g_ready_q, (_OS_TaskQNode *)g_current_task); 
 		
@@ -587,7 +579,7 @@ void _OS_SchedulerUnblockTask(OS_Task * task)
 	
 	OS_ENTER_CRITICAL(intsts);
 	
-	if(IS_PERIODIC_TASK(g_current_task->attributes)) {
+	if(IS_PERIODIC_TASK(task->attributes)) {
 	
 		// Delete this task from the g_periodic_blocked_q
 		_OS_PQueueDelete(&g_periodic_blocked_q, (_OS_TaskQNode *) task);
@@ -609,6 +601,30 @@ void _OS_SchedulerUnblockTask(OS_Task * task)
 	
 		// Insert this task into Aperiodic ready queue
 		_OS_PQueueInsertWithKey(&g_ap_ready_q,(_OS_TaskQNode *)task, task->ap.priority());
+	}
+	
+	OS_EXIT_CRITICAL(intsts);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// This function updates the accumulated budget and remaining budget for the
+// currently running task
+///////////////////////////////////////////////////////////////////////////////
+void _OS_UpdateCurrentTaskBudget()
+{
+	UINT32 intsts;
+		
+	OS_ENTER_CRITICAL(intsts);
+
+    // Get the task execution time
+    UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
+    g_current_task->accumulated_budget += budget_spent;
+	
+	if(IS_PERIODIC_TASK(g_current_task->attributes)) {
+	
+	    // Adjust the remaining  budget for the current task
+	    ASSERT(budget_spent <= g_current_task->p.remaining_budget);
+	    g_current_task->p.remaining_budget -= budget_spent;		
 	}
 	
 	OS_EXIT_CRITICAL(intsts);

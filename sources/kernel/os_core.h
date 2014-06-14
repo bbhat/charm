@@ -84,13 +84,13 @@ void _enable_interrupt(UINT32);
 #define  OS_EXIT_CRITICAL(x)	_enable_interrupt(x)
 
 #if ENABLE_ASSERTS==1
-#define ASSERT(x)		if(!(x)) panic("ASSSERT Failed %s\n", #x);
+#define ASSERT(x)		if(!(x)) panic("ASSERT Failed: " #x "\n");
 #else
 #define ASSERT(x)
 #endif
 
 #if ENABLE_ASSERTS==1
-#define ASSERT_ALWAYS(x)		panic("ASSSERT_ALWAYS: %s\n", x);
+#define ASSERT_ALWAYS(x)		panic("ASSERT_ALWAYS Failed: " #x "\n");
 #else
 #define ASSERT_ALWAYS(x)
 #endif

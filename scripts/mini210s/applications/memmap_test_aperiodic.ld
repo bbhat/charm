@@ -45,7 +45,7 @@ SECTIONS
 		
 	} > APP_MEM : data_seg
 	
-	.bss :
+	.bss : ALIGN(0x1000)
 	{
 		. = ALIGN(4);
 		__bss_start__ = .;

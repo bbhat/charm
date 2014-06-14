@@ -92,16 +92,10 @@ OS_Return _OS_SemWait(OS_Sem_t sem)
 		goto exit;
 	}
 
-    // Get the task execution time
-    UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-    g_current_task->accumulated_budget += budget_spent;
+	// Update the accumulated and remaining budgets
+	_OS_UpdateCurrentTaskBudget();
 	
-	if(IS_PERIODIC_TASK(g_current_task->attributes)) {
-	
-	    // Adjust the remaining  budget for the current task
-	    ASSERT(budget_spent <= g_current_task->p.remaining_budget);
-	    g_current_task->p.remaining_budget -= budget_spent;		
-	}
+	KlogStr(KLOG_SEMAPHORE_DEBUG, "Sem Task :- ", g_current_task->name);
 
 	// If the semaphore count is 0, then block the thread
 	if(semobj->count == 0) {
@@ -131,7 +125,7 @@ OS_Return _OS_SemWait(OS_Sem_t sem)
 		// Decrement the semaphore count in order to acquire it
 		semobj->count--;
 		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore - ", semobj->count);		
-		
+	
 		// The return path for this function is through _OS_Schedule, so it is important to
 		// update the result in the syscall_result
 		if(g_current_task->syscall_result) {
@@ -168,16 +162,8 @@ OS_Return _OS_SemPost(OS_Sem_t sem)
 		goto exit;
 	}
 	
-    // Get the task execution time
-    UINT32 budget_spent = _OS_Timer_GetTimeElapsed_us(BUDGET_TIMER);
-    g_current_task->accumulated_budget += budget_spent;
-	
-	if(IS_PERIODIC_TASK(g_current_task->attributes)) {
-	
-	    // Adjust the remaining  budget for the current task
-	    ASSERT(budget_spent <= g_current_task->p.remaining_budget);
-	    g_current_task->p.remaining_budget -= budget_spent;		
-	}
+	// Update the accumulated and remaining budgets
+	_OS_UpdateCurrentTaskBudget();
 
 	if(semobj->count == 0) {
 	
@@ -223,6 +209,7 @@ OS_Return _OS_SemPost(OS_Sem_t sem)
 		// update the result in the syscall_result
 		if(selected_task->syscall_result) 
 			selected_task->syscall_result[0] = SUCCESS;
+			
 		Klog32(KLOG_SEMAPHORE_DEBUG, "Semaphore :+ ", semobj->count);		
 	}
 	else if(!semobj->count || IS_COUNTING_SEMAPHORE(semobj->attributes)) {

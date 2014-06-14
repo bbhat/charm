@@ -39,13 +39,8 @@ SECTIONS
 			
 	} > APP_MEM : rodata_seg
 	
-	.data : ALIGN(0x1000)
-	{
-		*(.data)
-		
-	} > APP_MEM : data_seg
 	
-	.bss :
+	.bss : ALIGN(0x1000)
 	{
 		. = ALIGN(4);
 		__bss_start__ = .;
@@ -56,8 +51,15 @@ SECTIONS
 		
 	} > APP_MEM : data_seg
 	
-	.stack :
+	.data : 
 	{
+		. = ALIGN(4);
+		*(.data)
+		
+	} > APP_MEM : data_seg
+	
+	.stack :
+	{		
 		*(.stack)
 						
 	} > APP_MEM : data_seg
