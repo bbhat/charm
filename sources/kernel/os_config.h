@@ -73,7 +73,9 @@
 // Serial task related. This task is needed for all user space logging into serial log.
 // Without this, the user space will not be able to log anything into serial
 #define SERIAL_DRIVER_ENABLE		  	  1
+#define SERIAL_READ_ENABLED				  1			  // Do we need serial driver to accept input or not
 #define SERIAL_LOG_BUFFER_SIZE			  1024		  // In bytes. This is used by UART driver to buffer requested output strings
+#define SERIAL_READ_BUFFER_SIZE			  128		  // In bytes. This is used by the UART driver to buffer input keystrokes
 #define SERIAL_TASK_PERIOD			      10000		  // 10 milliseconds
 #define SERIAL_TASK_STACK_SIZE			  256		  // In words
 

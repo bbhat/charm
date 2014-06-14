@@ -41,8 +41,13 @@ OS_Return _Serial_DriverInit(OS_Driver * driver)
     sdriver->base.read = _Serial_DriverRead;
     sdriver->base.write = _Serial_DriverWrite;
    
-   	sdriver->write_index = 0;
-   	sdriver->read_index = 0;
+   	sdriver->output_write_index = 0;
+   	sdriver->output_read_index = 0;
+
+#if SERIAL_READ_ENABLED		
+   	sdriver->input_write_index = 0;
+   	sdriver->input_read_index = 0;
+#endif
     
     // Create the Serial IO task 
     _OS_CreatePeriodicTask(SERIAL_TASK_PERIOD, SERIAL_TASK_PERIOD, 
@@ -57,65 +62,133 @@ OS_Return _Serial_DriverInit(OS_Driver * driver)
 OS_Return _Serial_DriverRead(OS_Driver * driver, IO_Request *req)
 {
 	UINT32 length;
+	Serial_driver * sdriver = (Serial_driver *) driver;
 	
-	ASSERT(driver && req);
+	ASSERT(sdriver && req);
 
-	// At this point, this driver only supports non-blocking read.
+#if SERIAL_READ_ENABLED
+
+	do
+	{
+		// Check if the buffer is empty
+		if(sdriver->input_read_index == sdriver->input_write_index)
+		{
+			break;
+		}
 	
-	length = req->size;
-	Uart_ReadNB(DEBUG_UART, (const INT8 *)req->buffer + req->completed, &length);
-	req->completed += length;	
+		length = req->size - req->completed;
+		if((sdriver->input_write_index < sdriver->input_read_index) && length)
+		{
+			length = MIN(length, SERIAL_READ_BUFFER_SIZE - sdriver->input_read_index);
+			memcpy((INT8 *)req->buffer + req->completed, &sdriver->input_buffer[sdriver->input_read_index], length);
+
+			sdriver->input_read_index = 0;
+			req->completed += length;
+			length = req->size - req->completed;			
+		}
+		
+		if((sdriver->input_read_index < sdriver->input_write_index) && length)
+		{
+			length = MIN(length, sdriver->input_write_index - sdriver->input_read_index);
+			memcpy((INT8 *)req->buffer + req->completed, &sdriver->input_buffer[sdriver->input_read_index], length);
+		
+			// Update input_read_index. In this case, it will never exceed max buffer length
+			sdriver->input_read_index += length;
+			req->completed += length;
+		
+			// Update the length
+			length = req->size - req->completed;
+		}
+				
+	} while(0);	
 	
-    return SUCCESS;
+#else
+	panic("Serial read not configured. Enable SERIAL_READ_ENABLED");
+#endif
+
+	// For serial input we want to return data to the caller as and when it comes without waiting for
+	// the entire buffer to be received
+    return (req->completed > 0) ? SUCCESS : DEFER_IO_REQUEST;
 }
 
 OS_Return _Serial_DriverWrite(OS_Driver * driver, IO_Request *req)
 {
-	OS_Return status = DEFER_IO_REQUEST;
-	
 	ASSERT(driver && req);
 
 	req->completed += _Driver_SerialLog((Serial_driver *) driver, 
 							(const INT8 *)req->buffer + req->completed, 
 							(req->size - req->completed));
 	
-	if(req->completed == req->size) {
-		status = SUCCESS;
-	}
-	else {
-		panic("Not implemented");
-	}
-	
-    return status;
+	return (req->completed < req->size) ? DEFER_IO_REQUEST : SUCCESS;
 }
 
 void SerialTaskFn(void * ptr)
 {
 	Serial_driver * sdriver = (Serial_driver *) ptr;
 	ASSERT(sdriver);
-		
-	if(sdriver->write_index > sdriver->read_index)
+
+	// First take care of output logs
+	if(sdriver->output_write_index > sdriver->output_read_index)
 	{
-		sdriver->read_index += Uart_DebugWriteNB(
-			&sdriver->log_buffer[sdriver->read_index], 
-			(sdriver->write_index - sdriver->read_index));			
+		sdriver->output_read_index += Uart_DebugWriteNB(
+			&sdriver->output_buffer[sdriver->output_read_index], 
+			(sdriver->output_write_index - sdriver->output_read_index));			
 	}
-	else if(sdriver->write_index < sdriver->read_index)
+	else if(sdriver->output_write_index < sdriver->output_read_index)
 	{
 		// The ring buffer has wrapped around. Read it in two steps
-		sdriver->read_index += Uart_DebugWriteNB(
-			&sdriver->log_buffer[sdriver->read_index], 
-			(SERIAL_LOG_BUFFER_SIZE - sdriver->read_index));
+		sdriver->output_read_index += Uart_DebugWriteNB(
+			&sdriver->output_buffer[sdriver->output_read_index], 
+			(SERIAL_LOG_BUFFER_SIZE - sdriver->output_read_index));
 			
-		if(sdriver->read_index == SERIAL_LOG_BUFFER_SIZE)
+		if(sdriver->output_read_index == SERIAL_LOG_BUFFER_SIZE)
 		{
-			sdriver->read_index = 0;
-			sdriver->read_index += Uart_DebugWriteNB(
-				&sdriver->log_buffer[0], sdriver->write_index);			
+			sdriver->output_read_index = 0;
+			sdriver->output_read_index += Uart_DebugWriteNB(
+				&sdriver->output_buffer[0], sdriver->output_write_index);			
 		}			
 	}
+	else {
+		// The ring buffer is empty when (g_serial_log_write_index == g_serial_log_read_index)
+	}
 	
-	// The ring buffer is empty when (g_serial_log_write_index == g_serial_log_read_index)
+#if SERIAL_READ_ENABLED		
+
+	// Now buffer input keystrokes
+	INT8 ch;
+	UINT32 length;
+
+	do 
+	{
+		// First read one character
+		length = sizeof(ch);
+		Uart_ReadNB(DEBUG_UART, &ch, &length);
+		
+		// If there are no input characters, exit the loop
+		if(!length) break;
+		
+		// Store this character in the input buffer if there is space
+		if((sdriver->input_write_index + 1) == sdriver->input_read_index)
+		{
+			break;	// Buffer is full, ignore the input character
+		}
+		else if((sdriver->input_read_index == 0) &&
+				(sdriver->input_write_index == (SERIAL_READ_BUFFER_SIZE - 1)))
+		{
+			break;	// Buffer is full, ignore the input character
+		}		
+
+		sdriver->input_buffer[sdriver->input_write_index ++] = ch;
+		
+		// Update input_write_index
+		if(sdriver->input_write_index == SERIAL_READ_BUFFER_SIZE)
+		{
+			sdriver->input_write_index = 0;
+		}
+			
+	} while(TRUE);
+	
+#endif
 }
 
 UINT32 _Driver_SerialLog(Serial_driver * sdriver, const INT8 * str, UINT32 size)
@@ -124,54 +197,54 @@ UINT32 _Driver_SerialLog(Serial_driver * sdriver, const INT8 * str, UINT32 size)
 	UINT32 to_write;
 	UINT32 written = 0;
 	
-	if(sdriver->write_index < sdriver->read_index)
+	if(sdriver->output_write_index < sdriver->output_read_index)
 	{
 		// Ring buffer wastes one space so that we can identify queue full Vs queue empty
-		free_count = (sdriver->read_index - sdriver->write_index - 1);
+		free_count = (sdriver->output_read_index - sdriver->output_write_index - 1);
 		to_write = MIN(free_count, size);		
 		if(to_write)
 		{
-			memcpy(&sdriver->log_buffer[sdriver->write_index], str, to_write);
-			sdriver->write_index += to_write;
+			memcpy(&sdriver->output_buffer[sdriver->output_write_index], str, to_write);
+			sdriver->output_write_index += to_write;
 		}
 		written = to_write;
 	}
-	else if(sdriver->write_index >= sdriver->read_index)
+	else if(sdriver->output_write_index >= sdriver->output_read_index)
 	{
-		if(sdriver->read_index > 0)
+		if(sdriver->output_read_index > 0)
 		{
 			// In this case, we can write till the end of queue and then continue from the beginning 
 			// of the queue again
-			free_count = (SERIAL_LOG_BUFFER_SIZE - sdriver->write_index);
+			free_count = (SERIAL_LOG_BUFFER_SIZE - sdriver->output_write_index);
 			to_write = MIN(free_count, size);
 			if(to_write > 0)
 			{
-				memcpy(&sdriver->log_buffer[sdriver->write_index], str, to_write);
-				sdriver->write_index += to_write;
+				memcpy(&sdriver->output_buffer[sdriver->output_write_index], str, to_write);
+				sdriver->output_write_index += to_write;
 			}
 			written = to_write;
 			
-			if(sdriver->write_index == SERIAL_LOG_BUFFER_SIZE)
+			if(sdriver->output_write_index == SERIAL_LOG_BUFFER_SIZE)
 			{
-				sdriver->write_index = 0;
-				free_count = (sdriver->read_index - 1);
+				sdriver->output_write_index = 0;
+				free_count = (sdriver->output_read_index - 1);
 				to_write = MIN(free_count, size - written);
 				if(to_write)
 				{
-					memcpy(&sdriver->log_buffer, &str[written], to_write);
-					sdriver->write_index += to_write;
+					memcpy(&sdriver->output_buffer, &str[written], to_write);
+					sdriver->output_write_index += to_write;
 				}
 				written += to_write;
 			}
 		}
 		else	// g_serial_log_read_index == 0
 		{
-			free_count = (SERIAL_LOG_BUFFER_SIZE - sdriver->write_index - 1);
+			free_count = (SERIAL_LOG_BUFFER_SIZE - sdriver->output_write_index - 1);
 			to_write = MIN(free_count, size);
 			if(to_write > 0)
 			{
-				memcpy(&sdriver->log_buffer[sdriver->write_index], str, to_write);
-				sdriver->write_index += to_write;
+				memcpy(&sdriver->output_buffer[sdriver->output_write_index], str, to_write);
+				sdriver->output_write_index += to_write;
 			}
 			written += to_write;
 		}		
