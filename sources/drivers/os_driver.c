@@ -568,25 +568,16 @@ OS_Return _OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 si
 void _Driver_ResumeReadRequest(OS_Driver * driver)
 {
 	ASSERT(driver);
-	IO_Request * req = driver->read_io_queue_head;
+	IO_Request * req;
 	OS_Return result;
 
-	do {	
-		if(req && driver->read) {
-			result = driver->read(driver, req);
-		}
-		else {
-			break;
-		}
-	
+	req = driver->read_io_queue_head;
+	if(req && driver->read) {
+		result = driver->read(driver, req);		
 		if(result != DEFER_IO_REQUEST) {
 			_Driver_CompleteReadRequest(driver, result);
 		}
-		else {
-			break;
-		}
-		
-	} while(1);
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -596,17 +587,15 @@ void _Driver_ResumeReadRequest(OS_Driver * driver)
 void _Driver_ResumeWriteRequest(OS_Driver * driver)
 {
 	ASSERT(driver);
-	IO_Request * req = driver->write_io_queue_head;
+	IO_Request * req;
 	OS_Return result;
 	
-	if(req && driver->write)
-	{
-		result = driver->write(driver, req);
-	}
-	
-	if(result != DEFER_IO_REQUEST)
-	{
-		_Driver_CompleteWriteRequest(driver, result);
+	req = driver->write_io_queue_head;
+	if(req && driver->write) {
+		result = driver->write(driver, req);	
+		if(result != DEFER_IO_REQUEST) {
+			_Driver_CompleteWriteRequest(driver, result);
+		}
 	}
 }
 
@@ -768,6 +757,5 @@ IO_Request * _Driver_GetFreeIORequest(OS_Driver * driver)
 	}
 	
 	OS_EXIT_CRITICAL(intsts);
-	
 	return req;
 }
