@@ -27,7 +27,8 @@ static UINT32 g_kernel_driver_count = 0;
 
 static void _Driver_FreeIORequest(OS_Driver * driver, IO_Request * req);
 static IO_Request * _Driver_GetFreeIORequest(OS_Driver * driver);
-static IO_Request * _Driver_EnqueueIORequest(OS_Driver * driver, IO_Request * req);
+static IO_Request * _Driver_EnqueueWriteRequest(OS_Driver * driver, IO_Request * req);
+static IO_Request * _Driver_EnqueueReadRequest(OS_Driver * driver, IO_Request * req);
 
 extern OS_Process * g_current_process;
 extern OS_Task * g_current_task;
@@ -99,8 +100,10 @@ OS_Return _OS_DriverInit(OS_Driver *driver, const INT8 name[], OS_Return (*init)
 	driver->admin_access_mask = ACCESS_READ | ACCESS_WRITE;
 	driver->usage_mode = 0;
 	driver->open_clients = 0;
-	driver->io_queue_head = NULL;
-	driver->io_queue_tail = NULL;
+	driver->write_io_queue_head = NULL;
+	driver->write_io_queue_tail = NULL;
+	driver->read_io_queue_head = NULL;
+	driver->read_io_queue_tail = NULL;
 
 	// IO Handler task
 	driver->io_task = NULL;
@@ -272,7 +275,7 @@ OS_Return _OS_DriverClose(OS_Driver_t driver)
     OS_Driver * driver_inst = g_kernel_drivers[driver].driver;
     
     // If there are any outstanding requests, return error
-    if(driver_inst->io_queue_head != NULL) {
+    if(driver_inst->write_io_queue_head || driver_inst->read_io_queue_head) {
     	return RESOURCE_BUSY;
     }
     
@@ -357,18 +360,20 @@ OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL 
 	}
 	
 	io_request->buffer = buffer;
-	io_request->size = * size;
+	io_request->size = *size;
 	io_request->completed = 0;
 	io_request->attributes = READ_IO;
 	io_request->blocked_task = NULL;
 
 	OS_Return status = DEFER_IO_REQUEST;
 	
-	if(!driver_inst->io_queue_head && driver_inst->read)
+	if(!driver_inst->read_io_queue_head && driver_inst->read)
 	{
 		status = driver_inst->read(driver_inst, io_request);
-		*size = io_request->completed;
 	}
+
+	// Update the size
+	*size = io_request->completed;
 	
 	// Update the task remaining and accumulated budgets
 	_OS_UpdateCurrentTaskBudget();
@@ -376,7 +381,7 @@ OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL 
 	if(status == DEFER_IO_REQUEST)
 	{
 		// Enqueue this IO in the pending queue
-		_Driver_EnqueueIORequest(driver_inst, io_request);
+		_Driver_EnqueueReadRequest(driver_inst, io_request);
 		
 		// If we are OK to wait block this task
 		if(waitOK) 
@@ -464,11 +469,13 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size
 
 	OS_Return status = DEFER_IO_REQUEST;
 	
-	if(!driver_inst->io_queue_head && driver_inst->write) 
+	if(!driver_inst->write_io_queue_head && driver_inst->write) 
 	{
 		status = driver_inst->write(driver_inst, io_request);
-		*size = io_request->completed;
 	}
+
+	// Update the size
+	*size = io_request->completed;
 	
 	// Update the task remaining and accumulated budgets
 	_OS_UpdateCurrentTaskBudget();
@@ -476,7 +483,7 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size
 	if(status == DEFER_IO_REQUEST)
 	{
 		// Enqueue this IO in the pending queue
-		_Driver_EnqueueIORequest(driver_inst, io_request);
+		_Driver_EnqueueWriteRequest(driver_inst, io_request);
 		
 		// If we are OK to wait block this task
 		if(waitOK) 
@@ -555,25 +562,74 @@ OS_Return _OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 si
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+// Function called by IO Task of the driver to resume a read request when there is some
+// data is available
+//////////////////////////////////////////////////////////////////////////////////////////
+void _Driver_ResumeReadRequest(OS_Driver * driver)
+{
+	ASSERT(driver);
+	IO_Request * req = driver->read_io_queue_head;
+	OS_Return result;
+
+	do {	
+		if(req && driver->read) {
+			result = driver->read(driver, req);
+		}
+		else {
+			break;
+		}
+	
+		if(result != DEFER_IO_REQUEST) {
+			_Driver_CompleteReadRequest(driver, result);
+		}
+		else {
+			break;
+		}
+		
+	} while(1);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Function called by IO Task of the driver to resume a read request when there is some
+// data is available
+//////////////////////////////////////////////////////////////////////////////////////////
+void _Driver_ResumeWriteRequest(OS_Driver * driver)
+{
+	ASSERT(driver);
+	IO_Request * req = driver->write_io_queue_head;
+	OS_Return result;
+	
+	if(req && driver->write)
+	{
+		result = driver->write(driver, req);
+	}
+	
+	if(result != DEFER_IO_REQUEST)
+	{
+		_Driver_CompleteWriteRequest(driver, result);
+	}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 // Function called by the IO Task of the driver
-// Whenever a driver finishes processing a deferred IO Request, it should call this function
+// Whenever a driver finishes processing a deferred IO write request, it should call this function
 // to inform the driver framework about it. This function dequeues the current request from the
 // pending queue and if there is any task blocked on it, it will be resumed.
 //////////////////////////////////////////////////////////////////////////////////////////
-void _Driver_IORequestComplete(OS_Driver * driver, OS_Return result)
+void _Driver_CompleteWriteRequest(OS_Driver * driver, OS_Return result)
 {
 	UINT32 intsts;
 	IO_Request * req;
 	ASSERT(driver);
 	
 	OS_ENTER_CRITICAL(intsts);
-	if(driver->io_queue_head) {
-		req = driver->io_queue_head;
-		driver->io_queue_head = req->next;
+	if(driver->write_io_queue_head) {
+		req = driver->write_io_queue_head;
+		driver->write_io_queue_head = req->next;
 		req->next = NULL;
 		
-		if(!driver->io_queue_head) {
-			driver->io_queue_tail = NULL;
+		if(!driver->write_io_queue_head) {
+			driver->write_io_queue_tail = NULL;
 		}
 		
 		// If there is a task blocked on this request, resume the same
@@ -583,11 +639,43 @@ void _Driver_IORequestComplete(OS_Driver * driver, OS_Return result)
 			
 			// Insert this back into the scheduler queue
 			_OS_SchedulerUnblockTask(req->blocked_task);
+		}		
+	}
+	OS_EXIT_CRITICAL(intsts);	
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// Function called by the IO Task of the driver
+// Whenever a driver finishes processing a deferred IO read request, it should call this function
+// to inform the driver framework about it. This function dequeues the current request from the
+// pending queue and if there is any task blocked on it, it will be resumed.
+//////////////////////////////////////////////////////////////////////////////////////////
+void _Driver_CompleteReadRequest(OS_Driver * driver, OS_Return result)
+{
+	UINT32 intsts;
+	IO_Request * req;
+	ASSERT(driver);
+	
+	OS_ENTER_CRITICAL(intsts);
+	if(driver->read_io_queue_head) {
+		req = driver->read_io_queue_head;
+		driver->read_io_queue_head = req->next;
+		req->next = NULL;
+		
+		if(!driver->read_io_queue_head) {
+			driver->read_io_queue_tail = NULL;
 		}
 		
+		// If there is a task blocked on this request, resume the same
+		if(req->blocked_task) {
+			if(req->blocked_task->syscall_result)
+				req->blocked_task->syscall_result[0] = result;
+			
+			// Insert this back into the scheduler queue
+			_OS_SchedulerUnblockTask(req->blocked_task);
+		}		
 	}
 	OS_EXIT_CRITICAL(intsts);
-	
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -596,29 +684,54 @@ void _Driver_IORequestComplete(OS_Driver * driver, OS_Return result)
 // the current IO Request that is being processed by the driver. It moves to the next request
 // when the driver calls _Driver_IORequestComplete
 //////////////////////////////////////////////////////////////////////////////////////////
-IO_Request * _Driver_GetNextIORequest(OS_Driver * driver)
+IO_Request * _Driver_GetNextReadRequest(OS_Driver * driver)
 {
 	ASSERT(driver);
-	return driver->io_queue_head;
+	return driver->read_io_queue_head;
+}
+
+IO_Request * _Driver_GetNextWriteRequest(OS_Driver * driver)
+{
+	ASSERT(driver);
+	return driver->write_io_queue_head;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Function for IO Request management
 //////////////////////////////////////////////////////////////////////////////////////////
-IO_Request * _Driver_EnqueueIORequest(OS_Driver * driver, IO_Request * req)
+IO_Request * _Driver_EnqueueWriteRequest(OS_Driver * driver, IO_Request * req)
 {
 	UINT32 intsts;
 	ASSERT(driver);
 	
 	OS_ENTER_CRITICAL(intsts);
-	if(driver->io_queue_tail) {
+	if(driver->write_io_queue_tail) {
 		req->next = NULL;
-		driver->io_queue_tail->next = req;
+		driver->write_io_queue_tail->next = req;
 	}
 	else {
-		driver->io_queue_head = req;
+		driver->write_io_queue_head = req;
 	}
-	driver->io_queue_tail = req;
+	driver->write_io_queue_tail = req;
+	OS_EXIT_CRITICAL(intsts);	
+
+	return req;
+}
+
+IO_Request * _Driver_EnqueueReadRequest(OS_Driver * driver, IO_Request * req)
+{
+	UINT32 intsts;
+	ASSERT(driver);
+	
+	OS_ENTER_CRITICAL(intsts);
+	if(driver->read_io_queue_tail) {
+		req->next = NULL;
+		driver->read_io_queue_tail->next = req;
+	}
+	else {
+		driver->read_io_queue_head = req;
+	}
+	driver->read_io_queue_tail = req;
 	OS_EXIT_CRITICAL(intsts);	
 
 	return req;

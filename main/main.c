@@ -13,10 +13,10 @@
 #include "mmu.h"
 
 //#define TEST_KERNEL
-#define TEST_OS
-//#define TEST_SRT
-//#define TEST_APERIODIC
-//#define TEST_RTC
+// #define TEST_OS
+// #define TEST_SRT
+// #define TEST_APERIODIC
+#define TEST_RTC
 
 OS_Process_t test_proc;
 OS_Process_t test_proc1;

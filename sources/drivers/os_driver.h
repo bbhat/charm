@@ -38,9 +38,14 @@ typedef struct IO_Request
 	
 } IO_Request;
 
-#define IO_TYPE_MASK			   0x80000000
-#define WRITE_IO			       0x80000000
-#define READ_IO			   		   0x00000000
+enum
+{
+	IO_TYPE_MASK = 0x01,
+	WRITE_IO = 0x01,
+	READ_IO	= 0x00,
+
+	IO_BLOCKED_MASK	= 0x02
+} IO_Direction;
 
 typedef struct OS_Driver
 {
@@ -68,8 +73,10 @@ typedef struct OS_Driver
 	OS_Task * io_task;
 	
 	// Queue for outstanding IOs
-	IO_Request *io_queue_head;
-	IO_Request *io_queue_tail;
+	IO_Request *write_io_queue_head;
+	IO_Request *write_io_queue_tail;
+	IO_Request *read_io_queue_head;
+	IO_Request *read_io_queue_tail;
 	
 	// Queue for free IO requests
 	IO_Request *free_io_queue;
@@ -112,16 +119,23 @@ OS_Return _OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 si
 OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL waitOK);
 OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size, BOOL waitOK);
 
+// Function called by IO Task of the driver to resume a request when there is some
+// data is available
+void _Driver_ResumeReadRequest(OS_Driver * driver);
+void _Driver_ResumeWriteRequest(OS_Driver * driver);
+
 // Function called by the IO Task of the driver
-// Whenever a driver finishes processing a deferred IO Request, it should call this function
+// Whenever a driver finishes processing a deferred IO request, it should call this function
 // to inform the driver framework about it. This function dequeues the current request from the
 // pending queue and if there is any task blocked on it, it will be resumed.
-void _Driver_IORequestComplete(OS_Driver * driver, OS_Return result);
+void _Driver_CompleteWriteRequest(OS_Driver * driver, OS_Return result);
+void _Driver_CompleteReadRequest(OS_Driver * driver, OS_Return result);
 
 // Function called by the IO Task of the driver
 // This function returns the next pending IO request in the driver. It can be used to get 
 // the current IO Request that is being processed by the driver. It moves to the next request
 // when the driver calls _Driver_IORequestComplete
-IO_Request * _Driver_GetNextIORequest(OS_Driver * driver);
+IO_Request * _Driver_GetNextReadRequest(OS_Driver * driver);
+IO_Request * _Driver_GetNextWriteRequest(OS_Driver * driver);
 
 #endif // _OS_DRIVER_H
