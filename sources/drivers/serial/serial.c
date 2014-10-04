@@ -198,6 +198,7 @@ UINT32 _Driver_SerialLog(Serial_driver * sdriver, const INT8 * str, UINT32 size)
 			memcpy(&sdriver->output_buffer[sdriver->output_write_index], str, length);
 			sdriver->output_write_index += length;
 			remaining -= length;
+			str += length;
 			
 			// Wrap around if necessary
 			if(sdriver->output_write_index == SERIAL_LOG_BUFFER_SIZE) {
@@ -214,7 +215,8 @@ UINT32 _Driver_SerialLog(Serial_driver * sdriver, const INT8 * str, UINT32 size)
 		if(length) {
 			memcpy(&sdriver->output_buffer[sdriver->output_write_index], str, length);
 			sdriver->output_write_index += length;
-			remaining -= length;		
+			remaining -= length;
+			str += length;
 		}
 	}
 

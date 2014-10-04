@@ -20,7 +20,8 @@ int printf(const char *fmt, ...)
 	len = vsprintf(g_pcOutBuf,fmt,args);
 	va_end(args);
 	
-	return OS_DriverWrite(__console_serial_driver__, g_pcOutBuf, &len, FALSE);
+	OS_DriverWrite(__console_serial_driver__, g_pcOutBuf, &len, FALSE);
+	return len;
 }
 
 int puts (const char * str)
@@ -28,7 +29,6 @@ int puts (const char * str)
 	int len = strlen(str);
 	return OS_DriverWrite(__console_serial_driver__, str, &len, FALSE);
 }
-
 	
 int scanf(const char * fmt, ...)
 {
