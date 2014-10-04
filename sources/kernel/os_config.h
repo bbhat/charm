@@ -61,7 +61,7 @@
 #define MAX_OUTSTANDING_IO_REQUESTS		  8			 // For limiting the kernel resources allocated to outstanding requests
 
 // MMU related
-#define ENABLE_MMU						  0			 // Support for Virtual memory and memory protection
+#define ENABLE_MMU						  1			 // Support for Virtual memory and memory protection
 
 // Note: We will have to change the memmap.ld to ensure that individual sections are aligned
 // by the following page size.

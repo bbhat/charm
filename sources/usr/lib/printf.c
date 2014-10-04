@@ -29,18 +29,20 @@ int puts (const char * str)
 	return OS_DriverWrite(__console_serial_driver__, str, &len, FALSE);
 }
 
+	
 int scanf(const char * fmt, ...)
 {
+	unsigned char str[64];
+	int len;
 	int eol = 0;
 	int i = 0;
 	int j;
 	
-	unsigned char str[64];
 	va_list args;
 	
 	do
 	{
-		int len = sizeof(str) - 1;
+		len = sizeof(str) - 1;
 		OS_Return ret = OS_DriverRead(__console_serial_driver__, str, &len, TRUE);
 		for(j = 0; ((j < len) && !eol); j++)
 		{

@@ -198,14 +198,30 @@ OS_Return OS_CreateProcessFromFile(
 			}
 
 #if USER_PAGE_SIZE==4
+
+			// Create a map in the user process
 			_MMU_add_l2_small_page_va_to_pa_map(pcb->ptable,
 									sections[i].vaddr, sections[i].vaddr,
 									sections[i].size, ap, 
 									TRUE, TRUE);
+									
+			// Also map this place in the kernel process
+			_MMU_add_l2_small_page_va_to_pa_map(g_kernel_process->ptable,
+									sections[i].vaddr, sections[i].vaddr,
+									sections[i].size, KERNEL_RW_USER_NA,
+									TRUE, TRUE);
 #elif USER_PAGE_SIZE==64
+
+			// Create a map in the user process
 			_MMU_add_l2_large_page_va_to_pa_map(pcb->ptable,
 									sections[i].vaddr, sections[i].vaddr,
 									sections[i].size, ap, 
+									TRUE, TRUE);
+
+			// Also map this place in the kernel process
+			_MMU_add_l2_large_page_va_to_pa_map(g_kernel_process->ptable,
+									sections[i].vaddr, sections[i].vaddr,
+									sections[i].size, KERNEL_RW_USER_NA, 
 									TRUE, TRUE);
 #else
 	#error "Supported values for USER_PAGE_SIZE is either 4 or 64"
