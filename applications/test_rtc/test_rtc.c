@@ -12,7 +12,7 @@
 
 
 OS_Task_t task1;
-UINT32 stack1 [0x400];
+UINT32 stack1 [0x1000];
 OS_Driver_t rtcd;
 
 char input_str[64];
@@ -134,7 +134,7 @@ void task_rtc(void * ptr)
 			if(input_str[0]=='y')
 			{
 				length = sizeof(dt);
-				if(OS_DriverWrite(rtcd, &dt, &length) == SUCCESS)
+				if(OS_DriverWrite(rtcd, &dt, &length, TRUE) == SUCCESS)
 				{
 					printf("Date and Time set successfully...\n");
 				}
@@ -149,7 +149,7 @@ void task_rtc(void * ptr)
 			
 		case 'p':
 			length = sizeof(dt);
-			if(OS_DriverRead(rtcd, &dt, &length) != SUCCESS)
+			if(OS_DriverRead(rtcd, &dt, &length, TRUE) != SUCCESS)
 			{
 				printf("Getting Date and Time FAILED...\n");
 				goto error_exit;

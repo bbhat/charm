@@ -544,7 +544,10 @@ OS_Return _OS_CompleteAperiodicTask()
 void _OS_SchedulerBlockCurrentTask()
 {
 	UINT32 intsts;
-		
+	
+	ASSERT(g_current_task);
+	KlogStr(KLOG_IO_BLOCK_UNBLOCK, "Blocking - ", g_current_task->name);	
+
 	OS_ENTER_CRITICAL(intsts);
 		
 	if(IS_PERIODIC_TASK(g_current_task->attributes)) {
@@ -576,6 +579,7 @@ void _OS_SchedulerUnblockTask(OS_Task * task)
 	UINT32 intsts;
 	
 	ASSERT(task);
+	KlogStr(KLOG_IO_BLOCK_UNBLOCK, "Unblocking - ", task->name);	
 	
 	OS_ENTER_CRITICAL(intsts);
 	
@@ -598,7 +602,7 @@ void _OS_SchedulerUnblockTask(OS_Task * task)
 		}
 	}
 	else {
-	
+
 		// Insert this task into Aperiodic ready queue
 		_OS_PQueueInsertWithKey(&g_ap_ready_q,(_OS_TaskQNode *)task, task->ap.priority());
 	}

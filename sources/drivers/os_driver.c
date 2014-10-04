@@ -364,6 +364,7 @@ OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL 
 	io_request->completed = 0;
 	io_request->attributes = READ_IO;
 	io_request->blocked_task = NULL;
+	io_request->return_size = size;		// Pointer where the return size needs to be updated
 
 	OS_Return status = DEFER_IO_REQUEST;
 	
@@ -383,7 +384,7 @@ OS_Return _OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL 
 		// Enqueue this IO in the pending queue
 		_Driver_EnqueueReadRequest(driver_inst, io_request);
 		
-		// If we are OK to wait block this task
+		// If we are OK to wait, block this task
 		if(waitOK) 
 		{	
 			// Update the IO Request 'blocked_task' so that this task can be resumed later
@@ -466,6 +467,7 @@ OS_Return _OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size
 	io_request->completed = 0;
 	io_request->attributes = WRITE_IO;
 	io_request->blocked_task = NULL;
+	io_request->return_size = size;		// Pointer where the return size needs to be updated
 
 	OS_Return status = DEFER_IO_REQUEST;
 	
@@ -621,6 +623,9 @@ void _Driver_CompleteWriteRequest(OS_Driver * driver, OS_Return result)
 			driver->write_io_queue_tail = NULL;
 		}
 		
+		// Update the return size so that it will be visible to the callers
+		*req->return_size = req->completed;
+		
 		// If there is a task blocked on this request, resume the same
 		if(req->blocked_task) {
 			if(req->blocked_task->syscall_result)
@@ -629,6 +634,9 @@ void _Driver_CompleteWriteRequest(OS_Driver * driver, OS_Return result)
 			// Insert this back into the scheduler queue
 			_OS_SchedulerUnblockTask(req->blocked_task);
 		}		
+
+		// We are done with this IO Request. Free it.
+		_Driver_FreeIORequest(driver, req);
 	}
 	OS_EXIT_CRITICAL(intsts);	
 }
@@ -655,14 +663,21 @@ void _Driver_CompleteReadRequest(OS_Driver * driver, OS_Return result)
 			driver->read_io_queue_tail = NULL;
 		}
 		
+		// Update the return size so that it will be visible to the callers
+		*req->return_size = req->completed;
+		
 		// If there is a task blocked on this request, resume the same
-		if(req->blocked_task) {
-			if(req->blocked_task->syscall_result)
+		if(req->blocked_task) {		
+			if(req->blocked_task->syscall_result) {
 				req->blocked_task->syscall_result[0] = result;
+			}
 			
 			// Insert this back into the scheduler queue
 			_OS_SchedulerUnblockTask(req->blocked_task);
-		}		
+		}
+		
+		// We are done with this IO Request. Free it.
+		_Driver_FreeIORequest(driver, req);
 	}
 	OS_EXIT_CRITICAL(intsts);
 }

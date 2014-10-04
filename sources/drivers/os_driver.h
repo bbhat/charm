@@ -34,6 +34,7 @@ typedef struct IO_Request
 	UINT32 size;
 	UINT32 completed;				// Number of bytes completed transfer
 	UINT32 attributes;
+	UINT32 * return_size;			// Pointer where the final return size needs to be updated
 	OS_Task * blocked_task;			// If any client task is blocked on this IO request
 	
 } IO_Request;

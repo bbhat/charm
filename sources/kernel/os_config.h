@@ -61,7 +61,7 @@
 #define MAX_OUTSTANDING_IO_REQUESTS		  8			 // For limiting the kernel resources allocated to outstanding requests
 
 // MMU related
-#define ENABLE_MMU						  1			 // Support for Virtual memory and memory protection
+#define ENABLE_MMU						  0			 // Support for Virtual memory and memory protection
 
 // Note: We will have to change the memmap.ld to ensure that individual sections are aligned
 // by the following page size.
@@ -75,9 +75,9 @@
 #define SERIAL_DRIVER_ENABLE		  	  1
 #define SERIAL_READ_ENABLED				  1			  // Do we need serial driver to accept input or not
 #define SERIAL_LOG_BUFFER_SIZE			  1024		  // In bytes. This is used by UART driver to buffer requested output strings
-#define SERIAL_READ_BUFFER_SIZE			  128		  // In bytes. This is used by the UART driver to buffer input keystrokes
+#define SERIAL_READ_BUFFER_SIZE			  512		  // In bytes. This is used by the UART driver to buffer input keystrokes
 #define SERIAL_TASK_PERIOD			      10000		  // 10 milliseconds
-#define SERIAL_TASK_STACK_SIZE			  256		  // In words
+#define SERIAL_TASK_STACK_SIZE			  1024		  // In words
 
 // Define the Debug masks
 typedef enum
@@ -94,6 +94,7 @@ typedef enum
     KLOG_SEMAPHORE_DEBUG	  = (1 << 9),
     KLOG_OS_STARTUP	  		  = (1 << 10),
     KLOG_SYSCALL			  = (1 << 11),
+    KLOG_IO_BLOCK_UNBLOCK	  = (1 << 12),
 	
     KLOG_MISC                 = (1 << 31)
     
@@ -104,7 +105,7 @@ typedef enum
 #define OS_WITH_VALIDATE_TASK        1
 
 #define OS_KERNEL_LOGGING            0
-#define OS_KLOG_MASK                 (KLOG_SYSCALL)
+#define OS_KLOG_MASK                 (KLOG_IO_BLOCK_UNBLOCK)
 #define DEBUG_UART_CHANNEL           0
 
 #endif // _OS_CONFIG_H

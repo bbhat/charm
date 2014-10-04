@@ -379,7 +379,7 @@ OS_Return OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL w
 {
 	_OS_Syscall_Args param_info;
 	void * arg[4];
-	UINT32 ret[1];
+	UINT32 ret[2];
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
@@ -389,10 +389,12 @@ OS_Return OS_DriverRead(OS_Driver_t driver, void * buffer, UINT32 * size, BOOL w
 	
 	arg[0] = (void *)driver;
 	arg[1] = (void *)buffer;
-	arg[2] = (void *)size;
+	arg[2] = (void *)*size;
 	arg[3] = (void *)waitOK;
 
+	ret[1] = 0;
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
+	*size = ret[1];
 	
 	return (OS_Return) ret[0];	
 }
@@ -401,7 +403,7 @@ OS_Return OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size,
 {
 	_OS_Syscall_Args param_info;
 	void * arg[4];
-	UINT32 ret[1];
+	UINT32 ret[2];
 	
 	// Prepare the argument info structure
 	param_info.id = SYSCALL_DRIVER_STANDARD_CALL;
@@ -411,10 +413,12 @@ OS_Return OS_DriverWrite(OS_Driver_t driver, const void * buffer, UINT32 * size,
 	
 	arg[0] = (void *)driver;
 	arg[1] = (void *)buffer;
-	arg[2] = (void *)size;
+	arg[2] = (void *)*size;
 	arg[3] = (void *)waitOK;
 	
+	ret[1] = 0;
 	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_SWITCHING);
+	*size = ret[1];
 	
 	return (OS_Return) ret[0];	
 }

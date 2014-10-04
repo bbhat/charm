@@ -342,18 +342,20 @@ static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, cons
         break;
             
     case SUBCALL_DRIVER_READ:
-        if(param_info->arg_count >= 4)
+        if((param_info->arg_count >= 4) && (param_info->ret_count >= 2))
         {
+        	uint_ret[1] = uint_args[2];
         	result = _OS_DriverRead((OS_Driver_t) uint_args[0], (void *) uint_args[1], 
-        							(UINT32 *) uint_args[2], (BOOL) uint_args[3]);
+        							&uint_ret[1], (BOOL) uint_args[3]);
         }
         break;
         
     case SUBCALL_DRIVER_WRITE:
-        if(param_info->arg_count >= 4)
+        if((param_info->arg_count >= 4) && (param_info->ret_count >= 2))
         {
+        	uint_ret[1] = uint_args[2];
         	result = _OS_DriverWrite((OS_Driver_t) uint_args[0], (const void *) uint_args[1], 
-        							(UINT32 *) uint_args[2], (BOOL) uint_args[3]);
+        							&uint_ret[1], (BOOL) uint_args[3]);
         }
         break;
         

@@ -57,7 +57,7 @@ typedef enum
 	// Use SYSCALL_SWITCHING for Advanced system call such as those that result 
 	// in switching context
 	SYSCALL_BASIC = 0,
-	SYSCALL_SWITCHING = 1	
+	SYSCALL_SWITCHING = 1
 } Syscall_type;
 
 typedef struct
