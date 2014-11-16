@@ -79,6 +79,12 @@
 #define SERIAL_TASK_PERIOD			      10000		  // 10 milliseconds
 #define SERIAL_TASK_STACK_SIZE			  1024		  // In words
 
+// Kernel FIFO Driver
+#define ENABLE_KFIFO_DRIVER               1
+
+// Graphics Support
+#define ENABLE_2D_GRAPHICS                1
+
 // Define the Debug masks
 typedef enum
 {
