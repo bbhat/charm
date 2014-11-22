@@ -103,13 +103,42 @@ OS_Return OS_CreateProcess(
 		const INT8 * process_name,
 		UINT16 attributes,
 		void (*process_entry_function)(void *pdata),
-		void *pdata
-	)
+		void *pdata)
 {
 	// TODO: Implement this function
 	return SUCCESS;
 }
 
+OS_Process_t OS_GetCurrentProcess()
+{
+	// TODO: Implement this function
+	return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Memory Mapping functions
+///////////////////////////////////////////////////////////////////////////////
+
+OS_VirtualAddr OS_MapPhysicalMemory(
+		OS_Process_t process,
+		OS_PhysicalAddr paddr,
+		UINT32 size,
+		UINT32 attr,
+		OS_Return * result)
+{
+	// TODO: Implement this function
+	return SUCCESS;
+}
+
+OS_Return OS_UnmapMemory(
+		OS_Process_t process,
+		OS_VirtualAddr vaddr,
+		UINT32 size)
+{
+	// TODO: Implement this function
+	return SUCCESS;
+}
+		
 ///////////////////////////////////////////////////////////////////////////////
 // Function: PFM_SetUserLED
 // The led parameter indicates which LED should be turned ON/OFF/Toggled depending on 

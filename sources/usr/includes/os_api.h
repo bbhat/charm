@@ -71,6 +71,16 @@ typedef enum
     
 } OS_DriverAccessMode;
 
+// Typical values used for Task priorities
+enum
+{
+    TASK_PRIORITY_CRITICAL = 5,
+    TASK_PRIORITY_HIGH     = 10,
+    TASK_PRIORITY_DEFAULT  = 50,
+    TASK_PRIORITY_LOW      = 100,
+    TASK_PRIORITY_IDLE     = 255		// Actual kernel idle task is at 256
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //                                  OS Data types
 ///////////////////////////////////////////////////////////////////////////////
@@ -175,8 +185,45 @@ OS_Return OS_CreateProcessFromFile(
 		void *pdata
 	);
 
-// Future functions
+// OS_GetCurrentProcess:
+// API for getting the current process handle
+OS_Process_t OS_GetCurrentProcess();
 
+///////////////////////////////////////////////////////////////////////////////
+//                              Memory Mapping functions
+// Note that these functions can only be called from Admin processes. Non admin
+// processes will get NOT_ADMINISTRATOR error
+///////////////////////////////////////////////////////////////////////////////
+
+typedef enum
+{
+	MMAP_PROT_NO_ACCESS 	= (0),			// Default
+	MMAP_PROT_READ 			= (1 << 0),
+	MMAP_PROT_READ_WRITE 	= (3 << 0)
+};
+
+typedef enum
+{
+	MMAP_CACHEABLE 			= (0 << 16),		// Default
+	MMAP_NONCACHEABLE 		= (1 << 16)
+};
+
+typedef UINT32	OS_PhysicalAddr;
+typedef void *	OS_VirtualAddr;
+
+OS_VirtualAddr OS_MapPhysicalMemory(
+		OS_Process_t process,
+		OS_PhysicalAddr paddr,
+		UINT32 size,
+		UINT32 attr,
+		OS_Return * result
+	);
+
+OS_Return OS_UnmapMemory(
+		OS_Process_t process,
+		OS_VirtualAddr vaddr,
+		UINT32 size
+	);
 
 ///////////////////////////////////////////////////////////////////////////////
 //                              Semaphore functions

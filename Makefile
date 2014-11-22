@@ -102,6 +102,7 @@ endif
 all:
 	make boot
 	make kernel
+	make application APP=G2D
 	make application APP=SystemMonitor
 	make application APP=test_os
 	make application APP=srt
