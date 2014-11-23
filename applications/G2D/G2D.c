@@ -38,12 +38,7 @@ void task_render(void * ptr)
 {
 	// Start with a reset 
 	g2d_reset();
-	dprintf("Finished FIMG2D reset\n");
-	
-	while(1)
-	{	
-		OS_TaskYield();
-	}
+	dprintf("Finished FIMG2D reset\n");	
 }
 
 int main(int argc, char *argv[])
