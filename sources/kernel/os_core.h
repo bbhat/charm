@@ -168,6 +168,48 @@ OS_Return OS_CreateProcessFromFile(
 	);
 
 ///////////////////////////////////////////////////////////////////////////////
+//                              Memory Mapping functions
+// Note that these functions can only be called from Admin processes. Non admin
+// processes will get NOT_ADMINISTRATOR error
+///////////////////////////////////////////////////////////////////////////////
+enum
+{
+	MMAP_PROT_NO_ACCESS 	= (0),			// Default
+	MMAP_PROT_READ_ONLY 	= (1),
+	MMAP_PROT_READ_WRITE 	= (3),
+	MMAP_PROT_MASK			= (0x3)
+};
+
+enum
+{
+	MMAP_CACHEABLE 			= (0 << 8),		// Default
+	MMAP_NONCACHEABLE 		= (1 << 8),
+	MMAP_CACHE_MASK			= (1 << 8)
+};
+
+enum
+{
+	MMAP_WRITE_BUFFER_ENABLE 	= (0 << 16),	// Default
+	MMAP_WRITE_BUFFER_DISABLE 	= (1 << 16),	// Default
+	MMAP_WRITE_BUFFER_MASK		= (1 << 16)
+};
+
+typedef UINT32	OS_PhysicalAddr;
+typedef void *	OS_VirtualAddr;
+
+OS_VirtualAddr OS_MapPhysicalMemory(
+		OS_Process_t process,
+		OS_PhysicalAddr paddr,
+		UINT32 size,
+		UINT32 attr,
+		OS_Return * result);
+
+OS_Return OS_UnmapMemory(
+		OS_Process_t process,
+		OS_VirtualAddr vaddr,
+		UINT32 size);
+
+///////////////////////////////////////////////////////////////////////////////
 // The following function sleeps for the specified duration of time. 
 // Note: the sleep duration has only 250uSec resolution
 ///////////////////////////////////////////////////////////////////////////////

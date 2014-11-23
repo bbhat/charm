@@ -34,6 +34,9 @@ static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void 
 static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_DriverCustomCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_GetCurProcess(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_MapPhysicalMem(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_UnmapMem(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 //////////////////////////////////////////////////////////////////////////////
 // Other function prototypes
@@ -68,7 +71,9 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_GetTaskAllocMask,
 		syscall_DriverStandardCall, 
 		syscall_DriverCustomCall,
-		0, 0, 0, 
+		syscall_GetCurProcess,
+		syscall_MapPhysicalMem,
+		syscall_UnmapMem,
 		0, 0, 0, 0, 
 		0, 0, 0, 0, 
 		0, 0, 0, 0, 
@@ -94,7 +99,7 @@ void _OS_KernelSyscall(const _OS_Syscall_Args * param_info, const void * arg, vo
 	_syscall_handlers[param_info->id](param_info, arg, ret);
 }
 
-static void syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
@@ -118,12 +123,12 @@ static void syscall_PeriodicTaskCreate(const _OS_Syscall_Args * param_info, cons
 	if(uint_ret) uint_ret[0] = result;
 }
 
-static void syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_TaskYield(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	_OS_TaskYield();
 }
 
-static void syscall_TaskComplete(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_TaskComplete(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	UINT32 * uint_ret = (UINT32 *)ret;
 	
@@ -134,7 +139,7 @@ static void syscall_TaskComplete(const _OS_Syscall_Args * param_info, const void
 	if(uint_ret) uint_ret[0] = result;
 }
 
-static void syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
@@ -155,17 +160,140 @@ static void syscall_AperiodicTaskCreate(const _OS_Syscall_Args * param_info, con
 	if(uint_ret) uint_ret[0] = result;
 }
 
-static void syscall_ProcessCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_ProcessCreate(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	if(ret) ((UINT32 *)ret)[0] = SYSCALL_ARGUMENT_ERROR;
 }
 
-static void syscall_ProcessCreateFromFile(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_ProcessCreateFromFile(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	if(ret) ((UINT32 *)ret)[0] = SYSCALL_ARGUMENT_ERROR;
 }
 
-static void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_GetCurProcess(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+	UINT32 * uint_ret = (UINT32 *)ret;
+	
+	if(uint_ret && (param_info->ret_count >= 1))
+	{
+		ASSERT(g_kernel_process);
+		uint_ret[0] = g_kernel_process->id;
+	}
+}
+
+void syscall_MapPhysicalMem(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	UINT32 * uint_ret = (UINT32 *)ret;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
+	do
+	{
+		if((param_info->arg_count < 4) && (param_info->ret_count < 2)) break;
+		
+		OS_Process_t proc = (OS_Process_t) uint_args[0];
+		if(proc >= MAX_PROCESS_COUNT) break;
+		
+		OS_Process *pcb = &g_process_pool[proc];
+		if(!pcb) break;		
+	
+#if ENABLE_MMU
+
+		_MMU_PTE_AccessPermission ap;
+		UINT32 attr = uint_args[3];
+		switch(attr & MMAP_PROT_MASK)
+		{
+		case MMAP_PROT_READ_ONLY:
+			ap = KERNEL_RO_USER_RO;
+			break;
+			
+		case MMAP_PROT_READ_WRITE:
+			ap = KERNEL_RW_USER_RW;
+			break;
+			
+		case MMAP_PROT_NO_ACCESS:
+		default:
+			ap = KERNEL_NA_USER_NA;
+			break;
+		}
+
+		BOOL cacheable = ((attr & MMAP_CACHE_MASK) == MMAP_CACHEABLE);
+		BOOL write_Buffer = ((attr & MMAP_WRITE_BUFFER_MASK) == MMAP_WRITE_BUFFER_ENABLE);
+		
+#if USER_PAGE_SIZE==4
+
+		// Create a map in the user process
+		result = _MMU_add_l2_small_page_va_to_pa_map(pcb->ptable,
+								uint_args[1],
+								uint_args[1],
+								uint_args[2], 
+								ap, cacheable, write_Buffer);
+
+#elif USER_PAGE_SIZE==64
+
+		// Create a map in the user process
+		result = _MMU_add_l2_large_page_va_to_pa_map(pcb->ptable,
+								uint_args[1],
+								uint_args[1],
+								uint_args[2], 
+								ap, cacheable, write_Buffer);
+
+#else
+	#error "Supported values for USER_PAGE_SIZE is either 4 or 64"
+#endif
+		// Store the Virtual address we have used (we are using Virtual Address == Physical Address)
+		uint_ret[1] = uint_args[1];
+#endif // ENABLE_MMU	
+
+	} while(0);
+	
+	if(uint_ret) uint_ret[0] = result;
+}
+
+void syscall_UnmapMem(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+	const UINT32 * uint_args = (const UINT32 *)arg;
+	UINT32 * uint_ret = (UINT32 *)ret;
+	OS_Return result = SYSCALL_ARGUMENT_ERROR;
+	do
+	{
+		if(param_info->arg_count < 3) break;
+		
+		OS_Process_t proc = (OS_Process_t) uint_args[0];
+		if(proc >= MAX_PROCESS_COUNT) break;
+		
+		OS_Process *pcb = &g_process_pool[proc];
+		if(!pcb) break;		
+	
+#if ENABLE_MMU
+#if USER_PAGE_SIZE==4
+
+		// Create a map in the user process
+		result = _MMU_add_l2_small_page_va_to_pa_map(pcb->ptable,
+								uint_args[1],
+								uint_args[1],
+								uint_args[2], 
+								KERNEL_NA_USER_NA, FALSE, FALSE);
+
+#elif USER_PAGE_SIZE==64
+
+		// Create a map in the user process
+		result = _MMU_add_l2_large_page_va_to_pa_map(pcb->ptable,
+								uint_args[1],
+								uint_args[1],
+								uint_args[2], 
+								KERNEL_NA_USER_NA, FALSE, FALSE);
+
+#else
+	#error "Supported values for USER_PAGE_SIZE is either 4 or 64"
+#endif
+#endif // ENABLE_MMU	
+
+	} while(0);
+	
+	if(uint_ret) uint_ret[0] = result;
+}
+
+void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
@@ -179,7 +307,7 @@ static void syscall_SemAlloc(const _OS_Syscall_Args * param_info, const void * a
 	if(uint_ret) uint_ret[0] = result;
 }
 
-static void syscall_SemWait(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_SemWait(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	OS_Return result = SYSCALL_ARGUMENT_ERROR;
@@ -192,7 +320,7 @@ static void syscall_SemWait(const _OS_Syscall_Args * param_info, const void * ar
 	if(ret) ((UINT32 *)ret)[0] = result;
 }
 
-static void syscall_SemPost(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_SemPost(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	OS_Return result = SYSCALL_ARGUMENT_ERROR;
@@ -205,7 +333,7 @@ static void syscall_SemPost(const _OS_Syscall_Args * param_info, const void * ar
 	if(ret) ((UINT32 *)ret)[0] = result;
 }
 
-static void syscall_SemFree(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_SemFree(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	OS_Return result = SYSCALL_ARGUMENT_ERROR;
@@ -218,7 +346,7 @@ static void syscall_SemFree(const _OS_Syscall_Args * param_info, const void * ar
 	if(ret) ((UINT32 *)ret)[0] = result;
 }
 
-static void syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
@@ -232,7 +360,7 @@ static void syscall_SemGetValue(const _OS_Syscall_Args * param_info, const void 
 	if(uint_ret) uint_ret[0] = result;
 }
 
-static void syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	// TODO: Implement this function
 }
@@ -242,7 +370,7 @@ static void syscall_GetCurTask(const _OS_Syscall_Args * param_info, const void *
 // The mask indicates which LEDs should be turned ON/OFF/Toggled depending on 
 // the options provided
 ///////////////////////////////////////////////////////////////////////////////
-static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	const UINT32 * uint_args = (const UINT32 *)arg;
 	
@@ -255,7 +383,7 @@ static void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void *
 ///////////////////////////////////////////////////////////////////////////////
 // Statistics functions
 ///////////////////////////////////////////////////////////////////////////////
-static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	UINT32 * uint_ret = (UINT32 *)ret;
 	
@@ -274,7 +402,7 @@ static void syscall_OSGetStat(const _OS_Syscall_Args * param_info, const void * 
 #endif
 }
 
-static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	UINT32 * uint_ret = (UINT32 *)ret;
 #if OS_ENABLE_CPU_STATS==1
@@ -292,7 +420,7 @@ static void syscall_TaskGetStat(const _OS_Syscall_Args * param_info, const void 
 #endif	
 }
 
-static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 	UINT32 * uint_ret = (UINT32 *)ret;
 #if OS_ENABLE_CPU_STATS==1
@@ -310,7 +438,7 @@ static void syscall_GetTaskAllocMask(const _OS_Syscall_Args * param_info, const 
 #endif
 }
 
-static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
     const UINT32 * uint_args = (const UINT32 *)arg;
 	UINT32 * uint_ret = (UINT32 *)ret;
@@ -367,6 +495,6 @@ static void syscall_DriverStandardCall(const _OS_Syscall_Args * param_info, cons
 	if(uint_ret) uint_ret[0] = result;
 }
 
-static void syscall_DriverCustomCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+void syscall_DriverCustomCall(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
 {
 }

@@ -194,18 +194,26 @@ OS_Process_t OS_GetCurrentProcess();
 // Note that these functions can only be called from Admin processes. Non admin
 // processes will get NOT_ADMINISTRATOR error
 ///////////////////////////////////////////////////////////////////////////////
-
-typedef enum
+enum
 {
 	MMAP_PROT_NO_ACCESS 	= (0),			// Default
-	MMAP_PROT_READ 			= (1 << 0),
-	MMAP_PROT_READ_WRITE 	= (3 << 0)
+	MMAP_PROT_READ_ONLY 	= (1),
+	MMAP_PROT_READ_WRITE 	= (3),
+	MMAP_PROT_MASK			= (0x3)
 };
 
-typedef enum
+enum
 {
-	MMAP_CACHEABLE 			= (0 << 16),		// Default
-	MMAP_NONCACHEABLE 		= (1 << 16)
+	MMAP_CACHEABLE 			= (0 << 8),		// Default
+	MMAP_NONCACHEABLE 		= (1 << 8),
+	MMAP_CACHE_MASK			= (1 << 8)
+};
+
+enum
+{
+	MMAP_WRITE_BUFFER_ENABLE 	= (0 << 16),	// Default
+	MMAP_WRITE_BUFFER_DISABLE 	= (1 << 16),	// Default
+	MMAP_WRITE_BUFFER_MASK		= (1 << 16)
 };
 
 typedef UINT32	OS_PhysicalAddr;
@@ -216,14 +224,12 @@ OS_VirtualAddr OS_MapPhysicalMemory(
 		OS_PhysicalAddr paddr,
 		UINT32 size,
 		UINT32 attr,
-		OS_Return * result
-	);
+		OS_Return * result);
 
 OS_Return OS_UnmapMemory(
 		OS_Process_t process,
 		OS_VirtualAddr vaddr,
-		UINT32 size
-	);
+		UINT32 size);
 
 ///////////////////////////////////////////////////////////////////////////////
 //                              Semaphore functions

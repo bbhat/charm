@@ -32,6 +32,10 @@ enum
 	SYSCALL_DRIVER_STANDARD_CALL,           // Calling standard functions such as open/close/read/write
 	SYCALL_DRIVER_CUSTOM_CALL,              // Calling custom functions. The sub_id indicates the custom function id
 	
+	SYSCALL_GET_CUR_PROC,
+	SYSCALL_MAP_PHYSICAL_MEM,
+	SYSCALL_UNMAP_MEM,
+	
 	// Reserved space for other syscall
 	
 	SYSCALL_PFM_LED_SET = 32,	

@@ -109,10 +109,21 @@ OS_Return OS_CreateProcess(
 	return SUCCESS;
 }
 
+// Function for getting current process handle
 OS_Process_t OS_GetCurrentProcess()
 {
-	// TODO: Implement this function
-	return 0;
+	_OS_Syscall_Args param_info;
+	UINT32 ret[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_GET_CUR_PROC;
+	param_info.sub_id = 0;
+	param_info.arg_count = 0;
+	param_info.ret_count = ARRAYSIZE(ret);
+	
+	_OS_Syscall(&param_info, NULL, &ret, SYSCALL_BASIC);	
+	
+	return ret[0];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -126,8 +137,24 @@ OS_VirtualAddr OS_MapPhysicalMemory(
 		UINT32 attr,
 		OS_Return * result)
 {
-	// TODO: Implement this function
-	return SUCCESS;
+	_OS_Syscall_Args param_info;
+	UINT32 arg[4];
+	UINT32 ret[2];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_MAP_PHYSICAL_MEM;
+	param_info.sub_id = 0;
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
+	
+	arg[0] = process;	
+	arg[1] = paddr;	
+	arg[2] = size;	
+	arg[3] = attr;
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	
+	*result = (OS_Return) ret[0];		
+	return (OS_VirtualAddr) ret[1];
 }
 
 OS_Return OS_UnmapMemory(
@@ -135,8 +162,22 @@ OS_Return OS_UnmapMemory(
 		OS_VirtualAddr vaddr,
 		UINT32 size)
 {
-	// TODO: Implement this function
-	return SUCCESS;
+	_OS_Syscall_Args param_info;
+	UINT32 arg[3];
+	UINT32 ret[1];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_UNMAP_MEM;
+	param_info.sub_id = 0;
+	param_info.arg_count = ARRAYSIZE(arg);
+	param_info.ret_count = ARRAYSIZE(ret);
+	
+	arg[0] = process;	
+	arg[1] = (UINT32) vaddr;	
+	arg[2] = size;
+	_OS_Syscall(&param_info, &arg, &ret, SYSCALL_BASIC);
+	
+	return (OS_Return) ret[0];
 }
 		
 ///////////////////////////////////////////////////////////////////////////////
