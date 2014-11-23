@@ -13,4 +13,6 @@
 #include "os_api.h"
 #include "fimg2d_regs.h"
 
+void g2d_reset();
+
 #endif /* _G2D_H_ */

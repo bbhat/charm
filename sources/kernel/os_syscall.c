@@ -176,8 +176,8 @@ void syscall_GetCurProcess(const _OS_Syscall_Args * param_info, const void * arg
 	
 	if(uint_ret && (param_info->ret_count >= 1))
 	{
-		ASSERT(g_kernel_process);
-		uint_ret[0] = g_kernel_process->id;
+		ASSERT(g_current_process);
+		uint_ret[0] = g_current_process->id;
 	}
 }
 

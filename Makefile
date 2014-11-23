@@ -214,6 +214,12 @@ write2sd: $(BOOT_TARGET) mkv210_image
 clean:
 	rm -rf $(DST)
 	make -C applications/$(APP) clean
+	make -C applications/G2D clean
+	make -C applications/SystemMonitor clean
+	make -C applications/test_os clean
+	make -C applications/srt clean
+	make -C applications/test_aperiodic clean
+	make -C applications/test_rtc clean
 	make -C sources/usr/lib clean
 	make -C tools/elfmerge clean
 	make -C tools/ramdiskmk clean
