@@ -44,6 +44,9 @@ static UINT32 fb_size;
 
 #define isvalid(viewport)	((viewport < MAX_VIEWPORT_COUNT) && IsResourceBusy(&viewport_alloc_mask, viewport))
 
+#define DEFAULT_FG_COLOR	0x1234
+#define DEFAULT_BG_COLOR	0x4321
+
 void g2d_init()
 {
 	// Setting bit #0 results in a one-cycle reset signal to FIMG2D graphics engine.
@@ -62,7 +65,7 @@ Viewport_t g2d_create_viewport(	OS_Process_t owner,
 	do
 	{
 		handle = GetFreeResIndex(&viewport_alloc_mask, MAX_VIEWPORT_COUNT);
-		if(handle) {
+		if(handle < 0) {
 			break;
 		}
 		
@@ -77,8 +80,8 @@ Viewport_t g2d_create_viewport(	OS_Process_t owner,
 		vp->h = h;
 		
 		// Initialize default FG and BG colors
-		vp->bg_color = 0x4321;
-		vp->fg_color = 0x1234;
+		vp->bg_color = DEFAULT_BG_COLOR;
+		vp->fg_color = DEFAULT_FG_COLOR;
 		
 		vp->owner = owner;
 		
@@ -109,13 +112,14 @@ void task_render(void * ptr)
 {
 	Viewport_t vp_handle = (Viewport_t) ptr;
 	
+	dprintf("Entered task_render\n");
+	
 	do
 	{
 		if(!isvalid(vp_handle)) break;
 		
-		dprintf("Calling viewport clear\n");
-		
 		// Start with a clear viewport
+		dprintf("Calling viewport clear\n");
 		viewport_clear(vp_handle);
 		
 		g2d_init();
