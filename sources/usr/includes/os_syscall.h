@@ -36,6 +36,9 @@ enum
 	SYSCALL_MAP_PHYSICAL_MEM,
 	SYSCALL_UNMAP_MEM,
 	
+	// Display functions
+	SYSCALL_GET_DISP_FRAME_BUFFER,
+	
 	// Reserved space for other syscall
 	
 	SYSCALL_PFM_LED_SET = 32,	

@@ -24,6 +24,7 @@ MEMORY
 	PAGE_TABLES 	: ORIGIN = 0x20300000,  LENGTH = 0x100000
 	RAMDISK			: ORIGIN = 0x20400000,  LENGTH = 0x100000
 	APP_MEM			: ORIGIN = 0x20500000,  LENGTH = 0x1FC00000
+	FRAME_BUFFER	: ORIGIN = 0x23000000,  LENGTH = 0x100000
 }
 
 PHDRS
@@ -51,6 +52,10 @@ SECTIONS
 	/* Creating space for Ramdisk */
 	__ramdisk_start__  = 0x20400000;
 	__ramdisk_length__ = 0x100000;
+	
+	/* Creating space for Frame Buffer */
+	__frame_buffer_start__ = 0x23000000;
+	__frame_buffer_length__ = 0x100000;
 
 	/* Place other sections */
 	.text :

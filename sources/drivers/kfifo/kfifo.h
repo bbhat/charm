@@ -40,10 +40,6 @@ typedef struct Kfifo_driver {
 //	reads this kfifo and executes the command to display graphics
 ///////////////////////////////////////////////////////////////////////////////
 
-// Global instances of the Kfifo driver
-#if ENABLE_2D_GRAPHICS
-extern Kfifo_driver g_kfifo_fimg2d;			// We need one for Fimg2D
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Driver functions

@@ -57,16 +57,78 @@
 // (0xffffffff * 1000000) / TIMER1_TICK_FREQ. Lets use 1 second for this.
 #define	MAX_TIMER1_INTERVAL_uS		1000000
 
+//-----------------------------------------------------------------------
+// LCD related defines
+//-----------------------------------------------------------------------
+#define GPF0CON			(*(volatile unsigned long *)0xE0200120)
+#define GPF1CON			(*(volatile unsigned long *)0xE0200140)
+#define GPF2CON			(*(volatile unsigned long *)0xE0200160)
+#define GPF3CON			(*(volatile unsigned long *)0xE0200180)
+
+#define GPD0CON			(*(volatile unsigned long *)0xE02000A0)
+#define GPD0DAT			(*(volatile unsigned long *)0xE02000A4)
+
+#define CLK_SRC1		(*(volatile unsigned long *)0xe0100204)
+#define CLK_DIV1		(*(volatile unsigned long *)0xe0100304)
+#define DISPLAY_CONTROL	(*(volatile unsigned long *)0xe0107008)
+
+#define DISP_CONTROLLER_BASE_ADDR	0xF8000000
+#define VIDCON0			(*(volatile unsigned long *)0xF8000000)
+#define VIDCON1			(*(volatile unsigned long *)0xF8000004)
+#define VIDTCON2		(*(volatile unsigned long *)0xF8000018)
+#define WINCON0 		(*(volatile unsigned long *)0xF8000020)
+#define WINCON2 		(*(volatile unsigned long *)0xF8000028)
+#define SHADOWCON 		(*(volatile unsigned long *)0xF8000034)
+#define VIDOSD0A 		(*(volatile unsigned long *)0xF8000040)
+#define VIDOSD0B 		(*(volatile unsigned long *)0xF8000044)
+#define VIDOSD0C 		(*(volatile unsigned long *)0xF8000048)
+
+#define VIDW00ADD0B0 	(*(volatile unsigned long *)0xF80000A0)
+#define VIDW00ADD1B0 	(*(volatile unsigned long *)0xF80000D0)
+
+#define VIDTCON0 		(* (volatile unsigned long *) 0xF8000010)
+#define VIDTCON1 		(* (volatile unsigned long *) 0xF8000014)
+
+#define HSPW 		(0)
+#define HBPD 		(40 - 1)
+#define HFPD 		(5 - 1)
+#define VSPW 		(0)
+#define VBPD 		(8 - 1)
+#define VFPD 		(8 - 1)
+
+// Frame Buffer Address
+extern void * FB_ADDR;
+extern const UINT32 FB_SIZE;
+
+#define FB_WIDTH 	(480)
+#define FB_HEIGHT 	(272)
+#define LINEVAL 	(FB_HEIGHT-1)
+#define HOZVAL 		(FB_WIDTH-1)
+#define LeftTopX 	(0)
+#define LeftTopY 	(0)
+#define RightBotX 	(FB_WIDTH-1)
+#define RightBotY 	(FB_HEIGHT-1)
+
+#define TARGET_HAS_LCD		1
+#define BACKLIGHT_ON		1
+
+//-----------------------------------------------------------------------
 // Architecture related macros
+//-----------------------------------------------------------------------
 #define _ARM_ARCH			7
 #define _ARM_ARCH_v7
 #define _ARM_ARCH_v7a
 
+//-----------------------------------------------------------------------
+// Functions
+//-----------------------------------------------------------------------
 void _OS_TargetInit(void);
 
 void configure_user_led(UINT32 led);
 void user_led_on(UINT32 led);
 void user_led_off(UINT32 led);
 void user_led_toggle(UINT32 led);
+
+void lcd_init (void);
 
 #endif // _TARGET_H_

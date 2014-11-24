@@ -213,16 +213,16 @@ _SVC_STACK_TOP_:
 // The location for stacks
 //------------------------------------------------------------------------------
 	.section .stack
-	.space   0x1000
+	.space   0x2000
 	
 _SYSTEM_STACK:
 
 // Assign Start address of each stacks
 
-__STACK_SVC_END__	=	(_SYSTEM_STACK-0x500)	
-__STACK_UNDEF_END__	=	(_SYSTEM_STACK-0x300)	
-__STACK_ABORT_END__	=	(_SYSTEM_STACK-0x200)	
-__STACK_IRQ_END__	=	(_SYSTEM_STACK-0x100)	
+__STACK_SVC_END__	=	(_SYSTEM_STACK-0x800)	
+__STACK_UNDEF_END__	=	(_SYSTEM_STACK-0x600)	
+__STACK_ABORT_END__	=	(_SYSTEM_STACK-0x400)	
+__STACK_IRQ_END__	=	(_SYSTEM_STACK-0x200)	
 __STACK_FIQ_END__	=	(_SYSTEM_STACK-0x0)	
 
    .END

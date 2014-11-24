@@ -513,3 +513,26 @@ OS_Return OS_DriverConfigure(OS_Driver_t driver, const void * buffer, UINT32 siz
 	
 	return (OS_Return) ret[0];	
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Function to deal with Display
+///////////////////////////////////////////////////////////////////////////////
+void * OS_GetDisplayFrameBuffer(UINT32 * width, UINT32 * height, UINT32 * buffer_size)
+{
+	_OS_Syscall_Args param_info;
+	UINT32 ret[4];
+	
+	// Prepare the argument info structure
+	param_info.id = SYSCALL_GET_DISP_FRAME_BUFFER;
+	param_info.sub_id = 0;
+	param_info.arg_count = 0;
+	param_info.ret_count = ARRAYSIZE(ret);
+	
+	_OS_Syscall(&param_info, NULL, &ret, SYSCALL_BASIC);
+	
+	if(width) *width = ret[1];
+	if(height) *height = ret[2];
+	if(buffer_size) *buffer_size = ret[3];
+	
+	return (void *) ret[0];
+}

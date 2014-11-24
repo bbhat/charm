@@ -361,4 +361,12 @@ typedef enum
 // the options provided
 void PFM_SetUserLED(LED_Number led, LED_Options options);
 
+///////////////////////////////////////////////////////////////////////////////
+// Function to deal with Display
+///////////////////////////////////////////////////////////////////////////////
+
+// Function to get the display frame buffer pointer
+// This function can only be called by process with admin previleges.
+void * OS_GetDisplayFrameBuffer(UINT32 * width, UINT32 * height, UINT32 * buffer_size);
+
 #endif // _OS_API_H

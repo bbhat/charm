@@ -83,7 +83,7 @@
 #define ENABLE_KFIFO_DRIVER               1
 
 // Graphics Support
-#define ENABLE_2D_GRAPHICS                1
+#define ENABLE_LCD                        1
 
 // Define the Debug masks
 typedef enum
@@ -111,7 +111,7 @@ typedef enum
 #define OS_WITH_VALIDATE_TASK        1
 
 #define OS_KERNEL_LOGGING            0
-#define OS_KLOG_MASK                 (KLOG_IO_BLOCK_UNBLOCK)
+#define OS_KLOG_MASK                 (KLOG_GENERAL_INFO | KLOG_OS_STARTUP | KLOG_MISC)
 #define DEBUG_UART_CHANNEL           0
 
 #endif // _OS_CONFIG_H

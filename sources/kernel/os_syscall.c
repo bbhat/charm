@@ -11,6 +11,7 @@
 #include "os_sem.h"
 #include "os_stat.h"
 #include "os_driver.h"
+#include "target.h"
 #include "../usr/includes/os_syscall.h"
 
 //////////////////////////////////////////////////////////////////////////////
@@ -37,6 +38,7 @@ static void syscall_DriverCustomCall(const _OS_Syscall_Args * param_info, const 
 static void syscall_GetCurProcess(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_MapPhysicalMem(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 static void syscall_UnmapMem(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
+static void syscall_GetDisplayFrameBuffer(const _OS_Syscall_Args * param_info, const void * arg, void * ret);
 
 //////////////////////////////////////////////////////////////////////////////
 // Other function prototypes
@@ -74,7 +76,8 @@ static Syscall_handler _syscall_handlers[SYSCALL_MAX_COUNT] = {
 		syscall_GetCurProcess,
 		syscall_MapPhysicalMem,
 		syscall_UnmapMem,
-		0, 0, 0, 0, 
+		syscall_GetDisplayFrameBuffer,
+		0, 0, 0, 
 		0, 0, 0, 0, 
 		0, 0, 0, 0, 
 		syscall_SetUserLED
@@ -190,12 +193,19 @@ void syscall_MapPhysicalMem(const _OS_Syscall_Args * param_info, const void * ar
 	{
 		if((param_info->arg_count < 4) && (param_info->ret_count < 2)) break;
 		
+		// This function can only be called by process with admin previleges.
+		if(!(g_current_process->attributes & ADMIN_PROCESS))
+		{
+			result = NOT_ADMINISTRATOR;
+			break;
+		}
+		
 		OS_Process_t proc = (OS_Process_t) uint_args[0];
 		if(proc >= MAX_PROCESS_COUNT) break;
 		
 		OS_Process *pcb = &g_process_pool[proc];
-		if(!pcb) break;		
-	
+		if(!pcb) break;
+		
 #if ENABLE_MMU
 
 		_MMU_PTE_AccessPermission ap;
@@ -258,6 +268,13 @@ void syscall_UnmapMem(const _OS_Syscall_Args * param_info, const void * arg, voi
 	{
 		if(param_info->arg_count < 3) break;
 		
+		// This function can only be called by process with admin previleges.
+		if(!(g_current_process->attributes & ADMIN_PROCESS))
+		{
+			result = NOT_ADMINISTRATOR;
+			break;
+		}
+
 		OS_Process_t proc = (OS_Process_t) uint_args[0];
 		if(proc >= MAX_PROCESS_COUNT) break;
 		
@@ -378,6 +395,44 @@ void syscall_SetUserLED(const _OS_Syscall_Args * param_info, const void * arg, v
 	{
 		_PFM_SetUserLED((UINT32)uint_args[0], (UINT32)uint_args[1]);
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Display Frame Buffer
+///////////////////////////////////////////////////////////////////////////////
+void syscall_GetDisplayFrameBuffer(const _OS_Syscall_Args * param_info, const void * arg, void * ret)
+{
+	UINT32 * uint_ret = (UINT32 *)ret;
+
+	do
+	{	
+		if(!uint_ret || (param_info->ret_count < 1)) break;
+		
+		ASSERT(g_current_process);
+
+		// This function can only be called by process with admin previleges.
+		if(!(g_current_process->attributes & ADMIN_PROCESS))
+		{
+			uint_ret[0] = 0;
+			break;
+		}
+
+#if ENABLE_MMU
+
+		// Map the buffer into the process space
+		KERNEL_VA_TO_PA_MAP_FUNCTION(g_current_process->ptable,
+								(UINT32)FB_ADDR,
+								(UINT32)FB_ADDR,
+								FB_SIZE,
+								KERNEL_RW_USER_RW, FALSE, FALSE);
+#endif
+
+		uint_ret[0] = (UINT32)FB_ADDR;				
+		if(param_info->ret_count >= 2) uint_ret[1] = FB_WIDTH;
+		if(param_info->ret_count >= 3) uint_ret[2] = FB_HEIGHT;
+		if(param_info->ret_count >= 4) uint_ret[3] = FB_SIZE;
+		
+	} while(0);	
 }
 
 ///////////////////////////////////////////////////////////////////////////////

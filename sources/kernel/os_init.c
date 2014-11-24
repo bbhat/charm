@@ -90,13 +90,13 @@ void _OS_Init()
 	_OS_QueueInit(&g_completed_task_q);
 	_OS_QueueInit(&g_periodic_blocked_q);
 	
+	// Initialize debug UART
+	Uart_Init(UART0);	
+			
 	// Initialize the Kernel process
 	OS_CreateProcess(&kernel_pcb, "kernel", (SYSTEM_PROCESS | ADMIN_PROCESS), &kernel_process_entry, NULL);	
 	g_kernel_process = &g_process_pool[kernel_pcb];
 
-	// Initialize debug UART
-	Uart_Init(UART0);	
-			
 	// Target Initialization
 	_OS_TargetInit();	
 
@@ -234,6 +234,17 @@ void _OS_create_kernel_memory_map(_MMU_L1_PageTable * ptable)
 			(VADDR) ELFIN_GPIO_BASE, (PADDR) ELFIN_GPIO_BASE, 
 			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
 			
+	//------------------------- LCD ---------------------------------
+#if ENABLE_LCD && TARGET_HAS_LCD
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
+			(VADDR) DISP_CONTROLLER_BASE_ADDR, (PADDR) DISP_CONTROLLER_BASE_ADDR, 
+			(UINT32) ONE_MB, KERNEL_RW_USER_NA, FALSE, FALSE);
+
+	KERNEL_VA_TO_PA_MAP_FUNCTION(ptable, 
+			(VADDR) FB_ADDR, (PADDR) FB_ADDR, 
+			(UINT32) FB_SIZE, KERNEL_RW_USER_NA, FALSE, FALSE);
+#endif
+		
 	//------------------------- HEAP ---------------------------------
 	// Create map for the kernel and user heap space
 	_OS_MapHeapMemory(ptable);
