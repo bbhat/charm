@@ -84,6 +84,7 @@
 
 // Graphics Support
 #define ENABLE_LCD                        1
+#define ENABLE_G2D_BLOCK                  1
 
 // Define the Debug masks
 typedef enum

@@ -44,21 +44,49 @@ static UINT32 fb_size;
 
 #define isvalid(viewport)	((viewport < MAX_VIEWPORT_COUNT) && IsResourceBusy(&viewport_alloc_mask, viewport))
 
-#define DEFAULT_FG_COLOR	0x1234
-#define DEFAULT_BG_COLOR	0x4321
+#define DEFAULT_FG_COLOR	0x123456
+#define DEFAULT_BG_COLOR	0x654321
+
+/*******************************************************************************
+ * Local Functions
+ *******************************************************************************/ 
+static void g2d_init();
+static inline BOOL g2d_isbusy();
+static OS_Return g2d_activate_viewport(G2D_Viewport *vp);
+
 
 void g2d_init()
 {
 	// Setting bit #0 results in a one-cycle reset signal to FIMG2D graphics engine.
 	dprintf("Reset FIMG2D\n");
 	REG_WR(SOFT_RESET_REG, 0x01);
+		
+	// Set the AXI ID Mode Register
+	REG_WR(AXI_MODE_REG, 0x01);			// Use out of order AXI Master Read	
+	
+	// Set Destination Image Base Address Register
+	ASSERT(fb_addr);	// Make sure the frame buffer is set
+	REG_WR(DST_BASE_ADDR_REG, (UINT32) fb_addr);
+
+	// Destination Image Color Mode Register
+	REG_WR(DST_COLOR_MODE_REG, G2D_COLOR_FMT_XRGB8888 | G2D_ORDER_AXRGB);
+	
+	// Set Destination Stride Register 
+	REG_WR(DST_STRIDE_REG, (fb_width * G2D_COLOR_DEPTH_XRGB8888) >> 3);
+}
+
+inline BOOL g2d_isbusy()
+{
+	return ((REG_RD(FIFO_STAT_REG) & 0x01) == 0);
 }
 
 Viewport_t g2d_create_viewport(	OS_Process_t owner,
 								UINT16 x,
 								UINT16 y,
 								UINT16 w,
-								UINT16 h)
+								UINT16 h,
+								UINT32 fg_color,
+								UINT32 bg_color)
 {
 	Viewport_t handle = INVALID;
 	
@@ -80,8 +108,8 @@ Viewport_t g2d_create_viewport(	OS_Process_t owner,
 		vp->h = h;
 		
 		// Initialize default FG and BG colors
-		vp->bg_color = DEFAULT_BG_COLOR;
-		vp->fg_color = DEFAULT_FG_COLOR;
+		vp->bg_color = bg_color;
+		vp->fg_color = fg_color;
 		
 		vp->owner = owner;
 		
@@ -90,21 +118,75 @@ Viewport_t g2d_create_viewport(	OS_Process_t owner,
 	return handle;
 }
 
+OS_Return g2d_activate_viewport(G2D_Viewport *vp)
+{
+	ASSERT(vp);
+	
+	/***** Set parameters for color for the viewport *****/
+	
+	// Foreground / Background color Registers
+	REG_WR(FG_COLOR_REG, vp->fg_color);
+	REG_WR(BG_COLOR_REG, vp->bg_color);
+	REG_WR(BS_COLOR_REG, vp->bg_color);
+	
+	/***** Set Destination properties	*****/
+
+	// Source Image Selection Register 
+	REG_WR(SRC_SELECT_REG, G2D_SELECT_MODE_BGCOLOR);
+	
+	// Source Image Color Mode Register
+	REG_WR(SRC_COLOR_MODE_REG, G2D_COLOR_FMT_XRGB8888 | G2D_ORDER_AXRGB);
+	
+	// Destination Image Selection Register 
+	REG_WR(DST_SELECT_REG, G2D_SELECT_MODE_NORMAL);
+
+	// Clipping registers
+	const UINT32 lt_x = vp->x & 0x1FFF;
+	const UINT32 lt_y = vp->y & 0x1FFF;
+	const UINT32 rb_x = lt_x + (vp->w & 0x1FFF);
+	const UINT32 rb_y = lt_y + (vp->h & 0x1FFF);
+	REG_WR(CW_LT_REG, lt_x | (lt_y << 16));
+	REG_WR(CW_RB_REG, rb_x | (rb_y << 16));
+
+	return SUCCESS;
+}
+
 // Clear viewport
 void viewport_clear (Viewport_t handle)
 {
 	unsigned long * ptr = (unsigned long *) fb_addr;
 	unsigned int i;
+	OS_Return res;
 	
 	do
 	{
+		// Validate the input handle
 		if(!isvalid(handle)) break;
 		
+		// Get the viewport object
 		G2D_Viewport * vp = &viewports[handle];
-		for (i = 0; i < (vp->w * vp->h); i++) {
-			ptr[i] = vp->bg_color;
-		}		
 		
+		// Wait for the previous command to finish
+		while(g2d_isbusy());
+		
+		// Activate viewport
+		res = g2d_activate_viewport(vp);
+		if(res != SUCCESS) break;
+
+		// Set Destination Left Top and Right Bottom Coordinate Registers
+		const UINT32 lt_x = vp->x & 0x1FFF;
+		const UINT32 lt_y = vp->y & 0x1FFF;
+		const UINT32 rb_x = lt_x + (vp->w & 0x1FFF);
+		const UINT32 rb_y = lt_y + (vp->h & 0x1FFF);
+		REG_WR(DST_LEFT_TOP_REG, lt_x | (lt_y << 16));
+		REG_WR(DST_RIGHT_BOTTOM_REG, rb_x | (rb_y << 16));
+	
+		//REG_WR(CACHECTL_REG, 0x07);
+	
+		// Start the BitBLT Command Register
+		REG_WR(BITBLT_COMMAND_REG, 0);
+		REG_WR(BITBLT_START_REG, 1);
+				
 	} while(0);		
 }
 
@@ -112,18 +194,18 @@ void task_render(void * ptr)
 {
 	Viewport_t vp_handle = (Viewport_t) ptr;
 	
-	dprintf("Entered task_render\n");
+	dprintf("Entered task_render. Screen width %d height %d\n", fb_width, fb_height);
 	
 	do
 	{
 		if(!isvalid(vp_handle)) break;
 		
-		// Start with a clear viewport
-		dprintf("Calling viewport clear\n");
-		viewport_clear(vp_handle);
-		
 		g2d_init();
 		dprintf("Finished FIMG2D initialization\n");
+		
+		// Start with a clear viewport
+		dprintf("Calling viewport clear\n");
+		viewport_clear(vp_handle);		
 		
 	} while(0);	
 }
@@ -145,7 +227,7 @@ int main(int argc, char *argv[])
 		fb_addr = OS_GetDisplayFrameBuffer(&fb_width, &fb_height, &fb_size);
 		if(!fb_addr) break;
 		
-		vp_handle = g2d_create_viewport(process, 0, 0, fb_width, fb_height);
+		vp_handle = g2d_create_viewport(process, fb_width >> 2, fb_height >> 2, fb_width >> 1, fb_height >> 1, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
 		if(vp_handle < 0) break;
 
 		ret = OS_CreateAperiodicTask(TASK_PRIORITY_HIGH, render_stack, 

@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "soc.h"
+#include "os_config.h"
 
 // Values for FIN 24MHz and APLL at 1GHz
 #define APLL_MDIV       	0x7d
@@ -28,22 +29,34 @@ void _platform_clock_init()
 	
 	// 1 to set various clock switch, temporarily using a PLL
 	rCLK_SRC0 = 0x0;
+#if ENABLE_G2D_BLOCK
+	rCLK_SRC2 = 0x0;
+#endif
 	
 	// 2 Set lock time, use the default value
 	// Set the PLL, the clock frequency from Fin upgrade to the target, you need some time, namely lock time
-	rAPLL_LOCK = 0x0000ffff;
+	rAPLL_LOCK = 0x0000FFFF;
 	rMPLL_LOCK = 0x0000FFFF;					
 	
 	// 3 Set the division
 	rCLK_DIV0 = 0x14131440;
+#if ENABLE_G2D_BLOCK
+	rCLK_DIV2 = (0x02 << 8);	// DIVG2D clock divider ratio, SCLKG2D= MOUTG2D / (G2D_RATIO + 1)
+#endif			
 
 	// 4 to set the PLL
 	// FOUT = MDIV * FIN / (PDIV * 2 ^ (SDIV-1)) = 0x7d * 24 / (0x3 * 2 ^ (1-1)) = 1000 MHz
 	rAPLL_CON0 = APLL_VAL;
 	
 	// FOUT = MDIV * FIN / (PDIV * 2 ^ SDIV) = 0x29b * 24 / (0xc * 2 ^ 1) = 667 MHz
-	rMPLL_CON  = MPLL_VAL;					
-
+	rMPLL_CON  = MPLL_VAL;
+	
 	// Enable all PLLs and select various Muxes
 	rCLK_SRC0 = 0x10001111;
+#if ENABLE_G2D_BLOCK
+	rCLK_SRC2 = (0x01 << 8); 		// Select SCLKMPLL for G2D
+/*	
+	rCLK_GATE_IP0 &= ~(1 << 12);	// Disable clock gating for G2D
+*/
+#endif
 }
