@@ -13,6 +13,8 @@
 #include "os_api.h"
 #include "fimg2d_regs.h"
 
+typedef UINT32 COLOR;
+
 typedef struct
 {
 	UINT16 x;				// Starting coordinate-X
@@ -20,8 +22,8 @@ typedef struct
 	UINT16 w;				// Width
 	UINT16 h; 				// Height
 	
-	UINT32 fg_color;
-	UINT32 bg_color;
+	COLOR fg_color;
+	COLOR bg_color;
 	
 	OS_Process_t owner;		// Process handle owning this viewport
 	
@@ -61,7 +63,6 @@ enum {
 	G2D_ORDER_BGRAX		= (3 << 4)
 };
 
-
 enum
 {
 	G2D_ENABLE_MASK_OP = (1 << 0),
@@ -91,6 +92,11 @@ enum
 	G2D_ALPHA_BLEND_PERPIXEL_ALPHA = (2 << 22)
 };
 
+enum {
+	// ROP4 operation values
+	ROP4_COPY = 0xCCCC,
+	ROP4_INVERT = 0x3333
+};
 
 typedef INT32 Viewport_t;	// Typedef for viewport handle
 
@@ -101,9 +107,10 @@ Viewport_t g2d_create_viewport(	OS_Process_t owner,
 								UINT16 y,
 								UINT16 w,
 								UINT16 h,
-								UINT32 fg_color,
-								UINT32 bg_color);
+								COLOR fg_color,
+								COLOR bg_color);
 								
 void viewport_clear (Viewport_t handle);
+void viewport_fill (Viewport_t handle, COLOR color);
 
 #endif /* _G2D_H_ */

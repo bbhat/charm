@@ -225,6 +225,7 @@ clean:
 	make -C tools/ramdiskmk clean
 	make -C tools/mkv210_image clean
 	rm -rf $(ROOTFS_PATH)/kernel/bin
+	rm -rf $(ROOTFS_PATH)/applications/bin/
 
 ## Validate the arguments for build
 ifneq ($(CONFIG),debug)
