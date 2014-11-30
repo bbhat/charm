@@ -15,27 +15,13 @@
 
 typedef UINT32 COLOR;
 
-typedef struct
-{
-	UINT16 x;				// Starting coordinate-X
-	UINT16 y;				// Starting coordinate-Y
-	UINT16 w;				// Width
-	UINT16 h; 				// Height
-	
-	COLOR fg_color;
-	COLOR bg_color;
-	
-	OS_Process_t owner;		// Process handle owning this viewport
-	
-} G2D_Viewport;
-
 enum {
 	G2D_SELECT_MODE_NORMAL	= (0 << 0),
 	G2D_SELECT_MODE_FGCOLOR = (1 << 0),
 	G2D_SELECT_MODE_BGCOLOR = (2 << 0)
 };
 
-enum {
+typedef enum {
 	// COLOR FORMAT
 	G2D_COLOR_FMT_XRGB8888 = 0,
 	G2D_COLOR_FMT_ARGB8888 = 1,
@@ -46,6 +32,9 @@ enum {
 	G2D_COLOR_FMT_ARGB4444 = 6,
 	G2D_COLOR_FMT_PRGB888 = 7,
 
+} G2D_ColorFormat;
+
+typedef enum {
 	// Depth in terms of number of bits per pixel
 	G2D_COLOR_DEPTH_XRGB8888 = 32,
 	G2D_COLOR_DEPTH_ARGB8888 = 32,
@@ -54,14 +43,19 @@ enum {
 	G2D_COLOR_DEPTH_ARGB1555 = 16,
 	G2D_COLOR_DEPTH_XRGB4444 = 16,
 	G2D_COLOR_DEPTH_ARGB4444 = 16,
-	G2D_COLOR_DEPTH_PRGB888 = 24,
+	G2D_COLOR_DEPTH_PRGB888 = 24
+	
+} G2D_ColorDepth;
 
+typedef enum
+{
 	// COLOR ORDER
 	G2D_ORDER_AXRGB		= (0 << 4),
 	G2D_ORDER_RGBAX		= (1 << 4),
 	G2D_ORDER_AXBGR		= (2 << 4),
 	G2D_ORDER_BGRAX		= (3 << 4)
-};
+	
+} G2D_ColorOrder;
 
 enum
 {
@@ -100,6 +94,28 @@ enum {
 
 typedef INT32 Viewport_t;	// Typedef for viewport handle
 
+typedef struct
+{
+	UINT16 x;				// Starting coordinate-X
+	UINT16 y;				// Starting coordinate-Y
+	UINT16 w;				// Width
+	UINT16 h; 				// Height
+	
+	COLOR fg_color;
+	COLOR bg_color;
+	
+	OS_Process_t owner;		// Process handle owning this viewport
+	
+} G2D_Viewport;
+
+typedef struct
+{
+	UINT16 width;				// Width
+	UINT16 height; 				// Height
+	G2D_ColorFormat format;
+	UINT8 * buffer;
+} G2D_Image;
+
 #define MAX_VIEWPORT_COUNT		(12)
 
 Viewport_t g2d_create_viewport(	OS_Process_t owner,
@@ -112,5 +128,12 @@ Viewport_t g2d_create_viewport(	OS_Process_t owner,
 								
 void viewport_clear (Viewport_t handle);
 void viewport_fill (Viewport_t handle, COLOR color);
+
+void draw_image (Viewport_t handle, 
+								G2D_Image * image, 
+								UINT16 dst_x, 
+								UINT16 dst_y, 
+								UINT16 dst_w, 
+								UINT16 dst_h);
 
 #endif /* _G2D_H_ */
