@@ -11,16 +11,9 @@
 #define _G2D_H_
 
 #include "os_api.h"
-#include "fimg2d_regs.h"
-#include "utils.h"
 
 typedef UINT32 COLOR;
-
-enum {
-	G2D_SELECT_MODE_NORMAL	= (0 << 0),
-	G2D_SELECT_MODE_FGCOLOR = (1 << 0),
-	G2D_SELECT_MODE_BGCOLOR = (2 << 0)
-};
+typedef INT32 Viewport_t;	// Typedef for viewport handle
 
 typedef enum {
 	// COLOR FORMAT
@@ -35,85 +28,6 @@ typedef enum {
 
 } G2D_ColorFormat;
 
-typedef enum {
-	// Depth in terms of number of bits per pixel
-	G2D_COLOR_DEPTH_XRGB8888 = 32,
-	G2D_COLOR_DEPTH_ARGB8888 = 32,
-	G2D_COLOR_DEPTH_RGB565 = 16,
-	G2D_COLOR_DEPTH_XRGB1555 = 16,
-	G2D_COLOR_DEPTH_ARGB1555 = 16,
-	G2D_COLOR_DEPTH_XRGB4444 = 16,
-	G2D_COLOR_DEPTH_ARGB4444 = 16,
-	G2D_COLOR_DEPTH_PRGB888 = 24
-	
-} G2D_ColorDepth;
-
-typedef enum
-{
-	// COLOR ORDER
-	G2D_ORDER_AXRGB		= (0 << 4),
-	G2D_ORDER_RGBAX		= (1 << 4),
-	G2D_ORDER_AXBGR		= (2 << 4),
-	G2D_ORDER_BGRAX		= (3 << 4)
-	
-} G2D_ColorOrder;
-
-enum
-{
-	G2D_ENABLE_MASK_OP = (1 << 0),
-	G2D_ENABLE_STRETCH_MODE = (1 << 4),
-	G2D_ENABLE_CLIPPING_WINDOW = (1 << 8),
-	
-	// Transparency mode
-	G2D_TRANSPARENT_MODE_OPAQUE = (0 << 12),
-	G2D_TRANSPARENT_MODE_TRANSPARENT = (1 << 12),
-	G2D_TRANSPARENT_MODE_BLUESCREEN = (2 << 12),
-	G2D_TRANSPARENT_MODE_MAX = (3 << 12),
-	
-	// Color Key mode
-	G2D_COLORKEY_MODE_DISABLE	= (0 << 16),
-	G2D_COLORKEY_MODE_SRC_RGBA	= (1 << 16),
-	G2D_COLORKEY_MODE_DST_RGBA	= (2 << 16),
-	G2D_COLORKEY_MODE_MASK		= (3 << 16),
-	
-	// Alpha blend_modes
-	G2D_ALPHA_BLEND_MODE_DISABLE = (0 << 20),
-	G2D_ALPHA_BLEND_MODE_ENABLE = (1 << 20),
-	G2D_ALPHA_BLEND_MODE_FADING = (2 << 20),
-	G2D_ALPHA_BLEND_MODE_MAX = (3 << 20),
-	
-	// Source SrcNonPreBlendMode(Non-premultiplied)
-	G2D_ALPHA_BLEND_CONST_ALPHA = (1 << 22),
-	G2D_ALPHA_BLEND_PERPIXEL_ALPHA = (2 << 22)
-};
-
-enum {
-	// ROP4 operation values
-	ROP4_COPY = 0xCCCC,
-	ROP4_INVERT = 0x3333
-};
-
-typedef INT32 Viewport_t;	// Typedef for viewport handle
-
-typedef struct
-{
-	UINT16 x;				// Starting coordinate-X
-	UINT16 y;				// Starting coordinate-Y
-	UINT16 w;				// Width
-	UINT16 h; 				// Height
-	
-	COLOR fg_color;
-	COLOR bg_color;
-	
-	// When used to output text, this points to the current cursor location 
-	// within the current viewport
-	UINT16 text_x;			
-	UINT16 text_y;
-	
-	OS_Process_t owner;		// Process handle owning this viewport
-	
-} G2D_Viewport;
-
 typedef struct
 {
 	UINT16 width;				// Width
@@ -124,19 +38,8 @@ typedef struct
 
 #define MAX_VIEWPORT_COUNT		(12)
 
-#define REG_RD(reg)			(g2d_regs[(reg) >> 2])
-#define REG_WR(reg, val)	(g2d_regs[(reg) >> 2] = (val))
-
 #define DEFAULT_FG_COLOR	0xAAAAAA
 #define DEFAULT_BG_COLOR	0x220000
-
-extern volatile UINT32 * g2d_regs;		// Register map address
-extern G2D_ColorDepth gColorDepthMap[];
-extern UINT32 viewport_alloc_mask;
-extern G2D_Viewport viewports [MAX_VIEWPORT_COUNT];
-
-BOOL g2d_isbusy();
-BOOL isvalid(viewport);
 
 Viewport_t g2d_create_viewport(	OS_Process_t owner,
 								UINT16 x,
@@ -147,6 +50,7 @@ Viewport_t g2d_create_viewport(	OS_Process_t owner,
 								COLOR bg_color);
 								
 void viewport_clear (Viewport_t handle);
+
 void viewport_fill (Viewport_t handle, COLOR color);
 
 void viewport_draw_image (Viewport_t handle, 

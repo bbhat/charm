@@ -8,6 +8,7 @@
  ******************************************************************************/
 
 #include "G2D.h"
+#include "G2DViewport.h"
 #include "printf.h"
 #include "bitmaps.h"
 
