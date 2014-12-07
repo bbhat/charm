@@ -12,6 +12,7 @@
 
 #include "os_api.h"
 #include "fimg2d_regs.h"
+#include "utils.h"
 
 typedef UINT32 COLOR;
 
@@ -104,6 +105,11 @@ typedef struct
 	COLOR fg_color;
 	COLOR bg_color;
 	
+	// When used to output text, this points to the current cursor location 
+	// within the current viewport
+	UINT16 text_x;			
+	UINT16 text_y;
+	
 	OS_Process_t owner;		// Process handle owning this viewport
 	
 } G2D_Viewport;
@@ -118,6 +124,20 @@ typedef struct
 
 #define MAX_VIEWPORT_COUNT		(12)
 
+#define REG_RD(reg)			(g2d_regs[(reg) >> 2])
+#define REG_WR(reg, val)	(g2d_regs[(reg) >> 2] = (val))
+
+#define DEFAULT_FG_COLOR	0xAAAAAA
+#define DEFAULT_BG_COLOR	0x220000
+
+extern volatile UINT32 * g2d_regs;		// Register map address
+extern G2D_ColorDepth gColorDepthMap[];
+extern UINT32 viewport_alloc_mask;
+extern G2D_Viewport viewports [MAX_VIEWPORT_COUNT];
+
+BOOL g2d_isbusy();
+BOOL isvalid(viewport);
+
 Viewport_t g2d_create_viewport(	OS_Process_t owner,
 								UINT16 x,
 								UINT16 y,
@@ -129,11 +149,13 @@ Viewport_t g2d_create_viewport(	OS_Process_t owner,
 void viewport_clear (Viewport_t handle);
 void viewport_fill (Viewport_t handle, COLOR color);
 
-void draw_image (Viewport_t handle, 
+void viewport_draw_image (Viewport_t handle, 
 								G2D_Image * image, 
 								UINT16 dst_x, 
 								UINT16 dst_y, 
 								UINT16 dst_w, 
 								UINT16 dst_h);
+
+void viewport_draw_string(Viewport_t handle, const INT8 * string);
 
 #endif /* _G2D_H_ */
