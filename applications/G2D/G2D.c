@@ -10,7 +10,7 @@
 #include "G2D.h"
 #include "G2DViewport.h"
 #include "printf.h"
-#include "bitmaps.h"
+//#include "bitmaps.h"
 
 /*
  * Global Variables
@@ -27,9 +27,9 @@ static UINT32 led = 0;
 /*
  * Frame buffer
  */
-static void * fb_addr;
-static UINT32 fb_width;
-static UINT32 fb_height;
+void * fb_addr;
+UINT32 fb_width;
+UINT32 fb_height;
 static UINT32 fb_size;
 
 #define DEBUG_PRINT	0
@@ -58,7 +58,7 @@ void g2d_init()
 	
 	// Set Destination Image Base Address Register
 	ASSERT(fb_addr);	// Make sure the frame buffer is set
-	REG_WR(DST_BASE_ADDR_REG, (UINT32) fb_addr);
+	REG_WR(DST_BASE_ADDR_REG, fb_addr);
 
 	// Destination Image Color Mode Register
 	REG_WR(DST_COLOR_MODE_REG, G2D_COLOR_FMT_XRGB8888 | G2D_ORDER_AXRGB);
@@ -72,7 +72,7 @@ BOOL g2d_isbusy()
 	return ((REG_RD(FIFO_STAT_REG) & 0x01) == 0);	
 }
 
-BOOL isvalid(viewport)	
+BOOL g2d_viewport_valid(Viewport_t viewport)	
 { 
 	return ((viewport < MAX_VIEWPORT_COUNT) && IsResourceBusy(&viewport_alloc_mask, viewport));	
 }
@@ -93,7 +93,7 @@ void task_render(void * ptr)
 	
 	do
 	{
-		if(!isvalid(vp_handle)) break;
+		if(!g2d_viewport_valid(vp_handle)) break;
 		
 		// Get the viewport object
 		G2D_Viewport * vp = &viewports[vp_handle];
@@ -103,7 +103,8 @@ void task_render(void * ptr)
 		
 		dprintf("Calling clear screen\n");
 		viewport_clear(scr_handle);
-		
+
+#if 0
 		// Prepare the viewport image
 		image.width = 480;
 		image.height = 270;
@@ -134,6 +135,14 @@ void task_render(void * ptr)
 				count = 0;
 			}
 		}		
+#else
+		UINT8 ch = 0;
+		while(1)
+		{
+			OS_SemWait(sem);	
+			viewport_draw_char(vp_handle, ch++);
+		}
+#endif
 	} while(0);	
 }
 
@@ -173,10 +182,10 @@ int main(int argc, char *argv[])
 		
 		// Create a sub-Window
 		win_handle = g2d_create_viewport(process, 
-											0, 
-											0, 
-											fb_width, 
-											fb_height, 
+											fb_width >> 2, 
+											fb_height >> 2, 
+											fb_width >> 1, 
+											fb_height >> 1, 
 											DEFAULT_FG_COLOR, 
 											DEFAULT_BG_COLOR);
 		if(win_handle < 0) break;

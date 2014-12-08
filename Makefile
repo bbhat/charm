@@ -104,10 +104,10 @@ all:
 	make kernel
 	make application APP=G2D
 	make application APP=SystemMonitor
-	make application APP=test_os
-	make application APP=srt
-	make application APP=test_aperiodic
-	make application APP=test_rtc
+#	make application APP=test_os
+#	make application APP=srt
+#	make application APP=test_aperiodic
+#	make application APP=test_rtc
 	make usrlib
 	make ramdisk
 	

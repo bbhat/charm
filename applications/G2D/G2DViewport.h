@@ -44,6 +44,13 @@ typedef enum
 
 enum
 {
+	G2D_FLUSH_MASK_BUFFER = 0x01,
+	G2D_FLUSH_SRC_BUFFER = 0x02,
+	G2D_FLUSH_PAT_BUFFER = 0x04
+};
+
+enum
+{
 	G2D_ENABLE_MASK_OP = (1 << 0),
 	G2D_ENABLE_STRETCH_MODE = (1 << 4),
 	G2D_ENABLE_CLIPPING_WINDOW = (1 << 8),
@@ -74,8 +81,12 @@ enum
 enum {
 	// ROP4 operation values
 	ROP4_COPY = 0xCCCC,
-	ROP4_INVERT = 0x3333
+	ROP4_MASKED_COPY = 0x00CC,
+	ROP4_INVERT = 0x3333,
+	ROP4_MASKED_INVERT = 0x0033
 };
+
+extern G2D_ColorDepth gColorDepthMap[];
 
 typedef struct
 {
@@ -97,16 +108,20 @@ typedef struct
 } G2D_Viewport;
 
 #define REG_RD(reg)			(g2d_regs[(reg) >> 2])
-#define REG_WR(reg, val)	(g2d_regs[(reg) >> 2] = (val))
+#define REG_WR(reg, val)	(g2d_regs[(reg) >> 2] = (UINT32)(val))
 
 extern volatile UINT32 * g2d_regs;		// Register map address
 extern G2D_ColorDepth gColorDepthMap[];
 extern UINT32 viewport_alloc_mask;
 extern G2D_Viewport viewports [MAX_VIEWPORT_COUNT];
+extern void * fb_addr;
+extern UINT32 fb_width;
+extern UINT32 fb_height;
+
 
 // Internal functions
 BOOL g2d_isbusy();
-BOOL isvalid(viewport);
+BOOL g2d_viewport_valid(Viewport_t viewport);
 OS_Return g2d_activate_viewport(G2D_Viewport *vp);
 void g2d_set_dest_coordinates(G2D_Viewport *vp, UINT16 x, UINT16 y, UINT16 w, UINT16 h);
 

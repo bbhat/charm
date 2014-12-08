@@ -38,8 +38,12 @@ typedef struct
 
 #define MAX_VIEWPORT_COUNT		(12)
 
-#define DEFAULT_FG_COLOR	0xAAAAAA
-#define DEFAULT_BG_COLOR	0x220000
+#define DEFAULT_FG_COLOR	(0xAAAAAA)
+#define DEFAULT_BG_COLOR	(0x220000)
+#define MIN_VIEWPORT_WIDTH	(16)
+#define MIN_VIEWPORT_HEIGHT	(16)
+#define DEFAULT_TEXT_WIDTH	(8)				// Character width in pixels
+#define DEFAULT_TEXT_HEIGHT	(16)			// Character height in pixels
 
 Viewport_t g2d_create_viewport(	OS_Process_t owner,
 								UINT16 x,
@@ -60,6 +64,9 @@ void viewport_draw_image (Viewport_t handle,
 								UINT16 dst_w, 
 								UINT16 dst_h);
 
+void viewport_scroll_up(Viewport_t handle, UINT16 pixels);
 void viewport_draw_string(Viewport_t handle, const INT8 * string);
+void viewport_draw_char(Viewport_t handle, UINT8 ch);
+
 
 #endif /* _G2D_H_ */

@@ -11,17 +11,6 @@
 #include "G2DViewport.h"
 #include "printf.h"
 
-G2D_ColorDepth gColorDepthMap[] = {
-	G2D_COLOR_DEPTH_XRGB8888,
-	G2D_COLOR_DEPTH_ARGB8888,
-	G2D_COLOR_DEPTH_RGB565,
-	G2D_COLOR_DEPTH_XRGB1555,
-	G2D_COLOR_DEPTH_ARGB1555,
-	G2D_COLOR_DEPTH_XRGB4444,
-	G2D_COLOR_DEPTH_ARGB4444,
-	G2D_COLOR_DEPTH_PRGB888
-};
-
 void viewport_draw_image (Viewport_t handle, 
 					G2D_Image * image, 
 					UINT16 dst_x, 
@@ -35,7 +24,7 @@ void viewport_draw_image (Viewport_t handle,
 	do
 	{
 		// Validate the input handle
-		if(!isvalid(handle)) break;
+		if(!g2d_viewport_valid(handle)) break;
 		
 		// The width and height should not be 0
 		if(!dst_w || !dst_h) break;
@@ -59,6 +48,9 @@ void viewport_draw_image (Viewport_t handle,
 		// Check if we need to stretch the image
 		BOOL stretch = ((image->width != dst_w) || (image->height != dst_h));
 		
+		// Src buffer clear (Automatically set to 0b after a cycle)
+		REG_WR(CACHECTL_REG, G2D_FLUSH_SRC_BUFFER);
+
 		// Source properties
 		REG_WR(SRC_SELECT_REG, G2D_SELECT_MODE_NORMAL);					// Source Image Selection Register 
 		REG_WR(SRC_COLOR_MODE_REG, image->format | G2D_ORDER_AXRGB);	// Source Image Color Mode Register
