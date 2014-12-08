@@ -35,6 +35,9 @@ void viewport_draw_char(Viewport_t handle, UINT8 ch)
 		g2d_set_dest_coordinates(vp, vp->text_x, vp->text_y, DEFAULT_TEXT_WIDTH, DEFAULT_TEXT_HEIGHT);
 		
 		// Source properties
+		REG_WR(SRC_LEFT_TOP_REG, 0);
+		REG_WR(SRC_RIGHT_BOTTOM_REG, DEFAULT_TEXT_WIDTH | (DEFAULT_TEXT_HEIGHT << 16));
+		
 		REG_WR(SRC_SELECT_REG, G2D_SELECT_MODE_FGCOLOR);								// Source Image Selection Register 
 		REG_WR(SRC_COLOR_MODE_REG, G2D_COLOR_FMT_XRGB8888 | G2D_ORDER_AXRGB);			// Source Image Color Mode Register
 
@@ -59,9 +62,10 @@ void viewport_draw_char(Viewport_t handle, UINT8 ch)
 			vp->text_x = 0;
 			vp->text_y += DEFAULT_TEXT_HEIGHT;
 			if((vp->text_y + DEFAULT_TEXT_HEIGHT) > vp->h)
-			{
-				viewport_scroll_up(handle, DEFAULT_TEXT_HEIGHT);
-				vp->text_y -= DEFAULT_TEXT_HEIGHT;
+			{	
+				UINT16 extra = (vp->text_y + DEFAULT_TEXT_HEIGHT) - vp->h;
+				viewport_scroll_up(handle, extra);				
+				vp->text_y -= extra;				
 			}
 		}
 		

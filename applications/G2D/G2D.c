@@ -140,7 +140,7 @@ void task_render(void * ptr)
 		while(1)
 		{
 			OS_SemWait(sem);	
-			viewport_draw_char(vp_handle, ch++);
+			viewport_draw_char(vp_handle, ++ch);
 		}
 #endif
 	} while(0);	
@@ -181,6 +181,15 @@ int main(int argc, char *argv[])
 		if(scr_handle < 0) break;
 		
 		// Create a sub-Window
+#if 0
+		win_handle = g2d_create_viewport(process, 
+											0, 
+											0, 
+											fb_width, 
+											fb_height, 
+											DEFAULT_FG_COLOR, 
+											DEFAULT_BG_COLOR);
+#else
 		win_handle = g2d_create_viewport(process, 
 											fb_width >> 2, 
 											fb_height >> 2, 
@@ -188,6 +197,7 @@ int main(int argc, char *argv[])
 											fb_height >> 1, 
 											DEFAULT_FG_COLOR, 
 											DEFAULT_BG_COLOR);
+#endif	
 		if(win_handle < 0) break;
 
 		OS_SemAlloc(&sem, 0, 0);

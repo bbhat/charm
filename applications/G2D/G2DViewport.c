@@ -83,6 +83,19 @@ void g2d_set_dest_coordinates(G2D_Viewport *vp, UINT16 x, UINT16 y, UINT16 w, UI
 	REG_WR(DST_RIGHT_BOTTOM_REG, rb_x | (rb_y << 16));
 }
 
+void g2d_set_src_coordinates(G2D_Viewport *vp, UINT16 x, UINT16 y, UINT16 w, UINT16 h)
+{
+	ASSERT(vp);
+	
+	// Set Destination Left Top and Right Bottom Coordinate Registers
+	const UINT32 lt_x = (vp->x + x) & 0x1FFF;
+	const UINT32 lt_y = (vp->y + y) & 0x1FFF;
+	const UINT32 rb_x = (lt_x + w) & 0x1FFF;
+	const UINT32 rb_y = (lt_y + h) & 0x1FFF;
+	REG_WR(SRC_LEFT_TOP_REG, lt_x | (lt_y << 16));
+	REG_WR(SRC_RIGHT_BOTTOM_REG, rb_x | (rb_y << 16));
+}
+
 OS_Return g2d_activate_viewport(G2D_Viewport *vp)
 {
 	ASSERT(vp);
@@ -222,6 +235,9 @@ void viewport_scroll_up(Viewport_t handle, UINT16 pixels)
 		// Set Destination Left Top and Right Bottom Coordinate Registers
 		g2d_set_dest_coordinates(vp, 0, 0, vp->w, (vp->h - pixels));
 		
+		// Set source coordinates
+		g2d_set_src_coordinates(vp, 0, pixels, vp->w, (vp->h - pixels));
+		
 		// Src buffer clear (Automatically set to 0b after a cycle)
 		REG_WR(CACHECTL_REG, G2D_FLUSH_SRC_BUFFER);
 
@@ -230,8 +246,6 @@ void viewport_scroll_up(Viewport_t handle, UINT16 pixels)
 		REG_WR(SRC_COLOR_MODE_REG, G2D_COLOR_FMT_XRGB8888 | G2D_ORDER_AXRGB);	// Source Image Color Mode Register
 		REG_WR(SRC_STRIDE_REG, (fb_width * gColorDepthMap[G2D_COLOR_FMT_XRGB8888]) >> 3);	// Set Source Stride Register 
 		REG_WR(SRC_BASE_ADDR_REG, fb_addr);
-		REG_WR(SRC_LEFT_TOP_REG, vp->x | ((vp->y + pixels) << 16));
-		REG_WR(SRC_RIGHT_BOTTOM_REG, (vp->x + vp->w) | ((vp->y + vp->h) << 16));
 		
 		// Set ROP4 register
 		REG_WR(ROP4_REG, ROP4_COPY);

@@ -124,5 +124,6 @@ BOOL g2d_isbusy();
 BOOL g2d_viewport_valid(Viewport_t viewport);
 OS_Return g2d_activate_viewport(G2D_Viewport *vp);
 void g2d_set_dest_coordinates(G2D_Viewport *vp, UINT16 x, UINT16 y, UINT16 w, UINT16 h);
+void g2d_set_src_coordinates(G2D_Viewport *vp, UINT16 x, UINT16 y, UINT16 w, UINT16 h);
 
 #endif /* _G2DVIEWPORT_H_ */
