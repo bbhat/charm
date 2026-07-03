@@ -7,8 +7,8 @@
 ##
 ###################################################################################
 
-CC:=arm-elf-gcc
-LINK:=arm-elf-ld
+CC:=arm-none-eabi-gcc
+LINK:=arm-none-eabi-gcc
 
 ## Initialize default arguments
 TARGET		?=	mini210s
@@ -56,7 +56,7 @@ OBJS			:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
 ## Build flags
 AFLAGS		:=	-mcpu=$(CORE) -g -mlittle-endian -mfloat-abi=softfp -mfpu=neon
 CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian -mfloat-abi=softfp -mfpu=neon
-LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Map $(MAP_FILE)
+LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Wl,-Map,$(MAP_FILE)
 ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)
 else ifeq ($(CONFIG),release)

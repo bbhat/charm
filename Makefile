@@ -7,13 +7,13 @@
 ##
 ###################################################################################
 
-ASM		:=	arm-elf-gcc
-CC		:=	arm-elf-gcc
-LINK	:=	arm-elf-ld
-OBJCOPY	:=	arm-elf-objcopy
-OBJDUMP	:=	arm-elf-objdump
+ASM		:=	arm-none-eabi-gcc
+CC		:=	arm-none-eabi-gcc
+LINK	:=	arm-none-eabi-gcc
+OBJCOPY	:=	arm-none-eabi-objcopy
+OBJDUMP	:=	arm-none-eabi-objdump
 
-LIBPATH:=/usr/local/dev-arm/i386-Darwin-arm-gcc-4.6.1/lib/gcc/arm-elf/4.6.1 /opt/local/lib/gcc/arm-elf/4.6.1/fpu /opt/local/arm-elf/lib/fpu
+LIBPATH:=/usr/local/dev-arm/i386-Darwin-arm-gcc-4.6.1/lib/gcc/arm-none-eabi/4.6.1 /opt/local/lib/gcc/arm-none-eabi/4.6.1/fpu /opt/local/arm-none-eabi/lib/fpu
 
 ## Initialize default arguments
 TARGET		?=	mini210s
@@ -71,7 +71,7 @@ BOOT_OBJS	:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(BOOT_SOURCES)
 ## Build flags
 AFLAGS		:=	-mcpu=$(CORE) -g -mlittle-endian -mfloat-abi=softfp -mfpu=neon
 CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian -mfloat-abi=softfp -mfpu=neon
-LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Map $(MAP_FILE) $(LIBPATH)
+LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Wl,-Map,$(MAP_FILE) $(LIBPATH)
 ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)
 	AFLAGS	:=	-g -D DEBUG $(AFLAGS)
@@ -174,7 +174,7 @@ $(KERNEL_TARGET): $(OBJS) $(OS_TARGET)
 	$(LINK) $^ $(LDFLAGS) -o $@
 
 $(BOOT_TARGET): $(BOOT_OBJS)
-	$(LINK) -nostartfiles -nostdlib -T$(BOOT_LSCRIPT) -Map $(BOOT_MAP_FILE) $(BOOT_OBJS) -o $@
+	$(LINK) -nostartfiles -nostdlib -T$(BOOT_LSCRIPT) -Wl,-Map,$(BOOT_MAP_FILE) $(BOOT_OBJS) -o $@
 
 $(RAMDISK_TARGET): FORCE
 	make rootfs

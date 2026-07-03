@@ -7,9 +7,9 @@
 ##
 ###################################################################################
 
-CC:=arm-elf-gcc
-AR:=arm-elf-ar
-ASM:=arm-elf-gcc
+CC:=arm-none-eabi-gcc
+AR:=arm-none-eabi-ar
+ASM:=arm-none-eabi-gcc
 
 
 ## Initialize default arguments

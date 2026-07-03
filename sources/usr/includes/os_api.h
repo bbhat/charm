@@ -113,7 +113,7 @@ typedef struct
 	
 } OS_Time;
 
-enum
+typedef enum
 {
 	SUNDAY = 1,
 	MONDAY,

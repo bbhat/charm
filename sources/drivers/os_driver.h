@@ -39,12 +39,11 @@ typedef struct IO_Request
 	
 } IO_Request;
 
-enum
+typedef enum
 {
 	IO_TYPE_MASK = 0x01,
 	WRITE_IO = 0x01,
 	READ_IO	= 0x00,
-
 	IO_BLOCKED_MASK	= 0x02
 } IO_Direction;
 

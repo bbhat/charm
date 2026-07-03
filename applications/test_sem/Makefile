@@ -7,8 +7,8 @@
 ##
 ###################################################################################
 
-CC:=arm-elf-gcc
-LINK:=arm-elf-ld
+CC:=arm-none-eabi-gcc
+LINK:=arm-none-eabi-gcc
 LIBPATH:=/usr/local/dev-arm/i386-Darwin-arm-gcc-4.6.1/lib/gcc/arm-elf/4.6.1
 
 ## Initialize default arguments
@@ -49,7 +49,7 @@ OBJS			:=	$(addsuffix .o, $(basename $(addprefix $(OBJ_DIR)/, $(SOURCES))))
 ## Build flags
 AFLAGS		:=	-mcpu=$(CORE) -g -mlittle-endian -mfloat-abi=softfp -mfpu=neon
 CFLAGS		:=	-Wall -nostdinc -mcpu=$(CORE) -mlittle-endian -mfloat-abi=softfp -mfpu=neon
-LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Map $(MAP_FILE)
+LDFLAGS		:=	-nostartfiles -nostdlib -T$(LINKERS_SCRIPT) -Wl,-Map,$(MAP_FILE)
 ifeq ($(CONFIG),debug)
 	CFLAGS	:=	-g -O0 -D DEBUG $(CFLAGS)
 else ifeq ($(CONFIG),release)
